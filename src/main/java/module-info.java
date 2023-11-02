@@ -1,4 +1,4 @@
-module ca.bcit.comp2522.termproject.pix {
+module ca.bcit.comp2522.termproject {
     requires javafx.controls;
     requires javafx.fxml;
 
