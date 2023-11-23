@@ -5,6 +5,7 @@ import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
+import javafx.beans.property.DoubleProperty;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -38,33 +39,45 @@ public class GameController {
      */
     public GameController() {
         final double initialPlayerX = 0;
-        final double initialPlayerY = 300;
+        final double initialPlayerY = 700;
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
         this.platform = new PlatformManager();
         this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
-        gameRoot.getChildren().add(player);
         this.setBackground("Background/1.png");
-        this.initContent();
+        this.setUpPlatform();
+        this.setUpCamera();
+        gameRoot.getChildren().add(player);
     }
 
-    private void initContent() {
-        final int xCameraThreshold = 300;
-        final int xCameraAdjustment = 300;
-        final int yCameraUpperThreshold = 600;
-        final int yCameraLowerThreshold = 400;
-        final int yCameraAdjustment = 300;
-
+    /**
+     * Sets up the platform using the PlatformManager.
+     */
+    private void setUpPlatform() {
         platform.createGamePlatform();
 
         for (StandardBlock block: platform.getBlockArray()) {
             gameRoot.getChildren().add(block);
         }
+    }
+
+    /**
+     * Sets up the camera.
+     */
+    private void setUpCamera() {
+        final DoubleProperty playerX = player.translateXProperty();
+        final int xCameraThreshold = 300;
+        final int xCameraAdjustment = 300;
+
+        final DoubleProperty playerY = player.translateYProperty();
+        final int yCameraUpperThreshold = 600;
+        final int yCameraLowerThreshold = 400;
+        final int yCameraAdjustment = 300;
 
         // Adjust the camera horizontal position based on player's location
-        player.translateXProperty().addListener((obs, old, newValue) -> {
+        playerX.addListener((obs, old, newValue) -> {
             int offset = newValue.intValue();
 
             if (offset > xCameraThreshold && offset < platform.getTotalLevelWidth() - xCameraThreshold) {
@@ -73,7 +86,7 @@ public class GameController {
         });
 
         // Adjust the camera vertical position based on player's location
-        player.translateYProperty().addListener((obs, old, newValue) -> {
+        playerY.addListener((obs, old, newValue) -> {
             int offset = newValue.intValue();
 
             if (offset > yCameraUpperThreshold && offset < platform.getTotalLevelHeight() - yCameraLowerThreshold) {

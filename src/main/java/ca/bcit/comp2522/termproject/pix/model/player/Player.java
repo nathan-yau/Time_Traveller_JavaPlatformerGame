@@ -6,6 +6,7 @@ import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.Movable;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
+import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 
@@ -143,6 +144,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
 
     private void updatePlayerImage(final String imageUrl) {
         this.setImage(new Image(String.valueOf(MainApplication.class.getResource(imageUrl))));
+    }
+
+    public DoubleProperty getTranslateYProperty() {
+        return this.translateYProperty();
+    }
+
+    public DoubleProperty getTranslateXProperty() {
+        return this.translateXProperty();
     }
 
     @Override
