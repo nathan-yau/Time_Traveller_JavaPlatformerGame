@@ -4,6 +4,7 @@ import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
@@ -12,6 +13,7 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Represents the main game loop.
@@ -23,7 +25,9 @@ import java.io.IOException;
 public class GameController {
     private final Pane appRoot;
     private final Pane gameRoot;
+    private final Pane uiRoot;
     private final Player player;
+    private final HashMap<KeyCode, Boolean> keyboardChecker;
 
     /**
      * Constructs a GameController object with default values.
@@ -34,6 +38,8 @@ public class GameController {
         final double initialPlayerY = 300;
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
+        this.uiRoot = new Pane();
+        this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
         gameRoot.getChildren().add(player);
         this.setBackground("Background/1.png");
@@ -56,15 +62,49 @@ public class GameController {
         appRoot.setBackground(bg);
     }
 
-
     /**
-     * Creates the pane.
+     * Inserts the keyboard listeners.
      */
-    public void creatingPane() {
-        appRoot.getChildren().addAll(gameRoot);
+    public void insertKeyboardListeners() {
+        appRoot.getChildren().addAll(gameRoot, uiRoot);
+        appRoot.setOnKeyPressed(event -> keyboardChecker.put(event.getCode(), true));
+        appRoot.setOnKeyReleased(event -> keyboardChecker.put(event.getCode(), false));
+        appRoot.requestFocus();
     }
 
-    private void keyboardListeners() throws IOException { }
+    /**
+     * Checks if the key is pressed.
+     * @param key the key to check
+     * @return true if the key is pressed, false otherwise
+     */
+    private boolean isPressed(final KeyCode key) {
+        return keyboardChecker.getOrDefault(key, false);
+    }
+
+    /**
+     * Listens to the keyboard.
+     * @throws IOException if the image is not found
+     */
+    private void keyboardListeners() throws IOException {
+        final int outOfBounds = 5;
+        // Listen to jump signal and prevent for jumping out of the map
+        if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
+            player.jump();
+            System.out.println(player.getVelocity());
+        }
+
+        // Listen to backward signal and prevent for running out of the map
+        if (isPressed(KeyCode.A) && player.getTranslateX() >= outOfBounds) {
+            player.moveX(false);
+            player.nextImageFrame();
+        }
+
+        // Listen to forward signal
+        if (isPressed(KeyCode.D)) {
+            player.moveX(true);
+            player.nextImageFrame();
+        }
+    }
 
     /**
      * Starts the game loop.
