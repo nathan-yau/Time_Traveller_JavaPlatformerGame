@@ -1,10 +1,10 @@
 package ca.bcit.comp2522.termproject.pix.gamecontroller;
 
 import ca.bcit.comp2522.termproject.pix.MainApplication;
+import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
-import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -56,8 +56,10 @@ public class GameController {
         final int yCameraUpperThreshold = 600;
         final int yCameraLowerThreshold = 400;
         final int yCameraAdjustment = 300;
+
         platform.createGamePlatform();
-        for (Node block: platform.getBlockArray()) {
+
+        for (StandardBlock block: platform.getBlockArray()) {
             gameRoot.getChildren().add(block);
         }
 

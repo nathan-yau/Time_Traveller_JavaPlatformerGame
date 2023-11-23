@@ -74,59 +74,5 @@ public abstract class GameObject<T extends Enum<T>> extends ImageView {
         return this.objectSubtype;
     }
 
-    /**
-     * Checks if the game object is equal to another object.
-     *
-     * @param o the other object
-     * @return true if the game object is equal to the other object, false otherwise
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
 
-        GameObject<?> that = (GameObject<?>) o;
-
-        if (!Objects.equals(objectSubtype, that.objectSubtype)) {
-            return false;
-        }
-        return objectType == that.objectType;
-    }
-
-    /**
-     * Gets the hashcode of the game object.
-     *
-     * @return the hashcode of the game object as an int
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result;
-        if (objectSubtype != null) {
-            result =  objectSubtype.hashCode();
-        } else {
-            result = 0;
-        }
-        if (objectType != null) {
-            result = prime * result + objectType.hashCode();
-        }
-        return result;
-    }
-
-    /**
-     * Gets the string representation of the game object.
-     *
-     * @return the string representation of the game object as a String
-     */
-    @Override
-    public String toString() {
-        return "GameObject{"
-                + ", objectType="
-                + objectType
-                + '}';
-    }
 }

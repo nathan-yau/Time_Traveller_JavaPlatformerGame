@@ -81,14 +81,10 @@ public class PlatformManager {
                             BLOCK_HEIGHT + movingBlockYPadding, currentLevel, imageIndex.name());
                     blockArray.add(movingBlock);
                 } else if (categorySymbol == '2') {
-                    StandardBlock movableBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                            BLOCK_HEIGHT, BlockType.MOVABLE_BLOCK, currentLevel, "rock");
-                    blockArray.add(movableBlock);
-                } else if (categorySymbol == '3') {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, BlockType.DECORATION_BLOCK, currentLevel, "rock");
                     blockArray.add(decorationBlock);
-                } else if (categorySymbol == '4') {
+                } else if (categorySymbol == '3') {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "floor");
                     blockArray.add(decorationBlock);
@@ -125,24 +121,31 @@ public class PlatformManager {
     }
 
     // Get the position of the block.
-    private HashMap<String, Boolean> findPosition(final int row, final int col,
-                                                  final String[] level, final char categorySymbol) {
+    private HashMap<String, Boolean> findPosition(final int row, final int col, final String[] level,
+                                                  final char categorySymbol, final boolean ceiling,
+                                                  final boolean floor) {
         HashMap<String, Boolean> blockPositions = new HashMap<>();
-        blockPositions.put("topLeft", level[row - 1].charAt(col - 1) == categorySymbol);
-        blockPositions.put("topMid", level[row - 1].charAt(col) == categorySymbol);
-        blockPositions.put("topRight", level[row - 1].charAt(col + 1) == categorySymbol);
+        if (!ceiling) {
+            blockPositions.put("topLeft", level[row - 1].charAt(col - 1) == categorySymbol);
+            blockPositions.put("topMid", level[row - 1].charAt(col) == categorySymbol);
+            blockPositions.put("topRight", level[row - 1].charAt(col + 1) == categorySymbol);
+        }
         blockPositions.put("midLeft", level[row].charAt(col - 1) == categorySymbol);
         blockPositions.put("midRight", level[row].charAt(col + 1) == categorySymbol);
-        blockPositions.put("bottomLeft", level[row + 1].charAt(col - 1) == categorySymbol);
-        blockPositions.put("bottomMid", level[row + 1].charAt(col) == categorySymbol);
-        blockPositions.put("bottomRight", level[row + 1].charAt(col + 1) == categorySymbol);
+
+        if (!floor) {
+            blockPositions.put("bottomLeft", level[row + 1].charAt(col - 1) == categorySymbol);
+            blockPositions.put("bottomMid", level[row + 1].charAt(col) == categorySymbol);
+            blockPositions.put("bottomRight", level[row + 1].charAt(col + 1) == categorySymbol);
+        }
         return blockPositions;
     }
 
     // Get the adjacent blocks.
-    private HashMap<String, Boolean> findAdjacentBlocks(final int row, final int col,
-                                                        final String[] level, final char categorySymbol) {
-        HashMap<String, Boolean> blockPositions = findPosition(row, col, level, categorySymbol);
+    private HashMap<String, Boolean> findAdjacentBlocks(final int row, final int col, final String[] level,
+                                                        final char categorySymbol, final boolean ceiling,
+                                                        final boolean floor) {
+        HashMap<String, Boolean> blockPositions = findPosition(row, col, level, categorySymbol, ceiling, floor);
 
         boolean topLeft = Boolean.TRUE.equals(blockPositions.put("topLeft", false));
         boolean topMid = Boolean.TRUE.equals(blockPositions.put("topMid", false));
@@ -198,7 +201,7 @@ public class PlatformManager {
 
         if (!intendedEmptyCol) {
             HashMap<String, Boolean> adjacentBlocks =
-                    findAdjacentBlocks(row, col, level, categorySymbol);
+                    findAdjacentBlocks(row, col, level, categorySymbol, ceiling, floor);
 
             boolean topMid = Boolean.TRUE.equals(adjacentBlocks.put("topMid", false));
 
