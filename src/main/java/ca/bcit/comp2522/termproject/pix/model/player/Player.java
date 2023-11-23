@@ -56,10 +56,12 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         velocity = velocity.add(x, y);
     }
 
-    @Override
-    public void jump() {
+    /**
+     * Sets the Player to the jump speed on Y axis.
+     */
+    public void setJumpSpeed() {
         if (jumpEnable) {
-            final int jumpingVelocity = -30;
+            final int jumpingVelocity = -10;
             velocity = velocity.add(0, jumpingVelocity);
             jumpEnable = false;
             this.action = Action.JUMPING;
@@ -67,11 +69,52 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
-     * Moves the Player in the x direction.
+     * Sets the Player to move along the Y axis based on jump velocity and gravity.
+     * @param movementDelta the movement delta
+     */
+    public void updateHorizontalMovement(final int movementDelta) {
+        // Move the Player along X Axis
+        for (int i = 0; i < Math.abs(movementDelta); i++) {
+            this.moveX(movementDelta > 0);
+        }
+        this.nextImageFrame();
+    }
+
+    /**
+     * Sets the Player to move along the Y axis based on jump velocity and gravity.
+     */
+    public void updateVerticalMovement() {
+        final int gravity = 1;
+        // Move the Player along Y Axis based on current velocity
+        for (int i = 0; i < Math.abs(this.velocity.getY()); i++) {
+            this.moveY(this.velocity.getY() > 0);
+        }
+        // Applying gravity
+        if (this.velocity.getY() < gravity) {
+            this.velocity = this.velocity.add(0, 1);
+        }
+    }
+
+    /**
+     * Moves the Player in the y direction by 1 pixel.
+     * @param movingDown true if moving down, false if moving up
+     */
+    public void moveY(final boolean movingDown) {
+        if (movingDown) {
+            this.setTranslateY(this.getTranslateY() + 1);
+        } else {
+            this.setTranslateY(this.getTranslateY() - 1);
+        }
+    }
+
+    /**
+     * Moves the Player in the x direction by 1 pixel.
+     * @param movingRight true if moving right, false if moving left
      */
     @Override
     public void moveX(final boolean movingRight) {
         final int numberOfFrames = 8;
+        final int slowDownFrameUpdatesRate = 10;
         if (movingRight) {
             this.direction = Direction.FORWARD;
             this.setTranslateX(this.getTranslateX() + 1);
@@ -82,9 +125,12 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         if (this.action != Action.WALKING) {
             this.currentImageFrame = 0;
         }
-        this.currentImagePath = String.format("player/%s", direction.name());
-        this.updatePlayerImage(String.format("%s/walking_%d.png", currentImagePath,
-                currentImageFrame % numberOfFrames));
+        if (currentImageFrame % slowDownFrameUpdatesRate == 0) {
+            this.currentImagePath = String.format("player/%s", direction.name());
+            this.updatePlayerImage(String.format("%s/walking_%d.png", currentImagePath,
+                    currentImageFrame % numberOfFrames));
+        }
+
         this.action = Action.WALKING;
     }
 
