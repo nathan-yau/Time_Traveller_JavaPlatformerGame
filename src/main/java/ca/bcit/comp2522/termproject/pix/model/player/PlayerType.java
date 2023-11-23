@@ -1,5 +1,7 @@
 package ca.bcit.comp2522.termproject.pix.model.player;
 
+import ca.bcit.comp2522.termproject.pix.GameType;
+
 /**
  * Enumerates the types of player objects.
  *
@@ -7,6 +9,6 @@ package ca.bcit.comp2522.termproject.pix.model.player;
  * @author Derek Woo
  * @version 2023-11
  */
-public enum PlayerType {
+public enum PlayerType implements GameType {
     PLAYER
 }
