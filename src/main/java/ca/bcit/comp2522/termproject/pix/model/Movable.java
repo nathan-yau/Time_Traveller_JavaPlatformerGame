@@ -11,9 +11,11 @@ package ca.bcit.comp2522.termproject.pix.model;
 public interface Movable {
 
     /**
-     * Makes the object jump.
+     * Makes the object to move up or fall.
+     *
+     * @param movingDown true if falling, false if jumping
      */
-    void jump();
+    void moveY(boolean movingDown);
 
     /**
      * Makes the object move left or right.
