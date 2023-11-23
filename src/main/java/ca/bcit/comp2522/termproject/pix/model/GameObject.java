@@ -1,6 +1,8 @@
 package ca.bcit.comp2522.termproject.pix.model;
 
 import ca.bcit.comp2522.termproject.pix.MainApplication;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -112,6 +114,17 @@ public abstract class GameObject<T extends Enum<T>> extends ImageView {
      */
     public final double getCenterX() {
         return this.getBoundsInParent().getCenterX();
+    }
+
+    /**
+     * Check if the Player intersects with another object.
+     * @return true if intersects, false if not
+     */
+    public boolean checkIntersect(final Bounds objectBounds) {
+        if (objectBounds == null) {
+            return false;
+        }
+        return this.getBoundsInParent().intersects(objectBounds);
     }
 
     /**
