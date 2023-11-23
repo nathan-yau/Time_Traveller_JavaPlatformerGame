@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model;
 
+import ca.bcit.comp2522.termproject.pix.GameType;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import javafx.geometry.Bounds;
 import javafx.scene.image.Image;
@@ -13,7 +14,7 @@ import javafx.scene.image.ImageView;
  * @version 2023-11
  * @param <T> the type of the object
  */
-public abstract class GameObject<T extends Enum<T>> extends ImageView {
+public abstract class GameObject<T extends GameType> extends ImageView {
     // The name of the object.
     private final T objectSubtype;
 
