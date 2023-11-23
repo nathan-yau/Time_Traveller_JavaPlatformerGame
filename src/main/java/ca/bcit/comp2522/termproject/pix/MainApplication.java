@@ -15,9 +15,10 @@ import java.io.IOException;
  * @version 2023
  */
 public class MainApplication extends Application {
-    // Width of the window
+
+    /** Width of the window. */
     public static final int WINDOW_WIDTH = 1200;
-    // Height of the window
+    /** Height of the window. */
     public static final int WINDOW_HEIGHT = 700;
 
     /**
@@ -26,7 +27,7 @@ public class MainApplication extends Application {
      * @param stage the stage to run the application
      */
     @Override
-    public void start(Stage stage) {
+    public void start(final Stage stage) {
         GameController gameApp = new GameController();
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -34,6 +35,7 @@ public class MainApplication extends Application {
         stage.setScene(scene);
         stage.show();
 
+        gameApp.creatingPane();
         gameApp.startGameLoop();
     }
 
@@ -42,7 +44,7 @@ public class MainApplication extends Application {
      *
      * @param args not used
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         launch(args);
     }
 }
