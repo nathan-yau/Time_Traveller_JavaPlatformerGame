@@ -10,7 +10,6 @@ import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Background;
@@ -129,6 +128,9 @@ public class GameController {
         appRoot.setBackground(bg);
     }
 
+    /**
+     * Sets the cached block array.
+     */
     private void setCachedBlockArray() {
         final int cacheThreshold = 300;
         cachedBlockArray.clear();
@@ -149,6 +151,9 @@ public class GameController {
     }
 
 
+    /**
+     * Resets the cached block array.
+     */
     private void resetCachedBlockArray() {
         final int resetThreshold = 200;
         if (player.getCenterX() > lastCacheXPosition + resetThreshold
@@ -159,6 +164,9 @@ public class GameController {
         }
     }
 
+    /**
+     * Represents the collision detector.
+     */
     private static final class CollisionDetector {
         private final int X_TOLERANCE = 5;
         private final int Y_TOLERANCE = 5;
@@ -166,9 +174,15 @@ public class GameController {
         /**
          * Constructs a CollisionDetector.
          */
-        public CollisionDetector() {};
+        public CollisionDetector() {}
 
 
+        /**
+         * Checks if the two objects are intersecting.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the player is colliding with the platform, false otherwise
+         */
         private boolean objectIntersect(GameObject<? extends GameType> firstGameObject,
                                     GameObject<? extends GameType> secondGameObject) {
             return firstGameObject.checkIntersect(secondGameObject.getBoundsInParent());
@@ -232,9 +246,16 @@ public class GameController {
         }
     }
 
+    /**
+     * Represents the block interaction.
+     */
     private final class BlockInteraction {
         public BlockInteraction() {}
 
+        /**
+         * Interacts with the blocks on the x-axis.
+         * @param movementDelta the movement delta
+         */
         private void interactWithBlocksX(int movementDelta) {
             final boolean movingRight = movementDelta > 0;
             for (int i = 0; i < Math.abs(movementDelta); i++) {
@@ -250,6 +271,9 @@ public class GameController {
             player.nextImageFrame();
         }
 
+        /**
+         * Interacts with the blocks on the y-axis.
+         */
         private void interactWithBlocksY() {
             final double vectorY = player.getVelocityY();
             final boolean movingDown = vectorY > 0;
