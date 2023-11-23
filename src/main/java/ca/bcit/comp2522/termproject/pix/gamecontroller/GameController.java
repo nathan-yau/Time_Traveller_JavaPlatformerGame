@@ -1,8 +1,10 @@
 package ca.bcit.comp2522.termproject.pix.gamecontroller;
 
 import ca.bcit.comp2522.termproject.pix.MainApplication;
+import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -26,6 +28,7 @@ public class GameController {
     private final Pane appRoot;
     private final Pane gameRoot;
     private final Pane uiRoot;
+    private final PlatformManager platform;
     private final Player player;
     private final HashMap<KeyCode, Boolean> keyboardChecker;
 
@@ -39,10 +42,42 @@ public class GameController {
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
+        this.platform = new PlatformManager();
         this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
         gameRoot.getChildren().add(player);
         this.setBackground("Background/1.png");
+        this.initContent();
+    }
+
+    private void initContent() {
+        final int xCameraThreshold = 300;
+        final int xCameraAdjustment = 300;
+        final int yCameraUpperThreshold = 600;
+        final int yCameraLowerThreshold = 400;
+        final int yCameraAdjustment = 300;
+        platform.createGamePlatform();
+        for (Node block: platform.getBlockArray()) {
+            gameRoot.getChildren().add(block);
+        }
+
+        // Adjust the camera horizontal position based on player's location
+        player.translateXProperty().addListener((obs, old, newValue) -> {
+            int offset = newValue.intValue();
+
+            if (offset > xCameraThreshold && offset < platform.getTotalLevelWidth() - xCameraThreshold) {
+                gameRoot.setLayoutX(-(offset - xCameraAdjustment));
+            }
+        });
+
+        // Adjust the camera vertical position based on player's location
+        player.translateYProperty().addListener((obs, old, newValue) -> {
+            int offset = newValue.intValue();
+
+            if (offset > yCameraUpperThreshold && offset < platform.getTotalLevelHeight() - yCameraLowerThreshold) {
+                gameRoot.setLayoutY(-(offset - yCameraAdjustment));
+            }
+        });
     }
 
     /**
