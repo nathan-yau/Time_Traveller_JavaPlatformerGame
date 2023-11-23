@@ -2,11 +2,8 @@ package ca.bcit.comp2522.termproject.pix.model;
 
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import javafx.geometry.Bounds;
-import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
-import java.util.Objects;
 
 /**
  * Represents an object in the game that has coordinates.
@@ -135,6 +132,4 @@ public abstract class GameObject<T extends Enum<T>> extends ImageView {
     public final T getSubtype() {
         return this.objectSubtype;
     }
-
-
 }
