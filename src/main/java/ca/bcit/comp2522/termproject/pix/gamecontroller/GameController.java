@@ -168,6 +168,12 @@ public class GameController {
          */
         public CollisionDetector() {};
 
+
+        private boolean objectIntersect(GameObject<? extends GameType> firstGameObject,
+                                    GameObject<? extends GameType> secondGameObject) {
+            return firstGameObject.checkIntersect(secondGameObject.getBoundsInParent());
+        }
+
         /**
          * Checks if the two objects are colliding on the x-axis.
          * @param firstGameObject the first game object
@@ -233,9 +239,8 @@ public class GameController {
             final boolean movingRight = movementDelta > 0;
             for (int i = 0; i < Math.abs(movementDelta); i++) {
                 for (StandardBlock block : cachedBlockArray) {
-                    if (player.getBoundsInParent().intersects(block.getBoundsInParent())) {
-                        boolean xColliding = collisionDetector.CollidingDetectorX(player, block, movingRight);
-                        if (xColliding) {
+                    if (collisionDetector.objectIntersect(player, block)) {
+                        if (collisionDetector.CollidingDetectorX(player, block, movingRight)) {
                             return;
                         }
                     }
@@ -250,7 +255,7 @@ public class GameController {
             final boolean movingDown = vectorY > 0;
             for (int i = 0; i < Math.abs(vectorY); i++) {
                 for (StandardBlock block : cachedBlockArray) {
-                    if (player.getBoundsInParent().intersects(block.getBoundsInParent())) {
+                    if (collisionDetector.objectIntersect(player, block)) {
                         if (collisionDetector.CollidingDetectorY(player, block, movingDown)
                                 && collisionDetector.onSameXAxis(player, block)) {
                             if (movingDown) {
