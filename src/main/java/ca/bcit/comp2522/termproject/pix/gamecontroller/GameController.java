@@ -87,23 +87,22 @@ public class GameController {
      */
     private void keyboardListeners() throws IOException {
         final int outOfBounds = 5;
+        final int pixelPerStep = 5;
         // Listen to jump signal and prevent for jumping out of the map
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
-            player.jump();
-            System.out.println(player.getVelocity());
+            player.setJumpSpeed();
         }
 
         // Listen to backward signal and prevent for running out of the map
         if (isPressed(KeyCode.A) && player.getTranslateX() >= outOfBounds) {
-            player.moveX(false);
-            player.nextImageFrame();
+            player.updateHorizontalMovement(-pixelPerStep);
         }
 
         // Listen to forward signal
         if (isPressed(KeyCode.D)) {
-            player.moveX(true);
-            player.nextImageFrame();
+            player.updateHorizontalMovement(pixelPerStep);
         }
+
     }
 
     /**
@@ -115,6 +114,7 @@ public class GameController {
             public void handle(final long l) {
                 try {
                     keyboardListeners();
+                    player.updateVerticalMovement();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
