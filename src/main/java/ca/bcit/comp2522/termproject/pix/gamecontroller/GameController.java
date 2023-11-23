@@ -112,6 +112,76 @@ public class GameController {
         appRoot.setBackground(bg);
     }
 
+
+
+    private static final class CollisionDetector {
+        private final int X_TOLERANCE = 5;
+        private final int Y_TOLERANCE = 5;
+
+        /**
+         * Constructs a CollisionDetector.
+         */
+        public CollisionDetector() {};
+
+        /**
+         * Checks if the two objects are colliding on the x-axis.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the player is colliding with the platform, false otherwise
+         */
+        public boolean CollidingDetectorX(GameObject<? extends GameType> firstGameObject,
+                                         GameObject<? extends GameType> secondGameObject, boolean rightSide) {
+            double distance = Math.abs(firstGameObject.getMinX() - secondGameObject.getMaxX());
+            if (rightSide) {
+                distance = Math.abs(firstGameObject.getMaxX() - secondGameObject.getMinX());
+            }
+            return distance <= X_TOLERANCE;
+        }
+
+        /**
+         * Checks if the two objects are colliding on the y-axis.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the player is colliding with the platform, false otherwise
+         */
+        private boolean CollidingDetectorY(GameObject<? extends GameType> firstGameObject,
+                                          GameObject<? extends GameType> secondGameObject, boolean upSide) {
+            double distance = Math.abs(firstGameObject.getMinY() - secondGameObject.getMaxY());
+            if (upSide) {
+                distance = Math.abs(firstGameObject.getMaxY() - secondGameObject.getMinY());
+            }
+            return distance <= Y_TOLERANCE;
+        }
+
+        /**
+         * Checks if the two objects are on the same y-axis.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the player is colliding with the platform, false otherwise
+         */
+        private boolean onSameYAxis(GameObject<? extends GameType> firstGameObject,
+                                    GameObject<? extends GameType> secondGameObject) {
+            System.out.println(firstGameObject.getMaxY() +" "+secondGameObject.getMaxY());
+            return Math.abs(firstGameObject.getMaxY() - secondGameObject.getMaxY()) <= Y_TOLERANCE;
+        }
+
+        /**
+         * Checks if the two objects are on the same x-axis.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the player is colliding with the platform, false otherwise
+         */
+        private boolean onSameXAxis(GameObject<? extends GameType> firstGameObject,
+                                    GameObject<? extends GameType> secondGameObject) {
+            boolean firstObjectOnLeft = secondGameObject.getMinX() + X_TOLERANCE < firstGameObject.getMaxX()
+                    && firstGameObject.getMaxX() <= secondGameObject.getMaxX();
+            boolean firstObjectOnRight = secondGameObject.getMinX()< firstGameObject.getMinX()
+                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - X_TOLERANCE;
+            return firstObjectOnLeft || firstObjectOnRight;
+        }
+    }
+
+
     /**
      * Inserts the keyboard listeners.
      */
