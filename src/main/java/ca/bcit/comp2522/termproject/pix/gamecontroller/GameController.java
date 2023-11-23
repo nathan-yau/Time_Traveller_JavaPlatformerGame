@@ -1,12 +1,16 @@
 package ca.bcit.comp2522.termproject.pix.gamecontroller;
 
+import ca.bcit.comp2522.termproject.pix.GameType;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
+import ca.bcit.comp2522.termproject.pix.model.GameObject;
+import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Background;
@@ -16,7 +20,9 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * Represents the main game loop.
@@ -32,6 +38,11 @@ public class GameController {
     private final PlatformManager platform;
     private final Player player;
     private final HashMap<KeyCode, Boolean> keyboardChecker;
+    private final ArrayList<StandardBlock> cachedBlockArray;
+    private double lastCacheXPosition;
+    private double lastCacheYPosition;
+    private final CollisionDetector collisionDetector;
+    private final BlockInteraction blockInteraction;
 
     /**
      * Constructs a GameController object with default values.
@@ -215,7 +226,44 @@ public class GameController {
         }
     }
 
+    private final class BlockInteraction {
+        public BlockInteraction() {}
 
+        private void interactWithBlocksX(int movementDelta) {
+            final boolean movingRight = movementDelta > 0;
+            for (int i = 0; i < Math.abs(movementDelta); i++) {
+                for (StandardBlock block : cachedBlockArray) {
+                    if (player.getBoundsInParent().intersects(block.getBoundsInParent())) {
+                        boolean xColliding = collisionDetector.CollidingDetectorX(player, block, movingRight);
+                        if (xColliding) {
+                            return;
+                        }
+                    }
+                }
+                player.moveX(movingRight);
+            }
+            player.nextImageFrame();
+        }
+
+        private void interactWithBlocksY() {
+            final double vectorY = player.getVelocityY();
+            final boolean movingDown = vectorY > 0;
+            for (int i = 0; i < Math.abs(vectorY); i++) {
+                for (StandardBlock block : cachedBlockArray) {
+                    if (player.getBoundsInParent().intersects(block.getBoundsInParent())) {
+                        if (collisionDetector.CollidingDetectorY(player, block, movingDown)
+                                && collisionDetector.onSameXAxis(player, block)) {
+                            if (movingDown) {
+                                player.offsetGravity();
+                            }
+                            return;
+                        }
+                    }
+                }
+                player.moveY(movingDown);
+            }
+        }
+    }
     /**
      * Inserts the keyboard listeners.
      */
@@ -249,12 +297,12 @@ public class GameController {
 
         // Listen to backward signal and prevent for running out of the map
         if (isPressed(KeyCode.A) && player.getTranslateX() >= outOfBounds) {
-            player.updateHorizontalMovement(-pixelPerStep);
+            blockInteraction.interactWithBlocksX(-pixelPerStep);
         }
 
         // Listen to forward signal
-        if (isPressed(KeyCode.D)) {
-            player.updateHorizontalMovement(pixelPerStep);
+        if (isPressed(KeyCode.D)  && player.getMaxX() <= platform.getTotalLevelWidth() - outOfBounds) {
+            blockInteraction.interactWithBlocksX(pixelPerStep);
         }
 
     }
@@ -269,7 +317,8 @@ public class GameController {
                 try {
                     resetCachedBlockArray();
                     keyboardListeners();
-                    player.updateVerticalMovement();
+                    player.applyGravity();
+                    blockInteraction.interactWithBlocksY();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -277,6 +326,7 @@ public class GameController {
         };
         timer.start();
     }
+
 
     /**
      * Gets the root of the application.
