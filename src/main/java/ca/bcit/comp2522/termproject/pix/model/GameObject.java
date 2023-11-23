@@ -24,18 +24,28 @@ public abstract class GameObject<T extends Enum<T>> extends ImageView {
      *
      * @param x the x-coordinate of the game object as a double
      * @param y the y-coordinate of the game object as a double
-     * @param w
-     * @param h
-     * @param type
-     * @param name
-     * @param url
+     * @param w the width of the game object as a double
+     * @param h the height of the game object as a double
+     * @param type the type of the game object
+     * @param name the name of the game object
+     * @param url the image path of the game object
      */
-    public GameObject(final double x, final double y, final double w, final double h, final ObjectType type, final T name, final String url) {
+    public GameObject(final double x, final double y, final double w, final double h,
+                      final ObjectType type, final T name, final String url) {
         this(x, y, type, name, url);
         this.setFitWidth(w);
         this.setFitHeight(h);
     }
 
+    /**
+     * Constructs a GameObject.
+     *
+     * @param x the x-coordinate of the game object as a double
+     * @param y the y-coordinate of the game object as a double
+     * @param type the type of the game object
+     * @param name the name of the game object
+     * @param url the image path of the game object
+     */
     public GameObject(final double x, final double y, final ObjectType type, final T name, final String url) {
         super(new Image((String.valueOf(MainApplication.class.getResource(url)))));
         this.setTranslateX(x);
@@ -43,10 +53,22 @@ public abstract class GameObject<T extends Enum<T>> extends ImageView {
         this.objectName = name;
         this.objectType = type;
     }
+
+    /**
+     * Gets the name of the object.
+     *
+     * @return the name of the object
+     */
     public final T getName() {
         return this.objectName;
     }
 
+
+    /**
+     * Gets the type of the object.
+     *
+     * @return the type of the object
+     */
     public final ObjectType getType() {
         return this.objectType;
     }
