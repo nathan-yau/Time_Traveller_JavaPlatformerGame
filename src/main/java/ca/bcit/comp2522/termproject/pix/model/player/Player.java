@@ -140,6 +140,15 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.setImage(new Image(String.valueOf(MainApplication.class.getResource(imageUrl))));
     }
 
+    public boolean isPlayerInAction() {
+        return action == Action.JUMPING;
+    }
+
+    public void setIdle() {
+        this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
+        this.action = Action.IDLE;
+    }
+
     @Override
     public void meleeAttack() {
 

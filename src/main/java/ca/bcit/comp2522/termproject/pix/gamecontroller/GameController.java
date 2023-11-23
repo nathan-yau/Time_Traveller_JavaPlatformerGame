@@ -313,6 +313,19 @@ public class GameController {
     }
 
     /**
+     * Checks if any key is pressed.
+     * @return true if any key is pressed, false otherwise
+     */
+    private boolean isAnyKeyPressed() {
+        for (boolean isPressed : keyboardChecker.values()) {
+            if (isPressed) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Listens to the keyboard.
      * @throws IOException if the image is not found
      */
@@ -332,6 +345,10 @@ public class GameController {
         // Listen to forward signal
         if (isPressed(KeyCode.D)  && player.getMaxX() <= platform.getTotalLevelWidth() - outOfBounds) {
             blockInteraction.interactWithBlocksX(pixelPerStep);
+        }
+
+        if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
+            player.setIdle();
         }
 
     }
