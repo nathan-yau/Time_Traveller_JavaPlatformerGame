@@ -65,6 +65,55 @@ public abstract class GameObject<T extends Enum<T>> extends ImageView {
         return this.objectType;
     }
 
+
+    /**
+     * Gets the maximum x-coordinate of the game object.
+     * @return the maximum x-coordinate of the game object as a double
+     */
+    public final double getMaxX() {
+        return this.getBoundsInParent().getMaxX();
+    }
+
+    /**
+     * Gets the maximum y-coordinate of the game object.
+     * @return the maximum y-coordinate of the game object as a double
+     */
+    public final double getMaxY() {
+        return this.getBoundsInParent().getMaxY();
+    }
+
+    /**
+     * Gets the minimum x-coordinate of the game object.
+     * @return the minimum x-coordinate of the game object as a double
+     */
+    public final double getMinX() {
+        return this.getBoundsInParent().getMinX();
+    }
+
+    /**
+     * Gets the minimum y-coordinate of the game object.
+     * @return the minimum y-coordinate of the game object as a double
+     */
+    public final double getMinY() {
+        return this.getBoundsInParent().getMinY();
+    }
+
+    /**
+     * Gets the center y-coordinate of the game object.
+     * @return the center y-coordinate of the game object as a double
+     */
+    public final double getCenterY() {
+        return this.getBoundsInParent().getCenterY();
+    }
+
+    /**
+     * Gets the center x-coordinate of the game object.
+     * @return the center x-coordinate of the game object as a double
+     */
+    public final double getCenterX() {
+        return this.getBoundsInParent().getCenterX();
+    }
+
     /**
      * Gets the subtype of the game object.
      *
