@@ -44,8 +44,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Gets the velocity of the Player.
      * @return the velocity of the Player
      */
-    public Point2D getVelocity() {
-        return velocity;
+    public double getVelocityY() {
+        return velocity.getY();
     }
 
     /**
@@ -62,35 +62,27 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void setJumpSpeed() {
         if (jumpEnable) {
-            final int jumpingVelocity = -10;
+            final int jumpingVelocity = -25;
             velocity = velocity.add(0, jumpingVelocity);
             jumpEnable = false;
             this.action = Action.JUMPING;
         }
     }
 
-    /**
-     * Sets the Player to move along the Y axis based on jump velocity and gravity.
-     * @param movementDelta the movement delta
-     */
-    public void updateHorizontalMovement(final int movementDelta) {
-        // Move the Player along X Axis
-        for (int i = 0; i < Math.abs(movementDelta); i++) {
-            this.moveX(movementDelta > 0);
+    public void offsetGravity() {
+        //Offset Gravity by 1 if on the ground
+        this.setTranslateY(this.getTranslateY() - 1);
+        jumpEnable = true;
+        if (this.action == Action.JUMPING) {
+            this.action = Action.IDLE;
         }
-        this.nextImageFrame();
     }
 
     /**
      * Sets the Player to move along the Y axis based on jump velocity and gravity.
      */
-    public void updateVerticalMovement() {
-        final int gravity = 1;
-        // Move the Player along Y Axis based on current velocity
-        for (int i = 0; i < Math.abs(this.velocity.getY()); i++) {
-            this.moveY(this.velocity.getY() > 0);
-        }
-        // Applying gravity
+    public void applyGravity() {
+        final int gravity = 3;
         if (this.velocity.getY() < gravity) {
             this.velocity = this.velocity.add(0, 1);
         }
@@ -102,9 +94,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void moveY(final boolean movingDown) {
         if (movingDown) {
-            this.setTranslateY(this.getTranslateY() + 1);
+            this.setTranslateY(this.getTranslateY() + 0.8);
         } else {
-            this.setTranslateY(this.getTranslateY() - 1);
+            this.setTranslateY(this.getTranslateY() - 0.6);
         }
     }
 
