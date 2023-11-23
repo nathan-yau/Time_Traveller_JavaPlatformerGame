@@ -35,7 +35,7 @@ public class MainApplication extends Application {
         stage.setScene(scene);
         stage.show();
 
-        gameApp.creatingPane();
+        gameApp.insertKeyboardListeners();
         gameApp.startGameLoop();
     }
 
