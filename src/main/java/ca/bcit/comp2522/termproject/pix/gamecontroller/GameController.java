@@ -46,9 +46,15 @@ public class GameController {
         this.platform = new PlatformManager();
         this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
+        this.cachedBlockArray = new ArrayList<>();
+        this.collisionDetector = new CollisionDetector();
+        this.blockInteraction = new BlockInteraction();
+        this.lastCacheXPosition = initialPlayerX;
+        this.lastCacheYPosition = initialPlayerY;
         this.setBackground("Background/1.png");
         this.setUpPlatform();
         this.setUpCamera();
+        this.setCachedBlockArray();
         gameRoot.getChildren().add(player);
     }
 
@@ -112,7 +118,35 @@ public class GameController {
         appRoot.setBackground(bg);
     }
 
+    private void setCachedBlockArray() {
+        final int cacheThreshold = 300;
+        cachedBlockArray.clear();
+        for (StandardBlock block : platform.getBlockArray()) {
+            if (Objects.equals(block.getSubtype(), BlockType.DECORATION_BLOCK)) {
+                continue;
+            }
+            if (player.getCenterX() + cacheThreshold >= block.getMinX()
+                    && player.getCenterX() - cacheThreshold <= block.getMaxX()) {
+                if (player.getCenterY() + cacheThreshold >= block.getMinY()
+                        && player.getCenterY() - cacheThreshold <= block.getMaxY()) {
+                    cachedBlockArray.add(block);
+                }
+            }
+        }
+        lastCacheXPosition = player.getCenterX();
+        lastCacheYPosition = player.getCenterY();
+    }
 
+
+    private void resetCachedBlockArray() {
+        final int resetThreshold = 200;
+        if (player.getCenterX() > lastCacheXPosition + resetThreshold
+                || player.getCenterX() < lastCacheXPosition - resetThreshold
+                || player.getCenterY() > lastCacheYPosition + resetThreshold
+                || player.getCenterY() < lastCacheYPosition - resetThreshold) {
+            setCachedBlockArray();
+        }
+    }
 
     private static final class CollisionDetector {
         private final int X_TOLERANCE = 5;
@@ -233,6 +267,7 @@ public class GameController {
             @Override
             public void handle(final long l) {
                 try {
+                    resetCachedBlockArray();
                     keyboardListeners();
                     player.updateVerticalMovement();
                 } catch (IOException e) {
