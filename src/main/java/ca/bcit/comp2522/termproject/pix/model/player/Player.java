@@ -6,7 +6,6 @@ import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.Movable;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
-import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 
@@ -49,15 +48,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
-     * Sets the velocity of the Player.
-     * @param x the x coordinate of the velocity
-     * @param y the y coordinate of the velocity
-     */
-    public void setVelocity(final int x, final int y) {
-        velocity = velocity.add(x, y);
-    }
-
-    /**
      * Sets the Player to the jump speed on Y axis.
      */
     public void setJumpSpeed() {
@@ -69,6 +59,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         }
     }
 
+    /**
+     *  Sets the Player when it is on the ground.
+     */
     public void offsetGravity() {
         //Offset Gravity by 1 if on the ground
         this.setTranslateY(this.getTranslateY() - 1);
@@ -134,16 +127,12 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         currentImageFrame += 1;
     }
 
+    /**
+     * Updates the Player image.
+     * @param imageUrl the image path of the Player
+     */
     private void updatePlayerImage(final String imageUrl) {
         this.setImage(new Image(String.valueOf(MainApplication.class.getResource(imageUrl))));
-    }
-
-    public DoubleProperty getTranslateYProperty() {
-        return this.translateYProperty();
-    }
-
-    public DoubleProperty getTranslateXProperty() {
-        return this.translateXProperty();
     }
 
     @Override
