@@ -37,6 +37,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.direction = Direction.FORWARD;
         this.action = Action.IDLE;
         this.currentImageFrame = 0;
+        this.currentImagePath = String.format("player/%s", direction.name());
     }
 
     /**
@@ -90,6 +91,10 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.setTranslateY(this.getTranslateY() + 0.8);
         } else {
             this.setTranslateY(this.getTranslateY() - 0.6);
+        }
+        if (!movingDown) {
+            this.currentImagePath = String.format("player/%s", direction.name());
+            this.updatePlayerImage(String.format("%s/jumping_0.png", currentImagePath));
         }
     }
 
