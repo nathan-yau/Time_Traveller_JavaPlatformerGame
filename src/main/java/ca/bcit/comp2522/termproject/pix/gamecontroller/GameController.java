@@ -49,7 +49,7 @@ public class GameController {
      */
     public GameController() {
         final double initialPlayerX = 0;
-        final double initialPlayerY = 700;
+        final double initialPlayerY = 500;
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
@@ -87,11 +87,6 @@ public class GameController {
         final int xCameraThreshold = 300;
         final int xCameraAdjustment = 300;
 
-        final DoubleProperty playerY = player.translateYProperty();
-        final int yCameraUpperThreshold = 600;
-        final int yCameraLowerThreshold = 400;
-        final int yCameraAdjustment = 300;
-
         // Adjust the camera horizontal position based on player's location
         playerX.addListener((obs, old, newValue) -> {
             int offset = newValue.intValue();
@@ -101,14 +96,6 @@ public class GameController {
             }
         });
 
-        // Adjust the camera vertical position based on player's location
-        playerY.addListener((obs, old, newValue) -> {
-            int offset = newValue.intValue();
-
-            if (offset > yCameraUpperThreshold && offset < platform.getTotalLevelHeight() - yCameraLowerThreshold) {
-                gameRoot.setLayoutY(-(offset - yCameraAdjustment));
-            }
-        });
     }
 
     /**

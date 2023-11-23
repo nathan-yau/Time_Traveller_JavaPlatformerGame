@@ -15,9 +15,9 @@ import javafx.stage.Stage;
 public class MainApplication extends Application {
 
     /** Width of the window. */
-    public static final int WINDOW_WIDTH = 1200;
+    public static final int WINDOW_WIDTH = 1500;
     /** Height of the window. */
-    public static final int WINDOW_HEIGHT = 700;
+    public static final int WINDOW_HEIGHT = 720;
 
     /**
      * Starts the application.
@@ -31,6 +31,7 @@ public class MainApplication extends Application {
 
         stage.setTitle("Lowkey Time Travellers");
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.show();
 
         gameApp.insertKeyboardListeners();
