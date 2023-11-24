@@ -56,7 +56,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             final int jumpingVelocity = -25;
             velocity = velocity.add(0, jumpingVelocity);
             jumpEnable = false;
-            this.action = Action.JUMPING;
         }
     }
 
@@ -91,10 +90,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.setTranslateY(this.getTranslateY() + 0.8);
         } else {
             this.setTranslateY(this.getTranslateY() - 0.6);
-        }
-        if (!movingDown) {
             this.currentImagePath = String.format("player/%s", direction.name());
-            this.updatePlayerImage(String.format("%s/jumping_0.png", currentImagePath));
+            if (this.action != Action.JUMPING) {
+                this.updatePlayerImage(String.format("%s/jumping_0.png", currentImagePath));
+                this.action = Action.JUMPING;
+            }
         }
     }
 
@@ -121,7 +121,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.updatePlayerImage(String.format("%s/walking_%d.png", currentImagePath,
                     currentImageFrame % numberOfFrames));
         }
-
         this.action = Action.WALKING;
     }
 
