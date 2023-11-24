@@ -61,7 +61,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                ca.bcit.comp2522.termproject.pix/ca.bcit.comp2522.termproject.pix.HelloApplication
+                                ca.bcit.comp2522.termproject/ca.bcit.comp2522.termproject.HelloApplication
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
