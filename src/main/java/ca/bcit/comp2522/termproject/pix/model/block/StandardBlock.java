@@ -2,6 +2,11 @@ package ca.bcit.comp2522.termproject.pix.model.block;
 
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.animation.KeyValue;
+import javafx.scene.effect.ColorAdjust;
+import javafx.util.Duration;
 
 /**
  * Represents a standard stationary game block.
@@ -11,6 +16,7 @@ import ca.bcit.comp2522.termproject.pix.model.ObjectType;
  * @version 2023-11
  */
 public class StandardBlock extends GameObject<BlockType> {
+    private Timeline stepOnAnimation;
     /**
      * Constructs a StandardBlock.
      *
@@ -26,5 +32,23 @@ public class StandardBlock extends GameObject<BlockType> {
                          final int currentLevel, final String imageName) {
         super(x, y, w, h, ObjectType.BLOCK, blockType, String.format("%d/%s/%s.png",
                 currentLevel, blockType.name(), imageName));
+
+        ColorAdjust colorAdjust = new ColorAdjust();
+        this.setEffect(colorAdjust);
+        stepOnAnimation = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(colorAdjust.brightnessProperty(), 0.0)),
+                new KeyFrame(Duration.millis(300), new KeyValue(colorAdjust.brightnessProperty(), 0.25)),
+                new KeyFrame(Duration.millis(300), new KeyValue(colorAdjust.brightnessProperty(), 0))
+        );
+        stepOnAnimation.setCycleCount(1);
+        stepOnAnimation.setAutoReverse(true);
+    }
+
+    public void animate() {
+        stepOnAnimation.play();
+    }
+
+    public void fadeAnimate() {
+        stepOnAnimation.stop();
     }
 }

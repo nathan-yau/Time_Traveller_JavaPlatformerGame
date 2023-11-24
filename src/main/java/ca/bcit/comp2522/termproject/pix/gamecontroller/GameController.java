@@ -119,7 +119,7 @@ public class GameController {
      * Sets the cached block array.
      */
     private void setCachedBlockArray() {
-        final int cacheThreshold = 300;
+        final int cacheThreshold = 1000;
         cachedBlockArray.clear();
         for (StandardBlock block : platform.getBlockArray()) {
             if (Objects.equals(block.getSubtype(), BlockType.DECORATION_BLOCK)) {
@@ -142,7 +142,7 @@ public class GameController {
      * Resets the cached block array.
      */
     private void resetCachedBlockArray() {
-        final int resetThreshold = 200;
+        final int resetThreshold = 900;
         if (player.getCenterX() > lastCacheXPosition + resetThreshold
                 || player.getCenterX() < lastCacheXPosition - resetThreshold
                 || player.getCenterY() > lastCacheYPosition + resetThreshold

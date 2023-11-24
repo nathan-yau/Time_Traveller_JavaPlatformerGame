@@ -84,7 +84,7 @@ public class PlatformManager {
                     blockArray.add(decorationBlock);
                 } else if (categorySymbol == '3') {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                            BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "floor");
+                            BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "rope");
                     blockArray.add(decorationBlock);
                 }
             }
