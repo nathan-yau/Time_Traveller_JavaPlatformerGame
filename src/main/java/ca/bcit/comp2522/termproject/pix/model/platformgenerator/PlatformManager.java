@@ -4,9 +4,8 @@ import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
-
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 
 /**
  * Manages the components of the game platform.
@@ -20,7 +19,6 @@ public class PlatformManager {
      * The default width of a block.
      */
     public static final int BLOCK_WIDTH = 50;
-
     /**
      * The default height of a block.
      */
@@ -120,201 +118,81 @@ public class PlatformManager {
         return levelWidth * BLOCK_WIDTH;
     }
 
-    // Get the position of the block.
-    private HashMap<String, Boolean> findPosition(final int row, final int col, final String[] level,
-                                                  final char categorySymbol, final boolean ceiling,
-                                                  final boolean floor) {
-        HashMap<String, Boolean> blockPositions = new HashMap<>();
-        if (!ceiling) {
-            blockPositions.put("topLeft", level[row - 1].charAt(col - 1) == categorySymbol);
-            blockPositions.put("topMid", level[row - 1].charAt(col) == categorySymbol);
-            blockPositions.put("topRight", level[row - 1].charAt(col + 1) == categorySymbol);
-        }
-        blockPositions.put("midLeft", level[row].charAt(col - 1) == categorySymbol);
-        blockPositions.put("midRight", level[row].charAt(col + 1) == categorySymbol);
-
-        if (!floor) {
-            blockPositions.put("bottomLeft", level[row + 1].charAt(col - 1) == categorySymbol);
-            blockPositions.put("bottomMid", level[row + 1].charAt(col) == categorySymbol);
-            blockPositions.put("bottomRight", level[row + 1].charAt(col + 1) == categorySymbol);
-        }
-        return blockPositions;
-    }
-
-    // Get the adjacent blocks.
-    private HashMap<String, Boolean> findAdjacentBlocks(final int row, final int col, final String[] level,
-                                                        final char categorySymbol, final boolean ceiling,
-                                                        final boolean floor) {
-        HashMap<String, Boolean> blockPositions = findPosition(row, col, level, categorySymbol, ceiling, floor);
-
-        boolean topLeft = Boolean.TRUE.equals(blockPositions.put("topLeft", false));
-        boolean topMid = Boolean.TRUE.equals(blockPositions.put("topMid", false));
-        boolean topRight = Boolean.TRUE.equals(blockPositions.put("topRight", false));
-        boolean midLeft = Boolean.TRUE.equals(blockPositions.put("midLeft", false));
-        boolean midRight = Boolean.TRUE.equals(blockPositions.put("midRight", false));
-        boolean bottomLeft = Boolean.TRUE.equals(blockPositions.put("bottomLeft", false));
-        boolean bottomMid = Boolean.TRUE.equals(blockPositions.put("bottomMid", false));
-        boolean bottomRight = Boolean.TRUE.equals(blockPositions.put("bottomRight", false));
-
-        HashMap<String, Boolean> adjacentBlocks = new HashMap<>();
-        adjacentBlocks.put("topMid", Boolean.TRUE.equals(blockPositions.put("topMid", false)));
-
-        adjacentBlocks.put("noLeftBottomBlock", !bottomLeft & bottomMid & bottomRight);
-        adjacentBlocks.put("noMiddleBottomBlock", bottomLeft & !bottomMid & bottomRight);
-        adjacentBlocks.put("noRightBottomBlock", bottomLeft & bottomMid & !bottomRight);
-
-        adjacentBlocks.put("onlyLeftBottomBlock", bottomLeft & !bottomMid & !bottomRight);
-        adjacentBlocks.put("onlyMiddleBottomBlock", !bottomLeft & bottomMid & !bottomRight);
-        adjacentBlocks.put("onlyRightBottomBlock", !bottomLeft & !bottomMid & bottomRight);
-
-        adjacentBlocks.put("allRowBottomBlock", topLeft & topMid & topRight);
-        adjacentBlocks.put("noBottomBlock", !bottomLeft & !bottomMid & !bottomRight);
-
-        adjacentBlocks.put("allRowTopBlock", topLeft & topMid & topRight);
-        adjacentBlocks.put("noTopBlock", !topLeft & !topMid & !topRight);
-
-        adjacentBlocks.put("allRowMiddleBlock", midLeft & midRight);
-        adjacentBlocks.put("noMiddleBlock", !midLeft & !midRight);
-
-        adjacentBlocks.put("onlyLeftMiddleBlock", midLeft & !midRight);
-        adjacentBlocks.put("onlyRightMiddleBlock", !midLeft & midRight);
-
-        adjacentBlocks.put("noLeftTopBlock", !topLeft & topMid & topRight);
-        adjacentBlocks.put("noMiddleTopBlock", topLeft & !topMid & topRight);
-        adjacentBlocks.put("noRightTopBlock", topLeft & topMid & !topRight);
-
-        adjacentBlocks.put("onlyLeftTopBlock", topLeft & !topMid & !topRight);
-        adjacentBlocks.put("onlyMiddleTopBlock", !topLeft & topMid & !topRight);
-        adjacentBlocks.put("onlyRightTopBlock", !topLeft & !topMid & topRight);
-
-        return adjacentBlocks;
-    }
-
-    // Get the image for the block.
+    // Gets the images for a block.
     private PlatformPosition getImageForPlatformBlock(final int row, final int col, final String[] level,
                                                       final char categorySymbol) {
-        int numRows = level.length;
-        int numCols = level[0].length();
-        boolean intendedEmptyCol = (col == 0 || col + 1 == numCols);
-        boolean ceiling = row == 0;
-        boolean floor = row + 1 == numRows;
+        final int numRows = level.length;
+        final int numCols = level[0].length();
+        final boolean emptyCols = (col == 0 || col + 1 == numCols);
+        final boolean floor = (row + 1 == numRows);
 
-        if (!intendedEmptyCol) {
-            HashMap<String, Boolean> adjacentBlocks =
-                    findAdjacentBlocks(row, col, level, categorySymbol, ceiling, floor);
+        if (row == 0) {
+            return PlatformPosition.CEILING;
+        }
 
-            boolean topMid = Boolean.TRUE.equals(adjacentBlocks.put("topMid", false));
+        if (emptyCols) {
+            return PlatformPosition.BLOCK;
+        }
+        final int rows = 3;
+        final int cols = 3;
 
-            boolean noLeftBottomBlock = Boolean.TRUE.equals(adjacentBlocks.put("noLeftBottomBlock", false));
-            boolean noMiddleBottomBlock = Boolean.TRUE.equals(adjacentBlocks.put("noMiddleBottomBlock", false));
-            boolean noRightBottomBlock = Boolean.TRUE.equals(adjacentBlocks.put("noRightBottomBlock", false));
-
-            boolean onlyLeftBottomBlock = Boolean.TRUE.equals(adjacentBlocks.put("onlyLeftBottomBlock", false));
-            boolean onlyMiddleBottomBlock = Boolean.TRUE.equals(adjacentBlocks.put("onlyMiddleBottomBlock", false));
-            boolean onlyRightBottomBlock = Boolean.TRUE.equals(adjacentBlocks.put("onlyRightBottomBlock", false));
-
-            boolean allRowBottomBlock = Boolean.TRUE.equals(adjacentBlocks.put("allRowBottomBlock", false));
-            boolean noBottomBlock = Boolean.TRUE.equals(adjacentBlocks.put("noBottomBlock", false));
-
-            boolean allRowTopBlock = Boolean.TRUE.equals(adjacentBlocks.put("allRowTopBlock", false));
-            boolean noTopBlock = Boolean.TRUE.equals(adjacentBlocks.put("noTopBlock", false));
-
-            boolean allRowMiddleBlock = Boolean.TRUE.equals(adjacentBlocks.put("allRowMiddleBlock", false));
-            boolean noMiddleBlock = Boolean.TRUE.equals(adjacentBlocks.put("noMiddleBlock", false));
-
-            boolean onlyLeftMiddleBlock = Boolean.TRUE.equals(adjacentBlocks.put("onlyLeftMiddleBlock", false));
-            boolean onlyRightMiddleBlock = Boolean.TRUE.equals(adjacentBlocks.put("onlyRightMiddleBlock", false));
-
-            boolean noLeftTopBlock = Boolean.TRUE.equals(adjacentBlocks.put("noLeftTopBlock", false));
-            boolean noMiddleTopBlock = Boolean.TRUE.equals(adjacentBlocks.put("noMiddleTopBlock", false));
-            boolean noRightTopBlock = Boolean.TRUE.equals(adjacentBlocks.put("noRightTopBlock", false));
-
-            boolean onlyLeftTopBlock = Boolean.TRUE.equals(adjacentBlocks.put("onlyLeftTopBlock", false));
-            boolean onlyMiddleTopBlock = Boolean.TRUE.equals(adjacentBlocks.put("onlyMiddleTopBlock", false));
-            boolean onlyRightTopBlock = Boolean.TRUE.equals(adjacentBlocks.put("onlyRightTopBlock", false));
-
-            if (ceiling) {
-                if (noLeftBottomBlock) {
-                    if (allRowMiddleBlock) {
-                        return PlatformPosition.DIRT_LEFT_CORNER;
-                    } else {
-                        return PlatformPosition.CEILING;
-                    }
-                } else if (allRowBottomBlock) {
-                    return PlatformPosition.DIRT;
-                } else if (noRightBottomBlock) {
-                    return PlatformPosition.DIRT_RIGHT_CORNER;
-                } else if (onlyMiddleBottomBlock) {
-                    return PlatformPosition.WALL_TOP;
-                } else {
-                    return PlatformPosition.CEILING;
+        final Boolean[][] positions = new Boolean[cols][rows];
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (floor & i == 1) {
+                    positions[i + 1][j + 1] = true;
+                    continue;
                 }
+                positions[i + 1][j + 1] = level[row + i].charAt(col + j) == categorySymbol;
             }
+        }
 
-            if (floor) {
-                if (noLeftTopBlock) {
-                    if (allRowMiddleBlock) {
-                        return PlatformPosition.DIRT_RIGHT_CORNER;
-                    } else {
-                        return PlatformPosition.FLOOR;
-                    }
-                } else if (allRowTopBlock) {
-                    return PlatformPosition.DIRT;
-                } else if (noRightTopBlock) {
-                    return PlatformPosition.DIRT_LEFT_CORNER;
-                } else if (onlyMiddleTopBlock) {
-                    return PlatformPosition.WALL_BOTTOM;
-                } else {
-                    return PlatformPosition.FLOOR;
-                }
-            }
+        boolean topRowFilled = Arrays.stream(positions[0]).allMatch(value -> value);
+        boolean bottomRowFilled = Arrays.stream(positions[2]).allMatch(value -> value);
+        boolean middleColFilled = positions[0][1] & positions[1][1] & positions[2][1];
+        boolean leftColFilled = positions[0][0] & positions[1][0] & positions[2][0];
+        boolean rightColFilled = positions[0][2] & positions[1][2] & positions[2][2];
 
-            if (!topMid) {
-                if (onlyRightMiddleBlock) {
-                    return PlatformPosition.FLOOR_LEFT_CORNER;
-                } else if (onlyLeftMiddleBlock) {
-                    return PlatformPosition.FLOOR_RIGHT_CORNER;
-                } else if (allRowMiddleBlock) {
-                    return PlatformPosition.FLOOR;
-                } else {
-                    return PlatformPosition.FLOOR;
-                }
-            } else {
-                if (onlyRightMiddleBlock) {
-                    if (noBottomBlock) {
-                        return PlatformPosition.FLOOR_BOTTOM_LEFT_CORNER;
-                    } else {
-                        return PlatformPosition.LEFT_EDGE;
-                    }
-                } else if (onlyLeftMiddleBlock) {
-                    if (noBottomBlock) {
-                        return PlatformPosition.FLOOR_BOTTOM_RIGHT_CORNER;
-                    } else {
-                        return PlatformPosition.RIGHT_EDGE;
-                    }
-                } else if (allRowMiddleBlock) {
-                    if (noBottomBlock || onlyRightBottomBlock) {
-                        return PlatformPosition.FLOOR_BOTTOM;
-                    } else if (noLeftBottomBlock) {
-                        return PlatformPosition.DIRT_TURN_LEFT_CORNER;
-                    } else if (noRightTopBlock) {
-                        return PlatformPosition.DIRT_TURN_UP_CORNER;
-                    } else {
-                        return PlatformPosition.DIRT;
-                    }
-                } else {
-                    return PlatformPosition.WALL;
-                }
-            }
-        } else {
-            if (ceiling) {
-                return PlatformPosition.CEILING;
-            } else if (floor) {
-                return PlatformPosition.FLOOR;
+        if (!positions[0][0] && positions[1][0] & positions[0][1]) {
+            return PlatformPosition.DIRT_RIGHT_CORNER;
+        }
+
+        if (!positions[0][2] && positions[1][2] & positions[0][1]) {
+            return PlatformPosition.DIRT_LEFT_CORNER;
+        }
+
+        if (topRowFilled) {
+            if (bottomRowFilled) {
+                return PlatformPosition.DIRT;
             } else {
                 return PlatformPosition.FLOOR_BOTTOM;
             }
         }
+
+        if (middleColFilled & !leftColFilled & rightColFilled) {
+            return PlatformPosition.LEFT_EDGE;
+        }
+        if (middleColFilled & leftColFilled & !rightColFilled) {
+            return PlatformPosition.RIGHT_EDGE;
+        }
+
+        if (!positions[1][0] && positions[2][1]) {
+            return PlatformPosition.FLOOR_LEFT_CORNER;
+        }
+
+        if (!positions[1][0] && positions[1][2]) {
+            return PlatformPosition.FLOOR_BOTTOM_LEFT_CORNER;
+        }
+
+        if (!positions[1][2] && positions[2][1]) {
+            return PlatformPosition.FLOOR_RIGHT_CORNER;
+        }
+
+        if (!leftColFilled && !bottomRowFilled) {
+            return PlatformPosition.FLOOR_BOTTOM_RIGHT_CORNER;
+        }
+
+        return PlatformPosition.FLOOR;
     }
 
     /**
