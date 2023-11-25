@@ -10,5 +10,5 @@ import ca.bcit.comp2522.termproject.pix.GameType;
  * @version 2023-11
  */
 public enum PickUpItemType implements GameType {
-    HEALTH_POTION
+    HEALTH_POTION, GOLD_COIN
 }
