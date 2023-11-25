@@ -166,8 +166,9 @@ public class GameController {
      * Represents the collision detector.
      */
     private static final class CollisionDetector {
-        private final int xTolerance = 5;
+        private final int xTolerance = 10;
         private final int yTolerance = 20;
+        private final int edgeOffset = 2;
 
         /**
          * Constructs a CollisionDetector.
@@ -239,10 +240,10 @@ public class GameController {
          */
         private boolean onSameXAxis(final GameObject<? extends GameType> firstGameObject,
                                     final GameObject<? extends GameType> secondGameObject) {
-            boolean firstObjectOnLeft = secondGameObject.getMinX() + xTolerance < firstGameObject.getMaxX()
+            boolean firstObjectOnLeft = secondGameObject.getMinX() + edgeOffset < firstGameObject.getMaxX()
                     && firstGameObject.getMaxX() <= secondGameObject.getMaxX();
-            boolean firstObjectOnRight = secondGameObject.getMinX() < firstGameObject.getMinX()
-                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - xTolerance;
+            boolean firstObjectOnRight = secondGameObject.getMinX() < firstGameObject.getMaxX()
+                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
             return firstObjectOnLeft || firstObjectOnRight;
         }
     }
@@ -272,7 +273,6 @@ public class GameController {
                 }
                 player.moveX(movingRight);
             }
-            player.nextImageFrame();
         }
 
         /**
@@ -284,6 +284,10 @@ public class GameController {
             for (int i = 0; i < Math.abs(vectorY); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
+                        if (block.getSubtype() == BlockType.DISAPPEARING_BLOCK) {
+                            System.out.println(collisionDetector.collidingDetectorY(player, block, movingDown));
+                            System.out.println(collisionDetector.onSameXAxis(player, block));
+                        }
                         if (collisionDetector.collidingDetectorY(player, block, movingDown)
                                 && collisionDetector.onSameXAxis(player, block)) {
                             if (movingDown) {
@@ -373,6 +377,8 @@ public class GameController {
      */
     private void keyboardListeners() throws IOException {
         final int outOfBounds = 5;
+
+//        System.out.println(player.getAction());
         // Listen to jump signal and prevent for jumping out of the map
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
             player.setJumpSpeed();

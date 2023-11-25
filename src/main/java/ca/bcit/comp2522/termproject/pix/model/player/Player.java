@@ -9,6 +9,7 @@ import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.Movable;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
@@ -27,10 +28,8 @@ import java.util.concurrent.CompletableFuture;
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
     private boolean jumpEnable = true;
     private boolean attackEnable = true;
-    private boolean harmable = true;
     private double speed;
     private String currentImagePath;
-    private int currentImageFrame;
     private Action action;
     private Direction direction;
     private Point2D velocity;
@@ -38,6 +37,10 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private int goldCoinCounter;
     private Timeline meleeAnimation;
     private Timeline rangeAnimation;
+    private Timeline walkAnimation;
+    private Timeline jumpAnimation;
+    private static final double WALK_SPEED = 5;
+    private static final double RUN_SPEED = 10;
 
     /**
      * Constructs a Player object.
@@ -50,39 +53,68 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.velocity = new Point2D(0, 0);
         this.direction = Direction.FORWARD;
         this.action = Action.IDLE;
-        this.currentImageFrame = 0;
         this.currentImagePath = String.format("player/%s", direction.name());
         this.initializeMeleeAttackingAnimation();
         this.initializeRangeAttackingAnimation();
-        this.speed = 5;
+        this.initializeWalkingAnimation();
+        this.initializeJumpingAnimation();
+        this.speed = WALK_SPEED;
     }
 
     public double getSpeed() {
         return this.speed;
-    };
+    }
 
     public void run() {
-        this.speed = 10;
-    };
+        if (this.speed == WALK_SPEED) {
+            this.speed = RUN_SPEED;
+        }
+    }
 
     public void walk() {
-        this.speed = 5;
-    };
+        if (this.speed == RUN_SPEED) {
+            this.speed = WALK_SPEED;
+        }
+    }
+
+    private void initializeJumpingAnimation() {
+        final int[] jumpFrame = {0};
+        jumpAnimation = new Timeline(
+                new KeyFrame(Duration.millis(100), event -> {
+                    this.action = Action.JUMPING;
+                    this.currentImagePath = String.format("player/%s", direction.name());
+                    this.updatePlayerImage(String.format("%s/Jumping_%d.png", currentImagePath, jumpFrame[0]));
+                    jumpFrame[0] = (jumpFrame[0] + 1) % 7;
+                })
+        );
+        jumpAnimation.setCycleCount(8);
+        jumpAnimation.setOnFinished(event -> this.setIdle());
+    }
+    private void initializeWalkingAnimation() {
+        final int[] walkFrame = {0};
+        walkAnimation = new Timeline(
+                new KeyFrame(Duration.millis(100), event -> {
+                    this.currentImagePath = String.format("player/%s", direction.name());
+                    this.updatePlayerImage(String.format("%s/walking_%d.png", currentImagePath, walkFrame[0]));
+                    this.action = Action.WALKING;
+                    walkFrame[0] = (walkFrame[0] + 1) % 8;
+                })
+        );
+        walkAnimation.setCycleCount(Animation.INDEFINITE);
+        walkAnimation.setOnFinished(event -> this.setIdle());
+    }
 
     private void initializeRangeAttackingAnimation() {
         final int[] rangeFrame = {0};
         rangeAnimation = new Timeline(
                 new KeyFrame(Duration.millis(100), event -> {
                     this.action = Action.RANGE_ATTACK;
-                    this.updatePlayerImage(String.format("%s/range_attack_%d.png", currentImagePath,
-                            (rangeFrame[0] % 8)));
-                    rangeFrame[0]++;
+                    this.updatePlayerImage(String.format("%s/range_attack_%d.png", currentImagePath, rangeFrame[0]));
+                    rangeFrame[0] = (rangeFrame[0] + 1) % 8;
                 })
         );
         rangeAnimation.setCycleCount(8);
-        rangeAnimation.setOnFinished(event -> {
-            this.setIdle();
-        });
+        rangeAnimation.setOnFinished(event -> this.setIdle());
     }
 
     private void initializeMeleeAttackingAnimation() {
@@ -90,17 +122,12 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         meleeAnimation = new Timeline(
                 new KeyFrame(Duration.millis(100), event -> {
                     this.action = Action.MELEE_ATTACK;
-                    this.updatePlayerImage(String.format("%s/melee_attack_%d.png", currentImagePath,
-                            (meleeFrame[0] % 5)));
-                    harmable = false;
-                    meleeFrame[0]++;
+                    this.updatePlayerImage(String.format("%s/melee_attack_%d.png", currentImagePath, meleeFrame[0]));
+                    meleeFrame[0] = (meleeFrame[0] + 1) % 5;
                 })
         );
         meleeAnimation.setCycleCount(5);
-        meleeAnimation.setOnFinished(event -> {
-            harmable = true;
-            this.setIdle();
-        });
+        meleeAnimation.setOnFinished(event -> this.setIdle());
     }
 
     /**
@@ -129,9 +156,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         //Offset Gravity by 1 if on the ground
         this.setTranslateY(this.getTranslateY() - 1);
         jumpEnable = true;
-        if (this.action == Action.JUMPING) {
-            this.action = Action.IDLE;
-        }
     }
 
     /**
@@ -154,10 +178,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         } else {
             this.setTranslateY(this.getTranslateY() - 0.8);
             this.currentImagePath = String.format("player/%s", direction.name());
-            if (this.action != Action.JUMPING) {
-                this.updatePlayerImage(String.format("%s/jumping_0.png", currentImagePath));
-                this.action = Action.JUMPING;
-            }
+            walkAnimation.stop();
+            jumpAnimation.play();
+            this.action = Action.JUMPING;
         }
     }
 
@@ -168,8 +191,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     @Override
     public void moveX(final boolean movingRight) {
         this.attackEnable = false;
-        final int numberOfFrames = 8;
-        final int slowDownFrameUpdatesRate = 10;
         if (movingRight) {
             this.direction = Direction.FORWARD;
             this.setTranslateX(this.getTranslateX() + 1);
@@ -177,22 +198,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.direction = Direction.BACKWARD;
             this.setTranslateX(this.getTranslateX() - 1);
         }
-        if (this.action != Action.WALKING) {
-            this.currentImageFrame = 0;
-        }
-        if (currentImageFrame % slowDownFrameUpdatesRate == 0) {
-            this.currentImagePath = String.format("player/%s", direction.name());
-            this.updatePlayerImage(String.format("%s/walking_%d.png", currentImagePath,
-                    currentImageFrame % numberOfFrames));
-        }
-        this.action = Action.WALKING;
-    }
-
-    /**
-     * Set to the next frame of the Player.
-     */
-    public void nextImageFrame() {
-        currentImageFrame += 1;
+        jumpAnimation.stop();
+        walkAnimation.play();
     }
 
     /**
@@ -211,10 +218,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     public void setIdle() {
-        System.out.println(action);
         if (this.action != Action.IDLE) {
             this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
             this.action = Action.IDLE;
+            walkAnimation.stop();
+            jumpAnimation.stop();
             this.attackEnable = true;
         }
 

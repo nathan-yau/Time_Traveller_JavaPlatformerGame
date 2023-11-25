@@ -156,7 +156,20 @@ public class PlatformManager {
         }
 
         if (emptyCols) {
-            return PlatformPosition.BLOCK;
+            if (!(level[row - 1].charAt(col) == categorySymbol)) {
+                if (col == numCols - 1){
+                    return PlatformPosition.FLOOR_RIGHT_CORNER;
+                }
+                return PlatformPosition.FLOOR_LEFT_CORNER;
+            }
+            if (!(level[row - 1].charAt(numCols - 1) == categorySymbol)) {
+                System.out.println((row - 1) + " " + (numCols - 1));
+                return PlatformPosition.FLOOR_RIGHT_CORNER;
+            }
+            if (col == 0) {
+                return PlatformPosition.LEFT_EDGE;
+            }
+            return PlatformPosition.RIGHT_EDGE;
         }
         final int rows = 3;
         final int cols = 3;
