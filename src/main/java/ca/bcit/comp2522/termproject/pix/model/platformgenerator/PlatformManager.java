@@ -4,6 +4,7 @@ import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.GoldCoin;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 
@@ -103,8 +104,13 @@ public class PlatformManager {
                             BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "rope");
                     blockArray.add(decorationBlock);
                 } else if (categorySymbol == 'P') {
-                    HealthPotion potion = new HealthPotion(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT, currentLevel, "healthPotion");
-                    pickUpItemArray.add(potion);
+                    HealthPotion healthPotion = new HealthPotion(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, currentLevel, "healthPotion");
+                    pickUpItemArray.add(healthPotion);
+                } else if (categorySymbol == 'C') {
+                    GoldCoin goldCoin = new GoldCoin(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, currentLevel, "goldCoin");
+                    pickUpItemArray.add(goldCoin);
                 }
             }
         }
