@@ -319,6 +319,9 @@ public class GameController {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
                         System.out.println("Potion count: " + player.getHealthPotionCounter());
+                    } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
+                        player.incrementGoldCoinCounter();
+                        System.out.println("Gold Coin count: " + player.getGoldCoinCounter());
                     }
                     if (item.onPickUp()) {
                         iterator.remove();
