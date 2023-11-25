@@ -27,6 +27,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private boolean jumpEnable = true;
     private boolean attackEnable = true;
     private boolean harmable = true;
+    private double speed;
     private String currentImagePath;
     private int currentImageFrame;
     private Action action;
@@ -50,7 +51,20 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.currentImageFrame = 0;
         this.currentImagePath = String.format("player/%s", direction.name());
         this.initializeAttackingAnimation();
+        this.speed = 5;
     }
+
+    public double getSpeed() {
+        return this.speed;
+    };
+
+    public void run() {
+        this.speed = 10;
+    };
+
+    public void walk() {
+        this.speed = 5;
+    };
 
     private void initializeAttackingAnimation() {
         final int[] meleeFrame = {0};
@@ -106,7 +120,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Sets the Player to move along the Y axis based on jump velocity and gravity.
      */
     public void applyGravity() {
-        final int gravity = 3;
+        final int gravity = 7;
         if (this.velocity.getY() < gravity) {
             this.velocity = this.velocity.add(0, 1);
         }
@@ -118,9 +132,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void moveY(final boolean movingDown) {
         if (movingDown) {
-            this.setTranslateY(this.getTranslateY() + 0.8);
+            this.setTranslateY(this.getTranslateY() + 1);
         } else {
-            this.setTranslateY(this.getTranslateY() - 0.6);
+            this.setTranslateY(this.getTranslateY() - 0.8);
             this.currentImagePath = String.format("player/%s", direction.name());
             if (this.action != Action.JUMPING) {
                 this.updatePlayerImage(String.format("%s/jumping_0.png", currentImagePath));

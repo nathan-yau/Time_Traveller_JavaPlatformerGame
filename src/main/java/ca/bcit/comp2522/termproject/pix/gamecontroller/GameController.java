@@ -167,7 +167,7 @@ public class GameController {
      */
     private static final class CollisionDetector {
         private final int xTolerance = 5;
-        private final int yTolerance = 5;
+        private final int yTolerance = 20;
 
         /**
          * Constructs a CollisionDetector.
@@ -255,10 +255,13 @@ public class GameController {
 
         /**
          * Interacts with the blocks on the x-axis.
-         * @param movementDelta the movement delta
+         * @param movingRight true if moving forward, false if moving backward
          */
-        private void interactWithBlocksX(final int movementDelta) {
-            final boolean movingRight = movementDelta > 0;
+        private void interactWithBlocksX(final boolean movingRight) {
+            double movementDelta = player.getSpeed();
+            if (!movingRight) {
+                movementDelta = -movementDelta;
+            }
             for (int i = 0; i < Math.abs(movementDelta); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
@@ -370,20 +373,31 @@ public class GameController {
      */
     private void keyboardListeners() throws IOException {
         final int outOfBounds = 5;
-        final int pixelPerStep = 5;
         // Listen to jump signal and prevent for jumping out of the map
+        System.out.println(keyboardChecker);
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
             player.setJumpSpeed();
         }
 
+        // Listen to running signal
+        if (isPressed(KeyCode.I)) {
+            player.run();
+        }
+
+        // Listen to walk signal
+        if (!isPressed(KeyCode.I)) {
+            player.walk();
+        }
+
+
         // Listen to backward signal and prevent for running out of the map
         if (isPressed(KeyCode.A) && player.getTranslateX() >= outOfBounds) {
-            blockInteraction.interactWithBlocksX(-pixelPerStep);
+            blockInteraction.interactWithBlocksX(false);
         }
 
         // Listen to forward signal
         if (isPressed(KeyCode.D)  && player.getMaxX() <= platform.getTotalLevelWidth() - outOfBounds) {
-            blockInteraction.interactWithBlocksX(pixelPerStep);
+            blockInteraction.interactWithBlocksX(true);
         }
 
         // Listen to melee attack signal
