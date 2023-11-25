@@ -3,6 +3,7 @@ package ca.bcit.comp2522.termproject.pix.model.player;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.MeleeEffect;
+import ca.bcit.comp2522.termproject.pix.model.AttackEffect.RangeEffect;
 import ca.bcit.comp2522.termproject.pix.model.Combative;
 import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
@@ -35,7 +36,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Point2D velocity;
     private int healthPotionCounter;
     private int goldCoinCounter;
-    private Timeline attackingAnimation;
+    private Timeline meleeAnimation;
+    private Timeline rangeAnimation;
 
     /**
      * Constructs a Player object.
@@ -50,7 +52,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.action = Action.IDLE;
         this.currentImageFrame = 0;
         this.currentImagePath = String.format("player/%s", direction.name());
-        this.initializeAttackingAnimation();
+        this.initializeMeleeAttackingAnimation();
+        this.initializeRangeAttackingAnimation();
         this.speed = 5;
     }
 
@@ -66,9 +69,23 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.speed = 5;
     };
 
-    private void initializeAttackingAnimation() {
+    private void initializeRangeAttackingAnimation() {
+        final int[] rangeFrame = {0};
+        rangeAnimation = new Timeline(
+                new KeyFrame(Duration.millis(100), event -> {
+                    this.action = Action.RANGE_ATTACK;
+                    this.updatePlayerImage(String.format("%s/range_attack_%d.png", currentImagePath,
+                            (rangeFrame[0] % 8)));
+                    rangeFrame[0]++;
+                })
+        );
+        rangeAnimation.setCycleCount(8);
+        rangeAnimation.setOnFinished(event -> attackEnable = true);
+    }
+
+    private void initializeMeleeAttackingAnimation() {
         final int[] meleeFrame = {0};
-        attackingAnimation = new Timeline(
+        meleeAnimation = new Timeline(
                 new KeyFrame(Duration.millis(100), event -> {
                     this.action = Action.MELEE_ATTACK;
                     System.out.printf("%s/melee_attack_%d.png%n", currentImagePath, meleeFrame[0]);
@@ -78,8 +95,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
                     meleeFrame[0]++;
                 })
         );
-        attackingAnimation.setCycleCount(5);
-        attackingAnimation.setOnFinished(event -> {
+        meleeAnimation.setCycleCount(5);
+        meleeAnimation.setOnFinished(event -> {
             attackEnable = true;
             harmable = true;
         });
@@ -238,7 +255,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     public AttackEffect meleeAttack() {
         if (attackEnable) {
             attackEnable = false;
-            attackingAnimation.play();
+            meleeAnimation.play();
             double effectY = this.getBoundsInParent().getMinY();
             double effectX = this.getBoundsInParent().getMinX() - 50;
             if (direction == Direction.FORWARD) {
@@ -250,8 +267,22 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     @Override
-    public void rangeAttack() {
-
+    public AttackEffect rangeAttack() {
+        if (attackEnable) {
+            attackEnable = false;
+            rangeAnimation.play();
+            double effectY = this.getBoundsInParent().getMinY();
+            double effectX = this.getBoundsInParent().getMinX();
+            if (direction == Direction.FORWARD) {
+                effectX = this.getBoundsInParent().getMaxX() - 70;
+            }
+            double hitRange = 140;
+            if (direction == Direction.BACKWARD) {
+                hitRange = -hitRange;
+            }
+            return new RangeEffect(effectX, effectY + 10, 70, 50, "FireBall", hitRange, this.direction);
+        }
+        return null;
     }
 
     @Override

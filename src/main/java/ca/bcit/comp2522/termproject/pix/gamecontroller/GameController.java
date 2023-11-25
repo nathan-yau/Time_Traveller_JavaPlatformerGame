@@ -389,7 +389,6 @@ public class GameController {
             player.walk();
         }
 
-
         // Listen to backward signal and prevent for running out of the map
         if (isPressed(KeyCode.A) && player.getTranslateX() >= outOfBounds) {
             blockInteraction.interactWithBlocksX(false);
@@ -403,6 +402,18 @@ public class GameController {
         // Listen to melee attack signal
         if (isPressed(KeyCode.O) && player.getTranslateX() >= outOfBounds) {
             AttackEffect hitBox = player.meleeAttack();
+            if (hitBox != null) {
+                gameRoot.getChildren().add(hitBox);
+                hitBox.startEffect().thenAccept(isDone -> {
+                    if (isDone) {
+                        gameRoot.getChildren().remove(hitBox);
+                    }
+                });
+            }
+        }
+        // Listen to range attack signal
+        if (isPressed(KeyCode.P) && player.getTranslateX() >= outOfBounds) {
+            AttackEffect hitBox = player.rangeAttack();
             if (hitBox != null) {
                 gameRoot.getChildren().add(hitBox);
                 hitBox.startEffect().thenAccept(isDone -> {

@@ -19,7 +19,7 @@ public interface Combative {
     /**
      * Makes the object range attack.
      */
-    void rangeAttack();
+    AttackEffect rangeAttack();
 
     /**
      * Gets the attack damage created by the object.
