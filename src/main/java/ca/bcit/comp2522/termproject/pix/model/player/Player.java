@@ -25,6 +25,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Action action;
     private Direction direction;
     private Point2D velocity;
+    private int healthPotionCounter;
+
     /**
      * Constructs a Player object.
      * @param x the x coordinate of the Player
@@ -146,6 +148,18 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     public void setIdle() {
         this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
         this.action = Action.IDLE;
+    }
+
+    public void incrementHealthPotionCounter() {
+        this.healthPotionCounter++;
+    }
+
+    public void decrementHealthPotionCounter() {
+        this.healthPotionCounter--;
+    }
+
+    public int getHealthPotionCounter() {
+        return this.healthPotionCounter;
     }
 
     @Override
