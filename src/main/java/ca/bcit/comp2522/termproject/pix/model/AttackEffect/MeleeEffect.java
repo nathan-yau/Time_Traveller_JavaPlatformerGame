@@ -26,7 +26,6 @@ public class MeleeEffect extends AttackEffect {
                 new KeyFrame(Duration.millis(100), event -> {
                     final String sequenceIdle = String.format("Effect/%s/%s_%d.png",
                             this.getSubtype().name(), this.imageName, meleeFrame[0] % 10);
-                    System.out.println(sequenceIdle);
                     this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
                     meleeFrame[0]++;
                 })

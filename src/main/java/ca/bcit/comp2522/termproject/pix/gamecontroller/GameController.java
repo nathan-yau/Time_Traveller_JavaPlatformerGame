@@ -374,7 +374,6 @@ public class GameController {
     private void keyboardListeners() throws IOException {
         final int outOfBounds = 5;
         // Listen to jump signal and prevent for jumping out of the map
-        System.out.println(keyboardChecker);
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
             player.setJumpSpeed();
         }

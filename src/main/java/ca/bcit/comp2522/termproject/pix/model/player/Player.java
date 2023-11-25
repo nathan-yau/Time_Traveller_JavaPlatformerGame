@@ -80,7 +80,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
                 })
         );
         rangeAnimation.setCycleCount(8);
-        rangeAnimation.setOnFinished(event -> attackEnable = true);
+        rangeAnimation.setOnFinished(event -> {
+            this.setIdle();
+        });
     }
 
     private void initializeMeleeAttackingAnimation() {
@@ -88,7 +90,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         meleeAnimation = new Timeline(
                 new KeyFrame(Duration.millis(100), event -> {
                     this.action = Action.MELEE_ATTACK;
-                    System.out.printf("%s/melee_attack_%d.png%n", currentImagePath, meleeFrame[0]);
                     this.updatePlayerImage(String.format("%s/melee_attack_%d.png", currentImagePath,
                             (meleeFrame[0] % 5)));
                     harmable = false;
@@ -97,8 +98,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         );
         meleeAnimation.setCycleCount(5);
         meleeAnimation.setOnFinished(event -> {
-            attackEnable = true;
             harmable = true;
+            this.setIdle();
         });
     }
 
@@ -166,6 +167,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     @Override
     public void moveX(final boolean movingRight) {
+        this.attackEnable = false;
         final int numberOfFrames = 8;
         final int slowDownFrameUpdatesRate = 10;
         if (movingRight) {
@@ -209,8 +211,13 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     public void setIdle() {
-        this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
-        this.action = Action.IDLE;
+        System.out.println(action);
+        if (this.action != Action.IDLE) {
+            this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
+            this.action = Action.IDLE;
+            this.attackEnable = true;
+        }
+
     }
 
     /**
