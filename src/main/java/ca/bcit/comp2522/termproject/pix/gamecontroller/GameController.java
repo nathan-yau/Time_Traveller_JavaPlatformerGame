@@ -5,10 +5,13 @@ import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -21,6 +24,7 @@ import javafx.scene.layout.BackgroundSize;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Objects;
 
 /**
@@ -42,6 +46,7 @@ public class GameController {
     private double lastCacheYPosition;
     private final CollisionDetector collisionDetector;
     private final BlockInteraction blockInteraction;
+    private final ItemInteraction itemInteraction;
 
     /**
      * Constructs a GameController object with default values.
@@ -59,6 +64,7 @@ public class GameController {
         this.cachedBlockArray = new ArrayList<>();
         this.collisionDetector = new CollisionDetector();
         this.blockInteraction = new BlockInteraction();
+        this.itemInteraction = new ItemInteraction();
         this.lastCacheXPosition = initialPlayerX;
         this.lastCacheYPosition = initialPlayerY;
         this.setBackground("Background/1.png");
@@ -76,6 +82,10 @@ public class GameController {
 
         for (StandardBlock block: platform.getBlockArray()) {
             gameRoot.getChildren().add(block);
+        }
+
+        for (Node item: platform.getItemArray()) {
+            gameRoot.getChildren().add(item);
         }
     }
 
@@ -155,13 +165,13 @@ public class GameController {
      * Represents the collision detector.
      */
     private static final class CollisionDetector {
-        private final int X_TOLERANCE = 5;
-        private final int Y_TOLERANCE = 5;
+        private final int xTolerance = 5;
+        private final int yTolerance = 5;
 
         /**
          * Constructs a CollisionDetector.
          */
-        public CollisionDetector() {}
+        CollisionDetector() { }
 
 
         /**
@@ -170,8 +180,8 @@ public class GameController {
          * @param secondGameObject the second game object
          * @return true if the player is colliding with the platform, false otherwise
          */
-        private boolean objectIntersect(GameObject<? extends GameType> firstGameObject,
-                                    GameObject<? extends GameType> secondGameObject) {
+        private boolean objectIntersect(final GameObject<? extends GameType> firstGameObject,
+                                    final GameObject<? extends GameType> secondGameObject) {
             return firstGameObject.checkIntersect(secondGameObject.getBoundsInParent());
         }
 
@@ -179,30 +189,34 @@ public class GameController {
          * Checks if the two objects are colliding on the x-axis.
          * @param firstGameObject the first game object
          * @param secondGameObject the second game object
+         * @param rightSide whether the collision is on the right side
          * @return true if the player is colliding with the platform, false otherwise
          */
-        public boolean CollidingDetectorX(GameObject<? extends GameType> firstGameObject,
-                                         GameObject<? extends GameType> secondGameObject, boolean rightSide) {
+        public boolean collidingDetectorX(final GameObject<? extends GameType> firstGameObject,
+                                          final GameObject<? extends GameType> secondGameObject,
+                                          final boolean rightSide) {
             double distance = Math.abs(firstGameObject.getMinX() - secondGameObject.getMaxX());
             if (rightSide) {
                 distance = Math.abs(firstGameObject.getMaxX() - secondGameObject.getMinX());
             }
-            return distance <= X_TOLERANCE;
+            return distance <= xTolerance;
         }
 
         /**
          * Checks if the two objects are colliding on the y-axis.
          * @param firstGameObject the first game object
          * @param secondGameObject the second game object
+         * @param upSide whether the collision is from the top
          * @return true if the player is colliding with the platform, false otherwise
          */
-        private boolean CollidingDetectorY(GameObject<? extends GameType> firstGameObject,
-                                          GameObject<? extends GameType> secondGameObject, boolean upSide) {
+        private boolean collidingDetectorY(final GameObject<? extends GameType> firstGameObject,
+                                           final GameObject<? extends GameType> secondGameObject,
+                                           final boolean upSide) {
             double distance = Math.abs(firstGameObject.getMinY() - secondGameObject.getMaxY());
             if (upSide) {
                 distance = Math.abs(firstGameObject.getMaxY() - secondGameObject.getMinY());
             }
-            return distance <= Y_TOLERANCE;
+            return distance <= yTolerance;
         }
 
         /**
@@ -211,9 +225,9 @@ public class GameController {
          * @param secondGameObject the second game object
          * @return true if the player is colliding with the platform, false otherwise
          */
-        private boolean onSameYAxis(GameObject<? extends GameType> firstGameObject,
-                                    GameObject<? extends GameType> secondGameObject) {
-            return Math.abs(firstGameObject.getMaxY() - secondGameObject.getMaxY()) <= Y_TOLERANCE;
+        private boolean onSameYAxis(final GameObject<? extends GameType> firstGameObject,
+                                    final GameObject<? extends GameType> secondGameObject) {
+            return Math.abs(firstGameObject.getMaxY() - secondGameObject.getMaxY()) <= yTolerance;
         }
 
         /**
@@ -222,12 +236,12 @@ public class GameController {
          * @param secondGameObject the second game object
          * @return true if the player is colliding with the platform, false otherwise
          */
-        private boolean onSameXAxis(GameObject<? extends GameType> firstGameObject,
-                                    GameObject<? extends GameType> secondGameObject) {
-            boolean firstObjectOnLeft = secondGameObject.getMinX() + X_TOLERANCE < firstGameObject.getMaxX()
+        private boolean onSameXAxis(final GameObject<? extends GameType> firstGameObject,
+                                    final GameObject<? extends GameType> secondGameObject) {
+            boolean firstObjectOnLeft = secondGameObject.getMinX() + xTolerance < firstGameObject.getMaxX()
                     && firstGameObject.getMaxX() <= secondGameObject.getMaxX();
-            boolean firstObjectOnRight = secondGameObject.getMinX()< firstGameObject.getMinX()
-                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - X_TOLERANCE;
+            boolean firstObjectOnRight = secondGameObject.getMinX() < firstGameObject.getMinX()
+                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - xTolerance;
             return firstObjectOnLeft || firstObjectOnRight;
         }
     }
@@ -236,18 +250,18 @@ public class GameController {
      * Represents the block interaction.
      */
     private final class BlockInteraction {
-        public BlockInteraction() {}
+        BlockInteraction() { };
 
         /**
          * Interacts with the blocks on the x-axis.
          * @param movementDelta the movement delta
          */
-        private void interactWithBlocksX(int movementDelta) {
+        private void interactWithBlocksX(final int movementDelta) {
             final boolean movingRight = movementDelta > 0;
             for (int i = 0; i < Math.abs(movementDelta); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
-                        if (collisionDetector.CollidingDetectorX(player, block, movingRight)) {
+                        if (collisionDetector.collidingDetectorX(player, block, movingRight)) {
                             return;
                         }
                     }
@@ -266,7 +280,7 @@ public class GameController {
             for (int i = 0; i < Math.abs(vectorY); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
-                        if (collisionDetector.CollidingDetectorY(player, block, movingDown)
+                        if (collisionDetector.collidingDetectorY(player, block, movingDown)
                                 && collisionDetector.onSameXAxis(player, block)) {
                             if (movingDown) {
                                 player.offsetGravity();
@@ -279,6 +293,41 @@ public class GameController {
             }
         }
     }
+
+    // Handle interactions with pickup items.
+    private final class ItemInteraction {
+
+        /**
+         * Constructs an ItemInteraction object.
+         */
+        ItemInteraction() { }
+
+        // Check and handle collision with items
+        private void interactWithItems() {
+            Iterator<PickUpItem> iterator = platform.getItemArray().iterator();
+            boolean yAxisCollision;
+
+            while (iterator.hasNext()) {
+                final int yThreshold = 10;
+                PickUpItem item = iterator.next();
+
+                yAxisCollision = (player.getBoundsInParent().getMaxY()
+                        + yThreshold >= item.getBoundsInParent().getMaxY()
+                        & player.getBoundsInParent().getMinY() - yThreshold <= item.getBoundsInParent().getMaxY());
+
+                if (collisionDetector.objectIntersect(player, item) & yAxisCollision) {
+                    if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
+                        player.incrementHealthPotionCounter();
+                        System.out.println("Potion count: " + player.getHealthPotionCounter());
+                    }
+                    if (item.onPickUp()) {
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Inserts the keyboard listeners.
      */
@@ -351,6 +400,7 @@ public class GameController {
                     keyboardListeners();
                     player.applyGravity();
                     blockInteraction.interactWithBlocksY();
+                    itemInteraction.interactWithItems();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
