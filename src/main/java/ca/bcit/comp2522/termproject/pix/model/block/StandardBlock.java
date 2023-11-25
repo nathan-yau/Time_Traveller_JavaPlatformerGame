@@ -1,12 +1,15 @@
 package ca.bcit.comp2522.termproject.pix.model.block;
 
+import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import javafx.animation.KeyFrame;
+import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
 import javafx.animation.KeyValue;
-import javafx.scene.effect.ColorAdjust;
 import javafx.util.Duration;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents a standard stationary game block.
@@ -16,7 +19,7 @@ import javafx.util.Duration;
  * @version 2023-11
  */
 public class StandardBlock extends GameObject<BlockType> {
-    private Timeline stepOnAnimation;
+    private SequentialTransition fallingAnimation;
     /**
      * Constructs a StandardBlock.
      *
@@ -32,23 +35,47 @@ public class StandardBlock extends GameObject<BlockType> {
                          final int currentLevel, final String imageName) {
         super(x, y, w, h, ObjectType.BLOCK, blockType, String.format("%d/%s/%s.png",
                 currentLevel, blockType.name(), imageName));
-
-        ColorAdjust colorAdjust = new ColorAdjust();
-        this.setEffect(colorAdjust);
-        stepOnAnimation = new Timeline(
-                new KeyFrame(Duration.ZERO, new KeyValue(colorAdjust.brightnessProperty(), 0.0)),
-                new KeyFrame(Duration.millis(300), new KeyValue(colorAdjust.brightnessProperty(), 0.25)),
-                new KeyFrame(Duration.millis(300), new KeyValue(colorAdjust.brightnessProperty(), 0))
-        );
-        stepOnAnimation.setCycleCount(1);
-        stepOnAnimation.setAutoReverse(true);
+        this.initializeFailing();
     }
 
-    public void animate() {
-        stepOnAnimation.play();
+    /*
+     * Initializes the step on animation.
+     */
+    private void initializeFailing() {
+        final int fallingDuration = 500;
+        final int fadingDuration = 300;
+        // Opacity animation keyframes
+        KeyFrame fadeOut = new KeyFrame(Duration.millis(fadingDuration),
+                new KeyValue(this.opacityProperty(), 0));
+
+        KeyFrame fadeIn = new KeyFrame(Duration.millis(fadingDuration),
+                new KeyValue(this.opacityProperty(), 1));
+
+        // Falling animation keyframe
+        KeyFrame movingBackToMiddleFast = new KeyFrame(Duration.millis(fallingDuration),
+                new KeyValue(this.translateYProperty(), MainApplication.WINDOW_HEIGHT));
+
+        // Timelines for opacity changes and falling
+        Timeline opacityTimeline = new Timeline(fadeOut, fadeIn);
+        opacityTimeline.setCycleCount(2);
+        Timeline fallingTimeline = new Timeline(movingBackToMiddleFast);
+
+        // SequentialTransition to play opacity changes and falling in sequence
+        fallingAnimation = new SequentialTransition(opacityTimeline, fallingTimeline);
+        fallingAnimation.setCycleCount(1);
     }
 
-    public void fadeAnimate() {
-        stepOnAnimation.stop();
+    /**
+     * Plays the step on animation.
+     * @return a CompletableFuture of a boolean
+     */
+    public CompletableFuture<Boolean> animate() {
+        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
+        fallingAnimation.onFinishedProperty().set(e -> {
+            this.setVisible(false);
+            completionFuture.complete(true);
+        });
+        fallingAnimation.play();
+        return completionFuture;
     }
 }

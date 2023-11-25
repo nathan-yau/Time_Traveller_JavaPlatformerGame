@@ -54,5 +54,5 @@ public abstract class PickUpItem extends GameObject<PickUpItemType> {
      */
     public PickUpItemType getItemType() {
         return this.pickUpItemType;
-    };
+    }
 }

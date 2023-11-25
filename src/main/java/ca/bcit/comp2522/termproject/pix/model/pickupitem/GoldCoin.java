@@ -36,9 +36,7 @@ public class GoldCoin extends PickUpItem {
     public boolean onPickUp() {
         final int pauseDuration = 150;
         PauseTransition pause = new PauseTransition(Duration.millis(pauseDuration));
-        pause.setOnFinished(event -> {
-            this.setVisible(false);
-        });
+        pause.setOnFinished(event -> this.setVisible(false));
         pause.play();
         return true;
     }

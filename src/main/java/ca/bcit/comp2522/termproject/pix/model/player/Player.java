@@ -26,6 +26,8 @@ import java.util.concurrent.CompletableFuture;
  * @version 2023
  */
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
+    private static final double WALK_SPEED = 5;
+    private static final double RUN_SPEED = 10;
     private boolean jumpEnable = true;
     private boolean attackEnable = true;
     private double speed;
@@ -39,8 +41,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Timeline rangeAnimation;
     private Timeline walkAnimation;
     private Timeline jumpAnimation;
-    private static final double WALK_SPEED = 5;
-    private static final double RUN_SPEED = 10;
 
     /**
      * Constructs a Player object.
@@ -61,72 +61,103 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.speed = WALK_SPEED;
     }
 
+    /**
+     * Gets the speed of the Player.
+     * @return the speed of the Player
+     */
     public double getSpeed() {
         return this.speed;
     }
 
+    /**
+     * Sets the speed of the Player to run.
+     */
     public void run() {
         if (this.speed == WALK_SPEED) {
             this.speed = RUN_SPEED;
         }
     }
 
+    /**
+     * Sets the speed of the Player to walk.
+     */
     public void walk() {
         if (this.speed == RUN_SPEED) {
             this.speed = WALK_SPEED;
         }
     }
 
+    /*
+     * Initializes the jumping animation.
+     */
     private void initializeJumpingAnimation() {
         final int[] jumpFrame = {0};
+        final int jumpDuration = 100;
+        final int jumpFrameCount = 8;
         jumpAnimation = new Timeline(
-                new KeyFrame(Duration.millis(100), event -> {
+                new KeyFrame(Duration.millis(jumpDuration), event -> {
                     this.action = Action.JUMPING;
                     this.currentImagePath = String.format("player/%s", direction.name());
                     this.updatePlayerImage(String.format("%s/Jumping_%d.png", currentImagePath, jumpFrame[0]));
-                    jumpFrame[0] = (jumpFrame[0] + 1) % 7;
+                    jumpFrame[0] = (jumpFrame[0] + 1) % (jumpFrameCount + 1);
                 })
         );
-        jumpAnimation.setCycleCount(8);
+        jumpAnimation.setCycleCount(jumpFrameCount);
         jumpAnimation.setOnFinished(event -> this.setIdle());
     }
+
+    /*
+     * Initializes the walking animation.
+     */
     private void initializeWalkingAnimation() {
         final int[] walkFrame = {0};
+        final int walkDuration = 100;
+        final int walkFrameCount = 7;
         walkAnimation = new Timeline(
-                new KeyFrame(Duration.millis(100), event -> {
+                new KeyFrame(Duration.millis(walkDuration), event -> {
                     this.currentImagePath = String.format("player/%s", direction.name());
                     this.updatePlayerImage(String.format("%s/walking_%d.png", currentImagePath, walkFrame[0]));
                     this.action = Action.WALKING;
-                    walkFrame[0] = (walkFrame[0] + 1) % 8;
+                    walkFrame[0] = (walkFrame[0] + 1) % (walkFrameCount + 1);
                 })
         );
         walkAnimation.setCycleCount(Animation.INDEFINITE);
         walkAnimation.setOnFinished(event -> this.setIdle());
     }
 
+    /*
+     * Initializes the range attacking animation.
+     */
     private void initializeRangeAttackingAnimation() {
         final int[] rangeFrame = {0};
+        final int rangeAttackDuration = 100;
+        final int rangeAttackFrameCount = 7;
         rangeAnimation = new Timeline(
-                new KeyFrame(Duration.millis(100), event -> {
+                new KeyFrame(Duration.millis(rangeAttackDuration), event -> {
                     this.action = Action.RANGE_ATTACK;
                     this.updatePlayerImage(String.format("%s/range_attack_%d.png", currentImagePath, rangeFrame[0]));
-                    rangeFrame[0] = (rangeFrame[0] + 1) % 8;
+                    rangeFrame[0] = (rangeFrame[0] + 1) % (rangeAttackFrameCount + 1);
                 })
         );
-        rangeAnimation.setCycleCount(8);
+        rangeAnimation.setCycleCount(rangeAttackFrameCount);
         rangeAnimation.setOnFinished(event -> this.setIdle());
     }
 
+    /*
+     * Initializes the melee attacking animation.
+     */
     private void initializeMeleeAttackingAnimation() {
         final int[] meleeFrame = {0};
+        final int meleeAttackDuration = 100;
+        final int meleeAttackFrameCount = 4;
         meleeAnimation = new Timeline(
-                new KeyFrame(Duration.millis(100), event -> {
+                new KeyFrame(Duration.millis(meleeAttackDuration), event -> {
                     this.action = Action.MELEE_ATTACK;
                     this.updatePlayerImage(String.format("%s/melee_attack_%d.png", currentImagePath, meleeFrame[0]));
-                    meleeFrame[0] = (meleeFrame[0] + 1) % 5;
+                    meleeFrame[0] = (meleeFrame[0] + 1) % (meleeAttackFrameCount + 1);
                 })
         );
-        meleeAnimation.setCycleCount(5);
+        meleeAnimation.setCycleCount(meleeAttackFrameCount);
         meleeAnimation.setOnFinished(event -> this.setIdle());
     }
 
@@ -153,7 +184,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      *  Sets the Player when it is on the ground.
      */
     public void offsetGravity() {
-        //Offset Gravity by 1 if on the ground
         this.setTranslateY(this.getTranslateY() - 1);
         jumpEnable = true;
     }
@@ -173,13 +203,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * @param movingDown true if moving down, false if moving up
      */
     public void moveY(final boolean movingDown) {
+        final double jumpingPixel = 0.8;
         if (movingDown) {
             this.setTranslateY(this.getTranslateY() + 1);
         } else {
-            this.setTranslateY(this.getTranslateY() - 0.8);
             this.currentImagePath = String.format("player/%s", direction.name());
             walkAnimation.stop();
             jumpAnimation.play();
+            this.setTranslateY(this.getTranslateY() - jumpingPixel);
             this.action = Action.JUMPING;
         }
     }
@@ -210,6 +241,10 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.setImage(new Image(String.valueOf(MainApplication.class.getResource(imageUrl))));
     }
 
+    /**
+     * Checks if the Player is in action.
+     * @return true if the Player is in action, false otherwise
+     */
     public boolean isPlayerInAction() {
         return action == Action.JUMPING
                 || action == Action.MELEE_ATTACK
@@ -217,6 +252,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
                 || action == Action.HURTING;
     }
 
+    /**
+     * Sets the Player to idle.
+     */
     public void setIdle() {
         if (this.action != Action.IDLE) {
             this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
@@ -266,55 +304,88 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         return this.goldCoinCounter;
     }
 
+    /**
+     * Create a melee attack hit box.
+     * @return the melee attack hit box
+     */
     @Override
     public AttackEffect meleeAttack() {
         if (attackEnable) {
+            final int hitBoxWidth = 50;
+            final int hitBoxHeight = 50;
+            final int effectYOffset = 10;
             attackEnable = false;
             meleeAnimation.play();
             double effectY = this.getBoundsInParent().getMinY();
-            double effectX = this.getBoundsInParent().getMinX() - 50;
+            double effectX = this.getBoundsInParent().getMinX() - hitBoxWidth;
             if (direction == Direction.FORWARD) {
                 effectX = this.getBoundsInParent().getMaxX();
             }
-            return new MeleeEffect(effectX, effectY + 10, 50, 50, "Explosion");
+            return new MeleeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
+                    "Explosion");
         }
         return null;
     }
 
+    /**
+     * Create a range attack hit box.
+     * @return the range attack hit box
+     */
     @Override
     public AttackEffect rangeAttack() {
         if (attackEnable) {
+            final int hitBoxWidth = 70;
+            final int hitBoxHeight = 50;
+            final int effectYOffset = 10;
+            final double forwardHitRange = 140;
+            final double backwardHitRange = -140;
             attackEnable = false;
             rangeAnimation.play();
             double effectY = this.getBoundsInParent().getMinY();
             double effectX = this.getBoundsInParent().getMinX();
             if (direction == Direction.FORWARD) {
-                effectX = this.getBoundsInParent().getMaxX() - 70;
+                effectX = this.getBoundsInParent().getMaxX() - hitBoxWidth;
             }
-            double hitRange = 140;
+            double hitRange = forwardHitRange;
             if (direction == Direction.BACKWARD) {
-                hitRange = -hitRange;
+                hitRange = backwardHitRange;
             }
-            return new RangeEffect(effectX, effectY + 10, 70, 50, "FireBall", hitRange, this.direction);
+            return new RangeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
+                    "FireBall", hitRange, this.direction);
         }
         return null;
     }
 
+    /**
+     * Gets the attack point of the Player.
+     * @return the attack point of the Player
+     */
     @Override
     public int getAttackDamage() {
         return 0;
     }
 
+    /**
+     * Gets the health of the Player after taking hit.
+     * @return the health of the Player
+     */
     @Override
     public int takeDamage(final int point) {
         return 0;
     }
 
+    /**
+     * Shows the Player getting hurt.
+     */
     @Override
     public void getHurt() {
 
     }
 
+    /**
+     * Perform the Player's death.
+     * @return CompletableFuture true if the Player is dead, false otherwise
+     */
     @Override
     public CompletableFuture<Boolean> startDying() {
         return null;

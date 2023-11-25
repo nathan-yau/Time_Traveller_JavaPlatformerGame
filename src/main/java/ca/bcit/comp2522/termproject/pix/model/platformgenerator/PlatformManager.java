@@ -143,48 +143,25 @@ public class PlatformManager {
         return levelWidth * BLOCK_WIDTH;
     }
 
-    // Gets the images for a block.
-    private PlatformPosition getImageForPlatformBlock(final int row, final int col, final String[] level,
-                                                      final char categorySymbol) {
-        final int numRows = level.length;
-        final int numCols = level[0].length();
-        final boolean emptyCols = (col == 0 || col + 1 == numCols);
-        final boolean floor = (row + 1 == numRows);
-
-        if (row == 0) {
-            return PlatformPosition.CEILING;
-        }
-
-        if (emptyCols) {
-            if (!(level[row - 1].charAt(col) == categorySymbol)) {
-                if (col == numCols - 1){
-                    return PlatformPosition.FLOOR_RIGHT_CORNER;
-                }
-                return PlatformPosition.FLOOR_LEFT_CORNER;
-            }
-            if (!(level[row - 1].charAt(numCols - 1) == categorySymbol)) {
-                System.out.println((row - 1) + " " + (numCols - 1));
+    // Gets the images for the first and last column of a block.
+    private PlatformPosition firstAndLastColumn(final int row, final int col, final String[] level,
+                               final char categorySymbol, final int numCols) {
+        if (!(level[row - 1].charAt(col) == categorySymbol)) {
+            if (col == numCols - 1) {
                 return PlatformPosition.FLOOR_RIGHT_CORNER;
             }
-            if (col == 0) {
-                return PlatformPosition.LEFT_EDGE;
-            }
-            return PlatformPosition.RIGHT_EDGE;
+            return PlatformPosition.FLOOR_LEFT_CORNER;
         }
-        final int rows = 3;
-        final int cols = 3;
-
-        final Boolean[][] positions = new Boolean[cols][rows];
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                if (floor & i == 1) {
-                    positions[i + 1][j + 1] = true;
-                    continue;
-                }
-                positions[i + 1][j + 1] = level[row + i].charAt(col + j) == categorySymbol;
-            }
+        if (!(level[row - 1].charAt(numCols - 1) == categorySymbol)) {
+            return PlatformPosition.FLOOR_RIGHT_CORNER;
         }
-
+        if (col == 0) {
+            return PlatformPosition.LEFT_EDGE;
+        }
+        return PlatformPosition.RIGHT_EDGE;
+    }
+    // Gets the images for the gaming area of a block.
+    private PlatformPosition gamingArea(final Boolean[][] positions) {
         boolean topRowFilled = Arrays.stream(positions[0]).allMatch(value -> value);
         boolean bottomRowFilled = Arrays.stream(positions[2]).allMatch(value -> value);
         boolean middleColFilled = positions[0][1] & positions[1][1] & positions[2][1];
@@ -194,11 +171,9 @@ public class PlatformManager {
         if (!positions[0][0] && positions[1][0] & positions[0][1]) {
             return PlatformPosition.DIRT_RIGHT_CORNER;
         }
-
         if (!positions[0][2] && positions[1][2] & positions[0][1]) {
             return PlatformPosition.DIRT_LEFT_CORNER;
         }
-
         if (topRowFilled) {
             if (bottomRowFilled) {
                 return PlatformPosition.DIRT;
@@ -206,7 +181,6 @@ public class PlatformManager {
                 return PlatformPosition.FLOOR_BOTTOM;
             }
         }
-
         if (middleColFilled & !leftColFilled & rightColFilled) {
             return PlatformPosition.LEFT_EDGE;
         }
@@ -231,6 +205,36 @@ public class PlatformManager {
         }
 
         return PlatformPosition.FLOOR;
+    }
+    // Gets the images for a block.
+    private PlatformPosition getImageForPlatformBlock(final int row, final int col, final String[] level,
+                                                      final char categorySymbol) {
+        final int numRows = level.length;
+        final int numCols = level[0].length();
+        final boolean emptyCols = (col == 0 || col + 1 == numCols);
+        final boolean floor = (row + 1 == numRows);
+
+        if (row == 0) {
+            return PlatformPosition.CEILING;
+        }
+
+        if (emptyCols) {
+            return firstAndLastColumn(row, col, level, categorySymbol, numCols);
+        }
+        final int rows = 3;
+        final int cols = 3;
+
+        final Boolean[][] nearbyBlock = new Boolean[cols][rows];
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (floor & i == 1) {
+                    nearbyBlock[i + 1][j + 1] = true;
+                    continue;
+                }
+                nearbyBlock[i + 1][j + 1] = level[row + i].charAt(col + j) == categorySymbol;
+            }
+        }
+        return gamingArea(nearbyBlock);
     }
 
     /**
