@@ -1,11 +1,5 @@
 package ca.bcit.comp2522.termproject.pix.model.block;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
-import javafx.scene.effect.ColorAdjust;
-import javafx.util.Duration;
-
 /**
  * Represents a game block that disappears.
  *
