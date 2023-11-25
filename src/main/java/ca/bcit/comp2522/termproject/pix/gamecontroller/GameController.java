@@ -447,6 +447,15 @@ public class GameController {
         }
 
     }
+    /**
+     * Checks if the game is over.
+     */
+    private void gameOverCondition() {
+        if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT) {
+            System.out.println("Game Over");
+            System.exit(0);
+        }
+    }
 
     /**
      * Starts the game loop.
@@ -461,6 +470,7 @@ public class GameController {
                     player.applyGravity();
                     blockInteraction.interactWithBlocksY();
                     itemInteraction.interactWithItems();
+                    gameOverCondition();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
