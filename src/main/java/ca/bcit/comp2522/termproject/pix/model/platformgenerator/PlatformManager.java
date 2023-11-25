@@ -4,6 +4,9 @@ import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -27,6 +30,9 @@ public class PlatformManager {
     // The array of blocks that make up the game platform.
     private final ArrayList<StandardBlock> blockArray;
 
+    // The array of pickup items.
+    private final ArrayList<PickUpItem> pickUpItemArray;
+
     // The level manager.
     private final LevelManager levelManager;
 
@@ -41,6 +47,7 @@ public class PlatformManager {
      */
     public PlatformManager() {
         this.blockArray = new ArrayList<>();
+        this.pickUpItemArray = new ArrayList<>();
         this.levelManager = new LevelManager();
         this.levelWidth = levelManager.getCurrentLevelWidth();
         this.leveHeight = levelManager.getCurrentLevelHeight();
@@ -52,7 +59,16 @@ public class PlatformManager {
      * @return the list of blocks as an ArrayList
      */
     public ArrayList<StandardBlock> getBlockArray() {
-        return blockArray;
+        return this.blockArray;
+    }
+
+    /**
+     * Gets the array of pickup items on the game platform.
+     *
+     * @return the list of pickup items as an ArrayList
+     */
+    public ArrayList<PickUpItem> getItemArray() {
+        return this.pickUpItemArray;
     }
 
     /**
@@ -86,6 +102,9 @@ public class PlatformManager {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "rope");
                     blockArray.add(decorationBlock);
+                } else if (categorySymbol == 'P') {
+                    HealthPotion potion = new HealthPotion(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT, currentLevel, "healthPotion");
+                    pickUpItemArray.add(potion);
                 }
             }
         }
