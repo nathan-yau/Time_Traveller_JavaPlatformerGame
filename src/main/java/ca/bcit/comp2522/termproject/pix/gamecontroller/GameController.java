@@ -2,6 +2,7 @@ package ca.bcit.comp2522.termproject.pix.gamecontroller;
 
 import ca.bcit.comp2522.termproject.pix.GameType;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
+import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
@@ -383,6 +384,19 @@ public class GameController {
         // Listen to forward signal
         if (isPressed(KeyCode.D)  && player.getMaxX() <= platform.getTotalLevelWidth() - outOfBounds) {
             blockInteraction.interactWithBlocksX(pixelPerStep);
+        }
+
+        // Listen to melee attack signal
+        if (isPressed(KeyCode.O) && player.getTranslateX() >= outOfBounds) {
+            AttackEffect hitBox = player.meleeAttack();
+            if (hitBox != null) {
+                gameRoot.getChildren().add(hitBox);
+                hitBox.startEffect().thenAccept(isDone -> {
+                    if (isDone) {
+                        gameRoot.getChildren().remove(hitBox);
+                    }
+                });
+            }
         }
 
         if (!isAnyKeyPressed() & !player.isPlayerInAction()) {

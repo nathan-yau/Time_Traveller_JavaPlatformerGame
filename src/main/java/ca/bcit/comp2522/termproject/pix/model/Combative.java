@@ -1,5 +1,7 @@
 package ca.bcit.comp2522.termproject.pix.model;
 
+import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
+
 /**
  * Represents an object that can attack.
  * This interface is used to implement the meleeAttack, rangeAttack, and getAttackDamage methods.
@@ -12,7 +14,7 @@ public interface Combative {
     /**
      * Makes the object melee attack.
      */
-    void meleeAttack();
+    AttackEffect meleeAttack();
 
     /**
      * Makes the object range attack.

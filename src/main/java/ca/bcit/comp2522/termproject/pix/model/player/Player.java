@@ -1,13 +1,18 @@
 package ca.bcit.comp2522.termproject.pix.model.player;
 
 import ca.bcit.comp2522.termproject.pix.MainApplication;
+import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
+import ca.bcit.comp2522.termproject.pix.model.AttackEffect.MeleeEffect;
 import ca.bcit.comp2522.termproject.pix.model.Combative;
 import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.Movable;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
+import javafx.util.Duration;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -20,6 +25,8 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
     private boolean jumpEnable = true;
+    private boolean attackEnable = true;
+    private boolean harmable = true;
     private String currentImagePath;
     private int currentImageFrame;
     private Action action;
@@ -27,6 +34,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Point2D velocity;
     private int healthPotionCounter;
     private int goldCoinCounter;
+    private Timeline attackingAnimation;
 
     /**
      * Constructs a Player object.
@@ -41,6 +49,26 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.action = Action.IDLE;
         this.currentImageFrame = 0;
         this.currentImagePath = String.format("player/%s", direction.name());
+        this.initializeAttackingAnimation();
+    }
+
+    private void initializeAttackingAnimation() {
+        final int[] meleeFrame = {0};
+        attackingAnimation = new Timeline(
+                new KeyFrame(Duration.millis(100), event -> {
+                    this.action = Action.MELEE_ATTACK;
+                    System.out.printf("%s/melee_attack_%d.png%n", currentImagePath, meleeFrame[0]);
+                    this.updatePlayerImage(String.format("%s/melee_attack_%d.png", currentImagePath,
+                            (meleeFrame[0] % 5)));
+                    harmable = false;
+                    meleeFrame[0]++;
+                })
+        );
+        attackingAnimation.setCycleCount(5);
+        attackingAnimation.setOnFinished(event -> {
+            attackEnable = true;
+            harmable = true;
+        });
     }
 
     /**
@@ -143,7 +171,10 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     public boolean isPlayerInAction() {
-        return action == Action.JUMPING;
+        return action == Action.JUMPING
+                || action == Action.MELEE_ATTACK
+                || action == Action.RANGE_ATTACK
+                || action == Action.HURTING;
     }
 
     public void setIdle() {
@@ -190,8 +221,18 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     @Override
-    public void meleeAttack() {
-
+    public AttackEffect meleeAttack() {
+        if (attackEnable) {
+            attackEnable = false;
+            attackingAnimation.play();
+            double effectY = this.getBoundsInParent().getMinY();
+            double effectX = this.getBoundsInParent().getMinX() - 50;
+            if (direction == Direction.FORWARD) {
+                effectX = this.getBoundsInParent().getMaxX();
+            }
+            return new MeleeEffect(effectX, effectY + 10, 50, 50, "Explosion");
+        }
+        return null;
     }
 
     @Override
