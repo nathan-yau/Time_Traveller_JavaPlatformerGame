@@ -26,6 +26,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Direction direction;
     private Point2D velocity;
     private int healthPotionCounter;
+    private int goldCoinCounter;
 
     /**
      * Constructs a Player object.
@@ -150,16 +151,42 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.action = Action.IDLE;
     }
 
+    /**
+     * Increments the player's health potion counter by one.
+     */
     public void incrementHealthPotionCounter() {
         this.healthPotionCounter++;
     }
 
+    /**
+     * Decrements the player's health potion counter by one.
+     */
     public void decrementHealthPotionCounter() {
         this.healthPotionCounter--;
     }
 
+    /**
+     * Gets the player's health potion counter.
+     * @return the player's health potion counter
+     */
     public int getHealthPotionCounter() {
         return this.healthPotionCounter;
+    }
+
+    /**
+     * Increments the player's gold coin counter by one.
+     */
+    public void incrementGoldCoinCounter() {
+        this.goldCoinCounter++;
+    }
+
+    /**
+     * Gets the player's gold coin counter.
+     *
+     * @return the player's gold coin counter
+     */
+    public int getGoldCoinCounter() {
+        return this.goldCoinCounter;
     }
 
     @Override
