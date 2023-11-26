@@ -3,6 +3,7 @@ package ca.bcit.comp2522.termproject.pix.gamecontroller;
 import ca.bcit.comp2522.termproject.pix.GameType;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
@@ -85,8 +86,12 @@ public class GameController {
             gameRoot.getChildren().add(block);
         }
 
-        for (Node item: platform.getItemArray()) {
+        for (PickUpItem item: platform.getItemArray()) {
             gameRoot.getChildren().add(item);
+        }
+
+        for (Enemy enemy: platform.getEnemyArray()) {
+            gameRoot.getChildren().add(enemy);
         }
     }
 

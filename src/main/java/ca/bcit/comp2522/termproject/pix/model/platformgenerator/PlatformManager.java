@@ -1,5 +1,8 @@
 package ca.bcit.comp2522.termproject.pix.model.platformgenerator;
 
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.EnemyType;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Minion;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
@@ -7,6 +10,7 @@ import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.GoldCoin;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
+import javafx.scene.Node;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +38,9 @@ public class PlatformManager {
     // The array of pickup items.
     private final ArrayList<PickUpItem> pickUpItemArray;
 
+    // The array of enemies.
+    private final ArrayList<Enemy> enemyArray;
+
     // The level manager.
     private final LevelManager levelManager;
 
@@ -49,6 +56,7 @@ public class PlatformManager {
     public PlatformManager() {
         this.blockArray = new ArrayList<>();
         this.pickUpItemArray = new ArrayList<>();
+        this.enemyArray = new ArrayList<>();
         this.levelManager = new LevelManager();
         this.levelWidth = levelManager.getCurrentLevelWidth();
         this.leveHeight = levelManager.getCurrentLevelHeight();
@@ -70,6 +78,15 @@ public class PlatformManager {
      */
     public ArrayList<PickUpItem> getItemArray() {
         return this.pickUpItemArray;
+    }
+
+    /**
+     * Gets the array of enemies on the game platform.
+     *
+     * @return the list of enemies as an ArrayList
+     */
+    public ArrayList<Enemy> getEnemyArray() {
+        return enemyArray;
     }
 
     /**
@@ -111,6 +128,14 @@ public class PlatformManager {
                     GoldCoin goldCoin = new GoldCoin(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, currentLevel, "goldCoin");
                     pickUpItemArray.add(goldCoin);
+                } else if (categorySymbol == 'M') {
+                    final int height = 75;
+                    final int width = 85;
+                    final int xOffset = BLOCK_WIDTH - width;
+                    final int yOffset = BLOCK_HEIGHT - height;
+                    Minion minion = new Minion(xPosition + xOffset, yPosition + yOffset, width, height,
+                            EnemyType.MINOTAUR, currentLevel, "Idle");
+                    enemyArray.add(minion);
                 }
             }
         }
