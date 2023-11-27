@@ -26,8 +26,8 @@ import java.util.concurrent.CompletableFuture;
  * @version 2023
  */
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
-    private static final double WALK_SPEED = 5;
-    private static final double RUN_SPEED = 10;
+    private static final double WALK_SPEED = 3;
+    private static final double RUN_SPEED = WALK_SPEED * 2;
     private boolean jumpEnable = true;
     private boolean attackEnable = true;
     private double speed;
@@ -203,9 +203,10 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * @param movingDown true if moving down, false if moving up
      */
     public void moveY(final boolean movingDown) {
-        final double jumpingPixel = 0.8;
+        final double jumpingPixel = 1.0;
+        final double fallingPixel = 0.5;
         if (movingDown) {
-            this.setTranslateY(this.getTranslateY() + 1);
+            this.setTranslateY(this.getTranslateY() + fallingPixel);
         } else {
             this.currentImagePath = String.format("player/%s", direction.name());
             walkAnimation.stop();

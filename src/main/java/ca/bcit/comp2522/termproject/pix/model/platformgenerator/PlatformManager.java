@@ -1,8 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.platformgenerator;
 
-import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
-import ca.bcit.comp2522.termproject.pix.model.Enemy.EnemyType;
-import ca.bcit.comp2522.termproject.pix.model.Enemy.Minion;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.*;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
@@ -10,7 +8,6 @@ import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.GoldCoin;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
-import javafx.scene.Node;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,7 +85,6 @@ public class PlatformManager {
     public ArrayList<Enemy> getEnemyArray() {
         return enemyArray;
     }
-
     /**
      * Creates the game platform.
      */
@@ -114,7 +110,7 @@ public class PlatformManager {
                     blockArray.add(movingBlock);
                 } else if (categorySymbol == '2') {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                            BLOCK_HEIGHT, BlockType.DECORATION_BLOCK, currentLevel, "rock");
+                            BLOCK_HEIGHT, BlockType.DECORATION_BLOCK, currentLevel, "ladder");
                     blockArray.add(decorationBlock);
                 } else if (categorySymbol == '3') {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
@@ -128,16 +124,51 @@ public class PlatformManager {
                     GoldCoin goldCoin = new GoldCoin(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, currentLevel, "goldCoin");
                     pickUpItemArray.add(goldCoin);
-                } else if (categorySymbol == 'M') {
-                    final int height = 75;
-                    final int width = 85;
-                    final int xOffset = BLOCK_WIDTH - width;
-                    final int yOffset = BLOCK_HEIGHT - height;
-                    Minion minion = new Minion(xPosition + xOffset, yPosition + yOffset, width, height,
-                            EnemyType.MINOTAUR, currentLevel, "Idle");
+                } else if (categorySymbol == 'W') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, true, false);
+                    enemyArray.add(minion);
+                } else if (categorySymbol == 'F') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, false, true);
+                    enemyArray.add(minion);
+                } else if (categorySymbol == 'S') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, true, true);
                     enemyArray.add(minion);
                 }
             }
+        }
+    }
+
+    private Minion determineMinionType(final int xAxis, final int yAxis,
+                                       final int currentLevel, final boolean xWalker, final boolean airWalker) {
+        final int firstLevel = 1;
+        final int secondLevel = 2;
+        final int finalLevel = 3;
+        if (currentLevel == firstLevel & xWalker) {
+            if (airWalker) {
+                return new Wraith(xAxis, yAxis, true);
+            }
+            return new Minotaur(xAxis, yAxis, true);
+        } else if (currentLevel == firstLevel & !xWalker) {
+            return new Wraith(xAxis, yAxis, false);
+        } else if (currentLevel == secondLevel & xWalker) {
+            if (airWalker) {
+                return new Minotaur(xAxis, yAxis, true);
+            }
+            return new Minotaur(xAxis, yAxis, true);
+        } else if (currentLevel == secondLevel & !xWalker) {
+            return new Minotaur(xAxis, yAxis, false);
+        } else if (currentLevel == finalLevel & xWalker) {
+            if (airWalker) {
+                return new Minotaur(xAxis, yAxis, true);
+            }
+            return new Minotaur(xAxis, yAxis, true);
+        } else if (currentLevel == finalLevel & !xWalker) {
+            return new Minotaur(xAxis, yAxis, false);
+        } else {
+            throw new IllegalArgumentException("Invalid level");
         }
     }
 

@@ -13,7 +13,6 @@ import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
-import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;

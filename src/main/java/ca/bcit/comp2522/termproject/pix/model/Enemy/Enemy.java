@@ -19,32 +19,33 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     private int healthPoint;
     private final String folderPath;
     private boolean attackEnable;
+    private final int attackPoint;
 
     /**
      * Constructs an Enemy.
      *
      * @param x the x-coordinate of the enemy as an int
      * @param y the y-coordinate of the enemy as an int
-     * @param w the width of the enemy as an int
-     * @param h the height of the enemy as an int
+     * @param width the width of the enemy as an int
+     * @param height the height of the enemy as an int
      * @param type the type of the enemy as an ObjectType
      * @param name the name of the enemy as an EnemyType
-     * @param currentLevel the current game level as an int
-     * @param imageName the name of the image as a String
      * @param healthPoint the health point of the enemy as an int
+     * @param attackPoint the attack point of the enemy as an int
      */
-    public Enemy(final int x, final int y, final int w, final int h, final ObjectType type,
-                 final EnemyType name, final int currentLevel, final String imageName, final int healthPoint) {
-        super(x, y, w, h, type, name,
-                String.format("%d/%s/%s/%s/%s_0.png", currentLevel, type.name(), name.name(),
-                        Direction.BACKWARD.name(), imageName));
-        this.healthPoint = healthPoint;
-        this.folderPath = String.format("%d/%s/%s", currentLevel, type.name(), name.name());
+    public Enemy(final int x, final int y, final int width, final int height,
+                 final ObjectType type, final EnemyType name, final int healthPoint, final int attackPoint) {
+        super(x, y, width, height, type, name,
+                String.format("%s/%s/%s/%s_0.png", type.name(), name.name(), Direction.BACKWARD.name(), "Idle"));
         this.attackEnable = true;
+        this.healthPoint = healthPoint;
+        this.folderPath = String.format("%s/%s", type.name(), name.name());
+        this.attackPoint = attackPoint;
     }
 
     /**
      * Enables the enemy's attack ability.
+     * @param enabled the boolean value of the enemy's attack ability
      *
      */
     protected final void setAttackEnable(final boolean enabled) {
