@@ -116,6 +116,7 @@ public abstract class GameObject<T extends GameType> extends ImageView {
 
     /**
      * Check if the Player intersects with another object.
+     * @param objectBounds the bounds of the object
      * @return true if intersects, false if not
      */
     public boolean checkIntersect(final Bounds objectBounds) {

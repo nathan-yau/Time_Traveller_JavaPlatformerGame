@@ -232,7 +232,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void moveY(final boolean movingDown) {
         final double jumpingPixel = 1.0;
-        final double fallingPixel = 0.5;
+        final double fallingPixel = 0.4;
         if (movingDown) {
             this.setTranslateY(this.getTranslateY() + fallingPixel);
         } else {

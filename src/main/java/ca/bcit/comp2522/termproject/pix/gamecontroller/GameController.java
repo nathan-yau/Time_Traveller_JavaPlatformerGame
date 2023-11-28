@@ -371,9 +371,7 @@ public class GameController {
                     }
                 });
                 platform.getEnemyArray().removeIf(enemy -> {
-                    if (collisionDetector.onSameXAxis(hitBox, enemy)
-                            & ((player.getBoundsInParent().getMaxY() + 10 >= enemy.getBoundsInParent().getMaxY()
-                            & player.getBoundsInParent().getMinY() - 10 <= enemy.getBoundsInParent().getMaxY()))) {
+                    if (collisionDetector.objectIntersect(hitBox, enemy)) {
                         final int damage = 1;
                         if (enemy.takeDamage(damage) == 0) {
                             enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
@@ -387,15 +385,8 @@ public class GameController {
         }
 
         private void interactWithEnemies() {
-            boolean movingRight = player.facingForward();
-            boolean xAxisCollision, yAxisCollision;
             for (Enemy enemy : platform.getEnemyArray()) {
-                xAxisCollision = collisionDetector.collidingDetectorX(player, enemy, movingRight)
-                        || collisionDetector.onSameXAxis(player, enemy);
-                yAxisCollision = (player.getMaxY() + 10 >= enemy.getMaxY() & player.getMinY() - 10 <= enemy.getMaxY());
-                System.out.println(xAxisCollision);
-                System.out.println(yAxisCollision);
-                if (xAxisCollision & yAxisCollision) {
+                if (collisionDetector.objectIntersect(player, enemy)) {
                     enemy.setDirection(Direction.FORWARD);
                     if (player.getCenterX() < enemy.getCenterX()) {
                         enemy.setDirection(Direction.BACKWARD);
