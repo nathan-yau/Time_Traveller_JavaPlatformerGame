@@ -7,6 +7,9 @@ import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.GoldCoin;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.WeaponPickup;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,6 +114,14 @@ public class PlatformManager {
                     GoldCoin goldCoin = new GoldCoin(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, currentLevel, "goldCoin");
                     pickUpItemArray.add(goldCoin);
+                } else if (categorySymbol == 'M') {
+                    WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, PickUpItemType.MELEE_WEAPON, currentLevel, "melee");
+                    pickUpItemArray.add(weapon);
+                } else if (categorySymbol == 'R') {
+                    WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, PickUpItemType.RANGE_WEAPON, currentLevel, "range");
+                    pickUpItemArray.add(weapon);
                 }
             }
         }
