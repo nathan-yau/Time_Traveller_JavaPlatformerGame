@@ -128,14 +128,23 @@ public class PlatformManager {
                     Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                             yPosition + BLOCK_HEIGHT, currentLevel, true, false);
                     enemyArray.add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
                 } else if (categorySymbol == 'F') {
                     Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                             yPosition + BLOCK_HEIGHT, currentLevel, false, true);
                     enemyArray.add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
                 } else if (categorySymbol == 'S') {
                     Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                             yPosition + BLOCK_HEIGHT, currentLevel, true, true);
                     enemyArray.add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
                 }
             }
         }

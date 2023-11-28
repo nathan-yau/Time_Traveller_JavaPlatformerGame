@@ -13,13 +13,14 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
 import javafx.animation.Animation;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.image.Image;
 import javafx.util.Duration;
 
 import java.util.concurrent.CompletableFuture;
 
-public class Minion extends Enemy {
+public class Minion extends Enemy implements Runnable {
     private Direction direction;
     private Action action;
     private final double leftmostWalkingRange;
@@ -94,16 +95,7 @@ public class Minion extends Enemy {
         this.dyingFrame = dyingFrame;
         this.xWalker = xWalker;
         this.imagePath = String.format("%s/%s", this.getFolderPath(), direction.name());
-        this.initializeAttackingAnimation();
-        this.initializeHurtingAnimation();
-        if (xWalker) {
-            this.initializeWalking();
-            this.initializeWalkingAnimation();
-        } else {
-            this.initializeFlying();
-            this.initializeFlyingAnimation();
-        }
-        this.startMovement();
+
     }
 
     private void startMovement() throws IllegalArgumentException {
@@ -306,5 +298,19 @@ public class Minion extends Enemy {
     @Override
     public int getAttackDamage() {
         return 1;
+    }
+
+    @Override
+    public void run() {
+        this.initializeAttackingAnimation();
+        this.initializeHurtingAnimation();
+        if (xWalker) {
+            this.initializeWalking();
+            this.initializeWalkingAnimation();
+        } else {
+            this.initializeFlying();
+            this.initializeFlyingAnimation();
+        }
+        Platform.runLater(this::startMovement);
     }
 }
