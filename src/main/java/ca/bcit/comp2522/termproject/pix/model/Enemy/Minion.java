@@ -21,7 +21,6 @@ import javafx.util.Duration;
 import java.util.concurrent.CompletableFuture;
 
 public class Minion extends Enemy implements Runnable {
-    private Direction direction;
     private Action action;
     private final double leftmostWalkingRange;
     private final double upmostFlyingRange;
@@ -77,7 +76,6 @@ public class Minion extends Enemy implements Runnable {
                   final int dyingDuration, final int dyingFrame, final int healthPoint, final int attackPoint,
                   final boolean xWalker) {
         super(x, y, width, height, ObjectType.MINION, name, healthPoint, attackPoint);
-        this.direction = Direction.BACKWARD;
         this.action = Action.WALKING;
         this.initialXPosition = x;
         this.initialYPosition = y;
@@ -94,7 +92,7 @@ public class Minion extends Enemy implements Runnable {
         this.dyingDuration = dyingDuration;
         this.dyingFrame = dyingFrame;
         this.xWalker = xWalker;
-        this.imagePath = String.format("%s/%s", this.getFolderPath(), direction.name());
+        this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
 
     }
 
@@ -126,8 +124,8 @@ public class Minion extends Enemy implements Runnable {
                 })
         );
         hurtingAnimation.setOnFinished(event -> {
-            this.direction = facingDirection;
-            this.imagePath = String.format("%s/%s", this.getFolderPath(), direction.name());
+            this.setDirection(facingDirection);
+            this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
             currentAnimation.play();
             this.setAttackEnable(true);
         });
@@ -160,20 +158,12 @@ public class Minion extends Enemy implements Runnable {
         walkingAnimation.setCycleCount(Animation.INDEFINITE);
     }
 
-    public Direction getDirection() {
-        return this.direction;
-    }
-
-    public void setDirection(final Direction direction) {
-            this.direction = direction;
-            this.imagePath = String.format("%s/%s",this.getFolderPath(), direction.name());
-    }
-
     private void initializeAttackingAnimation() {
         final int[] attackImageFrame = {0};
         attackingAnimation = new Timeline(
                 new KeyFrame(Duration.millis(attackingDuration), event -> {
                     this.action = Action.MELEE_ATTACK;
+                    this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
                     final String sequenceIdle = String.format("%s/Attack_%d.png", imagePath, attackImageFrame[0]);
                     this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
                     attackImageFrame[0] = (attackImageFrame[0] + 1) % (attackingFrame + 1);
@@ -181,8 +171,8 @@ public class Minion extends Enemy implements Runnable {
         );
         attackingAnimation.setOnFinished(event -> {
             setAttackEnable(true);
-            this.direction = facingDirection;
-            this.imagePath = String.format("%s/%s", this.getFolderPath(), direction.name());
+            this.setDirection(facingDirection);
+            this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
             currentAnimation.play();
         });
         attackingAnimation.setCycleCount(attackingFrame);
@@ -206,15 +196,15 @@ public class Minion extends Enemy implements Runnable {
         Timeline middleSlowTimeline = new Timeline(middleSlow);
 
         endingTimeline.setOnFinished(event -> {
-            this.direction = backwardDirection;
+            this.setDirection(backwardDirection);
             this.facingDirection = backwardDirection;
-            this.imagePath = String.format("%s/%s", this.getFolderPath(), direction.name());
+            this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
         });
 
         beginningTimeline.setOnFinished(event -> {
-            this.direction = forwardDirection;
+            this.setDirection(forwardDirection);
             this.facingDirection = forwardDirection;
-            this.imagePath = String.format("%s/%s", this.getFolderPath(), direction.name());
+            this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
         });
 
         movingAction = new SequentialTransition(beginningTimeline, middleFastTimeline,

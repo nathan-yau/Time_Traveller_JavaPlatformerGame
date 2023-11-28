@@ -1,6 +1,9 @@
 package ca.bcit.comp2522.termproject.pix.model.platformgenerator;
 
-import ca.bcit.comp2522.termproject.pix.model.Enemy.*;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Minion;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Minotaur;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Wraith;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;

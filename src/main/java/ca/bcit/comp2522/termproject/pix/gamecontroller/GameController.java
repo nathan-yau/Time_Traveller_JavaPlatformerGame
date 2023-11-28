@@ -10,6 +10,7 @@ import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
+import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
@@ -48,6 +49,7 @@ public class GameController {
     private final CollisionDetector collisionDetector;
     private final BlockInteraction blockInteraction;
     private final ItemInteraction itemInteraction;
+    private final EnemyInteraction enemyInteraction;
 
     /**
      * Constructs a GameController object with default values.
@@ -66,6 +68,7 @@ public class GameController {
         this.collisionDetector = new CollisionDetector();
         this.blockInteraction = new BlockInteraction();
         this.itemInteraction = new ItemInteraction();
+        this.enemyInteraction = new EnemyInteraction();
         this.lastCacheXPosition = initialPlayerX;
         this.lastCacheYPosition = initialPlayerY;
         this.setBackground("Background/1.png");
@@ -356,6 +359,55 @@ public class GameController {
         }
     }
 
+    // Handle interactions with pickup items.
+    private final class EnemyInteraction {
+        ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
+
+        private void meleeWithEnemies(final AttackEffect hitBox) {
+                gameRoot.getChildren().add(hitBox);
+                hitBox.startEffect().thenAccept(isDone -> {
+                    if (isDone) {
+                        gameRoot.getChildren().remove(hitBox);
+                    }
+                });
+                platform.getEnemyArray().removeIf(enemy -> {
+                    if (collisionDetector.onSameXAxis(hitBox, enemy)
+                            & ((player.getBoundsInParent().getMaxY() + 10 >= enemy.getBoundsInParent().getMaxY()
+                            & player.getBoundsInParent().getMinY() - 10 <= enemy.getBoundsInParent().getMaxY()))) {
+                        final int damage = 1;
+                        if (enemy.takeDamage(damage) == 0) {
+                            enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
+                            return true;
+                        } else {
+                            enemy.getHurt();
+                        }
+                    }
+                    return false;
+                });
+        }
+
+        private void interactWithEnemies() {
+            boolean movingRight = player.facingForward();
+            boolean xAxisCollision, yAxisCollision;
+            for (Enemy enemy : platform.getEnemyArray()) {
+                xAxisCollision = collisionDetector.collidingDetectorX(player, enemy, movingRight)
+                        || collisionDetector.onSameXAxis(player, enemy);
+                yAxisCollision = (player.getMaxY() + 10 >= enemy.getMaxY() & player.getMinY() - 10 <= enemy.getMaxY());
+                System.out.println(xAxisCollision);
+                System.out.println(yAxisCollision);
+                if (xAxisCollision & yAxisCollision) {
+                    enemy.setDirection(Direction.FORWARD);
+                    if (player.getCenterX() < enemy.getCenterX()) {
+                        enemy.setDirection(Direction.BACKWARD);
+                    }
+                    enemy.meleeAttack();
+                    player.getHurt();
+                    return;
+                }
+            }
+        }
+    }
+
     /**
      * Inserts the keyboard listeners.
      */
@@ -424,12 +476,7 @@ public class GameController {
         if (isPressed(KeyCode.O) && player.getTranslateX() >= outOfBounds) {
             AttackEffect hitBox = player.meleeAttack();
             if (hitBox != null) {
-                gameRoot.getChildren().add(hitBox);
-                hitBox.startEffect().thenAccept(isDone -> {
-                    if (isDone) {
-                        gameRoot.getChildren().remove(hitBox);
-                    }
-                });
+                enemyInteraction.meleeWithEnemies(hitBox);
             }
         }
         // Listen to range attack signal
@@ -474,6 +521,7 @@ public class GameController {
                     player.applyGravity();
                     blockInteraction.interactWithBlocksY();
                     itemInteraction.interactWithItems();
+                    enemyInteraction.interactWithEnemies();
                     gameOverCondition();
                 } catch (IOException e) {
                     throw new RuntimeException(e);

@@ -11,6 +11,7 @@ import ca.bcit.comp2522.termproject.pix.model.Movable;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
@@ -28,8 +29,10 @@ import java.util.concurrent.CompletableFuture;
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
     private static final double WALK_SPEED = 3;
     private static final double RUN_SPEED = WALK_SPEED * 2;
+    private int healthPoint;
     private boolean jumpEnable = true;
     private boolean attackEnable = true;
+    private boolean damageEnable = true;
     private double speed;
     private String currentImagePath;
     private Action action;
@@ -41,6 +44,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Timeline rangeAnimation;
     private Timeline walkAnimation;
     private Timeline jumpAnimation;
+    private Timeline hurtAnimation;
 
     /**
      * Constructs a Player object.
@@ -58,6 +62,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.initializeRangeAttackingAnimation();
         this.initializeWalkingAnimation();
         this.initializeJumpingAnimation();
+        this.initializeHurtingAnimation();
+        this.healthPoint = 20;
         this.speed = WALK_SPEED;
     }
 
@@ -159,6 +165,28 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         );
         meleeAnimation.setCycleCount(meleeAttackFrameCount);
         meleeAnimation.setOnFinished(event -> this.setIdle());
+    }
+
+    /*
+     * Initializes the melee attacking animation.
+     */
+    private void initializeHurtingAnimation() {
+        final int[] hurtFrame = {0};
+        final int hurtDuration = 80;
+        final int hurtFrameCount = 6;
+        hurtAnimation = new Timeline(
+                new KeyFrame(Duration.millis(hurtDuration), event -> {
+                    this.action = Action.MELEE_ATTACK;
+                    this.setOpacity(hurtFrame[0] % 2);
+                    this.updatePlayerImage(String.format("%s/hurting_%d.png", currentImagePath, hurtFrame[0]));
+                    hurtFrame[0] = (hurtFrame[0] + 1) % (hurtFrameCount + 1);
+                })
+        );
+        hurtAnimation.setCycleCount(hurtFrameCount);
+        hurtAnimation.setOnFinished(event -> {
+            this.setIdle();
+            this.setOpacity(1);
+        });
     }
 
     /**
@@ -358,6 +386,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
+     * Checks if the Player is facing forward.
+     * @return true if the Player is facing forward, false otherwise
+     */
+    public boolean facingForward() {
+        return this.direction == Direction.FORWARD;
+    }
+
+    /**
      * Gets the attack point of the Player.
      * @return the attack point of the Player
      */
@@ -372,7 +408,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     @Override
     public int takeDamage(final int point) {
-        return 0;
+        if (damageEnable) {
+            healthPoint -= point;
+            damageEnable = false;
+            PauseTransition pause = new PauseTransition(Duration.seconds(1));
+            pause.setOnFinished(event -> damageEnable = true);
+            pause.play();
+        }
+        return healthPoint;
     }
 
     /**
@@ -380,7 +423,12 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     @Override
     public void getHurt() {
-
+        if (damageEnable) {
+            this.attackEnable = false;
+            this.hurtAnimation.play();
+            this.takeDamage(1);
+            this.action = Action.HURTING;
+        }
     }
 
     /**

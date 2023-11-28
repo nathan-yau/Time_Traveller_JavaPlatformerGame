@@ -20,6 +20,7 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     private final String folderPath;
     private boolean attackEnable;
     private final int attackPoint;
+    private Direction direction;
 
     /**
      * Constructs an Enemy.
@@ -37,6 +38,7 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
                  final ObjectType type, final EnemyType name, final int healthPoint, final int attackPoint) {
         super(x, y, width, height, type, name,
                 String.format("%s/%s/%s/%s_0.png", type.name(), name.name(), Direction.BACKWARD.name(), "Idle"));
+        this.direction = Direction.BACKWARD;
         this.attackEnable = true;
         this.healthPoint = healthPoint;
         this.folderPath = String.format("%s/%s", type.name(), name.name());
@@ -70,6 +72,19 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
         return folderPath;
     }
 
+    /**
+     *  Set the direction of the enemy.
+     *  @param direction the direction of the enemy as a Direction
+     */
+    public void setDirection(final Direction direction) {
+        this.direction = direction;
+    };
+    /**
+     *  Get the direction of the enemy.
+     */
+    public Direction getDirection() {
+        return direction;
+    }
     /**
      * Gets the health point of the enemy.
      *
