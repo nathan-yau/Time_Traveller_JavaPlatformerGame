@@ -10,6 +10,9 @@ import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
+import ca.bcit.comp2522.termproject.pix.model.weapon.MeleeWeapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.Node;
@@ -339,12 +342,16 @@ public class GameController {
                 if (collisionDetector.objectIntersect(player, item) & yAxisCollision) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
-                        System.out.println("Potion count: " + player.getHealthPotionCounter());
                     } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
                         player.incrementGoldCoinCounter();
-                        System.out.println("Gold Coin count: " + player.getGoldCoinCounter());
+                    } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
+                        Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
+                        player.addWeapon(meleeWeapon);
+                    } else if (item.getSubtype() == PickUpItemType.RANGE_WEAPON) {
+                        Weapon rangeWeapon = new RangeWeapon(platform.getCurrentLevel());
+                        player.addWeapon(rangeWeapon);
                     }
-                    if (item.onPickUp()) {
+                    if (item.onPickup()) {
                         iterator.remove();
                     }
                 }
@@ -414,6 +421,11 @@ public class GameController {
         // Listen to forward signal
         if (isPressed(KeyCode.D)  && player.getMaxX() <= platform.getTotalLevelWidth() - outOfBounds) {
             blockInteraction.interactWithBlocksX(true);
+        }
+
+        // Listen to potion use signal
+        if (isPressed(KeyCode.H)) {
+            player.useHealthPotion();
         }
 
         // Listen to melee attack signal
