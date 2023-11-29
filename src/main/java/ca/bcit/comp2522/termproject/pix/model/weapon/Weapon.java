@@ -1,5 +1,8 @@
 package ca.bcit.comp2522.termproject.pix.model.weapon;
 
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
+
 import java.util.Random;
 
 /**
@@ -12,10 +15,11 @@ import java.util.Random;
 public abstract class Weapon {
     /** Random generator. */
     protected static final Random RANDOM_GENERATOR = new Random();
+    private static final int COOL_DOWN_TIME = 1;
     private final WeaponType weaponType;
     private final int damage;
     private final double hitRate;
-    private boolean isUsable;
+    private WeaponState weaponState;
 
     /**
      * Constructs a Weapon.
@@ -28,15 +32,29 @@ public abstract class Weapon {
         this.weaponType = weaponType;
         this.damage = damage;
         this.hitRate = hitRate;
-        this.isUsable = true;
+        this.weaponState = WeaponState.AVAILABLE;
     }
+
+    // What happens when a weapon is used.
+    protected abstract void onUse();
 
     /**
      * Uses the weapon.
      *
      * @return the damage as an int
      */
-    public int onUse() {
+    public int useWeapon() {
+        this.setWeaponState(WeaponState.IN_USE);
+        onUse();
+
+        PauseTransition pause = new PauseTransition(Duration.seconds(COOL_DOWN_TIME));
+        pause.setOnFinished(event -> {
+            if (this.getWeaponState() == WeaponState.IN_USE) {
+                this.setWeaponState(WeaponState.AVAILABLE);
+            }
+        });
+
+        pause.play();
         if (RANDOM_GENERATOR.nextDouble() <= hitRate) {
             return damage;
         } else {
@@ -47,10 +65,10 @@ public abstract class Weapon {
     /**
      * Gets whether weapon is usable.
      *
-     * @return whether weapon is usable as a boolean
+     * @return the weapon's current state as a WeaponState
      */
-    public boolean getIsUsable() {
-        return this.isUsable;
+    public WeaponState getWeaponState() {
+        return this.weaponState;
     }
 
     /**
@@ -65,9 +83,9 @@ public abstract class Weapon {
     /**
      * Sets whether weapon is usable.
      *
-     * @param isUsable whether weapon is usable as a boolean
+     * @param weaponState the weapon's current state as a WeaponState
      */
-    public void setIsUsable(final boolean isUsable) {
-        this.isUsable = isUsable;
+    public void setWeaponState(final WeaponState weaponState) {
+        this.weaponState = weaponState;
     }
 }
