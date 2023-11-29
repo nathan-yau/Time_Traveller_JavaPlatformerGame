@@ -10,6 +10,7 @@ import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.Movable;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponState;
 import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -287,6 +288,20 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
+     * Gets the weapon from the Player's weapons array.
+     *
+     * @param weaponType the weapon type to get
+     * @return the weapon from the Player's weapons array if it exists, or null if not
+     */
+    public Weapon getWeapon(final WeaponType weaponType) {
+        if (weaponType == WeaponType.MELEE_WEAPON) {
+            return this.weaponArray[0];
+        } else {
+            return this.weaponArray[1];
+        }
+    }
+
+    /**
      * Increments the player's health potion counter by one.
      */
     public void incrementHealthPotionCounter() {
@@ -421,6 +436,26 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         if (healthPotionCounter > 0 && healthPoint < INITIAL_HEALTH_POINTS) {
             this.healthPotionCounter--;
             this.healthPoint++;
+        }
+    }
+
+    /**
+     * Use a weapon.
+     *
+     * @param weaponType the weapon type to use as a WeaponType
+     * @return the resulting damage as an int
+     */
+    public int useWeapon(final WeaponType weaponType) {
+        if (weaponType == WeaponType.MELEE_WEAPON) {
+            if (this.weaponArray[0] == null || this.weaponArray[0].getWeaponState() != WeaponState.AVAILABLE) {
+                return 1;
+            }
+            return this.weaponArray[0].useWeapon();
+        } else {
+            if (this.weaponArray[1] == null || this.weaponArray[1].getWeaponState() != WeaponState.AVAILABLE) {
+                return -1;
+            }
+            return this.weaponArray[1].useWeapon();
         }
     }
 }
