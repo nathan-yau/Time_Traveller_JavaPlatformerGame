@@ -22,7 +22,7 @@ public class MeleeWeapon extends Weapon {
      * What happens when a melee weapon is used.
      */
     @Override
-    protected void onUse() {
+    public void useWeapon() {
         System.out.println("Melee weapon used.");
     }
 
