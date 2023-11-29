@@ -19,6 +19,14 @@ public class MeleeWeapon extends Weapon {
     }
 
     /**
+     * What happens when a melee weapon is used.
+     */
+    @Override
+    protected void onUse() {
+        System.out.println("Melee weapon used.");
+    }
+
+    /**
      * Gets the string representation of this MeleeWeapon.
      *
      * @return the string representation of this MeleeWeapon as a String
