@@ -1,8 +1,5 @@
 package ca.bcit.comp2522.termproject.pix.model.weapon;
 
-import javafx.animation.PauseTransition;
-import javafx.util.Duration;
-
 import java.util.Random;
 
 /**
@@ -19,7 +16,7 @@ public abstract class Weapon {
     private final WeaponType weaponType;
     private final int damage;
     private final double hitRate;
-    private WeaponState weaponState;
+    private boolean weaponIsAvailable;
 
     /**
      * Constructs a Weapon.
@@ -32,29 +29,20 @@ public abstract class Weapon {
         this.weaponType = weaponType;
         this.damage = damage;
         this.hitRate = hitRate;
-        this.weaponState = WeaponState.AVAILABLE;
+        this.weaponIsAvailable = true;
     }
 
-    // What happens when a weapon is used.
-    protected abstract void onUse();
+    /**
+     * Use a weapon.
+     */
+    public abstract void useWeapon();
 
     /**
-     * Uses the weapon.
+     * Get the damage done from a weapon.
      *
      * @return the damage as an int
      */
-    public int useWeapon() {
-        this.setWeaponState(WeaponState.IN_USE);
-        onUse();
-
-        PauseTransition pause = new PauseTransition(Duration.seconds(COOL_DOWN_TIME));
-        pause.setOnFinished(event -> {
-            if (this.getWeaponState() == WeaponState.IN_USE) {
-                this.setWeaponState(WeaponState.AVAILABLE);
-            }
-        });
-
-        pause.play();
+    public int getWeaponDamage() {
         if (RANDOM_GENERATOR.nextDouble() <= hitRate) {
             return damage;
         } else {
@@ -67,8 +55,8 @@ public abstract class Weapon {
      *
      * @return the weapon's current state as a WeaponState
      */
-    public WeaponState getWeaponState() {
-        return this.weaponState;
+    public boolean weaponIsAvailable() {
+        return this.weaponIsAvailable;
     }
 
     /**
@@ -83,9 +71,9 @@ public abstract class Weapon {
     /**
      * Sets whether weapon is usable.
      *
-     * @param weaponState the weapon's current state as a WeaponState
+     * @param weaponIsAvailable whether the weapon is available as a boolean
      */
-    public void setWeaponState(final WeaponState weaponState) {
-        this.weaponState = weaponState;
+    public void setWeaponIsAvailable(final boolean weaponIsAvailable) {
+        this.weaponIsAvailable = weaponIsAvailable;
     }
 }
