@@ -412,9 +412,9 @@ public class GameController {
                     if (collisionDetector.objectIntersect(existingRangeHitBox, enemy)) {
                         existingRangeHitBox.stopInitialEffect();
                         rangeTargetHit = true;
-                        player.vanishRangeHitBox();
                         existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
                             gameRoot.getChildren().remove(existingRangeHitBox);
+                            player.vanishRangeHitBox();
                             rangeTargetHit = false;
                         });
                         if (enemy.takeDamage(1) != 0) {

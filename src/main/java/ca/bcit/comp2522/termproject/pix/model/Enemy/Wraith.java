@@ -1,5 +1,11 @@
 package ca.bcit.comp2522.termproject.pix.model.Enemy;
-
+/**
+ * Represents a wraith object that extends from minion.
+ *
+ * @author Nathan Yau
+ * @author Derek Woo
+ * @version 2023-11
+ */
 public class Wraith extends Minion {
     private static final int HEALTH_POINT = 4;
     private static final int ATTACK_POINT = 1;

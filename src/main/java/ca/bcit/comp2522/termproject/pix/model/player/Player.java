@@ -29,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
     private static final double WALK_SPEED = 3;
     private static final double RUN_SPEED = WALK_SPEED * 2;
+    private static final int MAX_HEALTH_POINT = 20;
     private int healthPoint;
     private boolean jumpEnable;
     private boolean attackEnable;
@@ -70,7 +71,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.initializeWalkingAnimation();
         this.initializeJumpingAnimation();
         this.initializeHurtingAnimation();
-        this.healthPoint = 20;
+        this.healthPoint = MAX_HEALTH_POINT;
         this.speed = WALK_SPEED;
     }
 
@@ -266,9 +267,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.direction = Direction.BACKWARD;
             this.setTranslateX(this.getTranslateX() - 1);
         }
-        System.out.println(direction);
         jumpAnimation.stop();
-        if (!(meleeAnimation.getStatus() == Animation.Status.RUNNING || rangeAnimation.getStatus() == Animation.Status.RUNNING)) {
+        if (!(meleeAnimation.getStatus() == Animation.Status.RUNNING
+            || rangeAnimation.getStatus() == Animation.Status.RUNNING)) {
             walkAnimation.play();
         }
     }
@@ -438,22 +439,40 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         return healthPoint;
     }
 
+    /**
+     * Get Melee Hit Box.
+     * @return the melee hit box
+     */
     public AttackEffect getMeleeHitBox() {
         return this.meleeHitBox;
     }
 
+    /**
+     * Get Range Hit Box.
+     * @return the range hit box
+     */
     public AttackEffect getRangeHitBox() {
         return this.rangeHitBox;
     }
 
+    /**
+     * Set the melee hit box to null.
+     */
     public void vanishMeleeHitBox() {
         this.meleeHitBox = null;
     }
 
+    /**
+     * Set the range hit box to null.
+     */
     public void vanishRangeHitBox() {
         this.rangeHitBox = null;
     }
 
+    /**
+     * Checks if the Player has no hit box.
+     * @return true if the Player has no hit box, false otherwise
+     */
     public boolean noHitBox() {
         return !(this.meleeHitBox != null || this.rangeHitBox != null);
     }

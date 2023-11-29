@@ -3,7 +3,6 @@ package ca.bcit.comp2522.termproject.pix.model.Enemy;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.MeleeEffect;
-import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import ca.bcit.comp2522.termproject.pix.model.player.Action;
 import ca.bcit.comp2522.termproject.pix.model.player.Direction;
@@ -20,6 +19,13 @@ import javafx.util.Duration;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Represents a minion object.
+ *
+ * @author Nathan Yau
+ * @author Derek Woo
+ * @version 2023-11
+ */
 public class Minion extends Enemy implements Runnable {
     private Action action;
     private final double leftmostWalkingRange;
@@ -47,7 +53,6 @@ public class Minion extends Enemy implements Runnable {
     private ParallelTransition currentAnimation;
     private Direction facingDirection;
     private Timeline walkingAnimation;
-    private GameObject healthBar;
 
     /**
      * Constructs a Minion.
@@ -95,7 +100,9 @@ public class Minion extends Enemy implements Runnable {
         this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
 
     }
-
+    /*
+     * Starts the movement of the minion.
+     */
     private void startMovement() throws IllegalArgumentException {
         if (xWalker) {
             currentAnimation = new ParallelTransition(
@@ -112,6 +119,9 @@ public class Minion extends Enemy implements Runnable {
         currentAnimation.play();
     }
 
+    /*
+     * Initializes the hurting animation.
+     */
     private void initializeHurtingAnimation() {
         final int[] hurtImageFrame = {0};
         hurtingAnimation = new Timeline(
@@ -131,7 +141,9 @@ public class Minion extends Enemy implements Runnable {
         });
         hurtingAnimation.setCycleCount(hurtingFrame);
     }
-
+    /*
+     * Initializes the flying animation.
+     */
     private void initializeFlyingAnimation() {
         final int[] flyingImageFrame = {0};
         flyingAnimation = new Timeline(
@@ -145,6 +157,9 @@ public class Minion extends Enemy implements Runnable {
         flyingAnimation.setCycleCount(Animation.INDEFINITE);
     }
 
+    /*
+     * Initializes the walking animation.
+     */
     private void initializeWalkingAnimation() {
         final int[] walkingImageFrame = {0};
         walkingAnimation = new Timeline(
@@ -158,6 +173,9 @@ public class Minion extends Enemy implements Runnable {
         walkingAnimation.setCycleCount(Animation.INDEFINITE);
     }
 
+    /*
+     * Initializes the attacking animation.
+     */
     private void initializeAttackingAnimation() {
         final int[] attackImageFrame = {0};
         attackingAnimation = new Timeline(
@@ -178,8 +196,10 @@ public class Minion extends Enemy implements Runnable {
         attackingAnimation.setCycleCount(attackingFrame);
     }
 
+    /*
+     * Initialize moving animation.
+     */
     private void initializeAnimation(final double startRange, final double endRange, final double initialPosition,
-                                     final Direction forwardDirection, final Direction backwardDirection,
                                      final DoubleProperty axis) {
         KeyFrame beginning = new KeyFrame(Duration.seconds(1),
                 new KeyValue(axis, startRange));
@@ -196,14 +216,14 @@ public class Minion extends Enemy implements Runnable {
         Timeline middleSlowTimeline = new Timeline(middleSlow);
 
         endingTimeline.setOnFinished(event -> {
-            this.setDirection(backwardDirection);
-            this.facingDirection = backwardDirection;
+            this.setDirection(Direction.BACKWARD);
+            this.facingDirection = Direction.BACKWARD;
             this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
         });
 
         beginningTimeline.setOnFinished(event -> {
-            this.setDirection(forwardDirection);
-            this.facingDirection = forwardDirection;
+            this.setDirection(Direction.FORWARD);
+            this.facingDirection = Direction.FORWARD;
             this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
         });
 
@@ -212,23 +232,34 @@ public class Minion extends Enemy implements Runnable {
         movingAction.setCycleCount(Timeline.INDEFINITE);
     }
 
+    /*
+     * Initializes the flying animation.
+     */
     private void initializeFlying() {
-        this.initializeAnimation(upmostFlyingRange, bottommostFlyingRange, initialYPosition, Direction.FORWARD,
-                Direction.BACKWARD, this.translateYProperty());
+        this.initializeAnimation(upmostFlyingRange, bottommostFlyingRange, initialYPosition,
+                this.translateYProperty());
     }
 
-
+    /*
+     * Initializes the walking animation.
+     */
     private void initializeWalking() {
-        this.initializeAnimation(leftmostWalkingRange, rightmostWalkingRange, initialXPosition, Direction.FORWARD,
-                Direction.BACKWARD, this.translateXProperty());
+        this.initializeAnimation(leftmostWalkingRange, rightmostWalkingRange, initialXPosition,
+                this.translateXProperty());
     }
 
+    /**
+     * Pauses the current animation and plays the hurting animation.
+     */
     @Override
     public void getHurt() {
         currentAnimation.pause();
         hurtingAnimation.play();
     }
 
+    /*
+     * Stops all current animation.
+     */
     private void stopAllAliveAnimation() {
         if (currentAnimation != null) {
             currentAnimation.stop();
@@ -241,6 +272,11 @@ public class Minion extends Enemy implements Runnable {
         }
     }
 
+    /**
+     * Starts the dying animation.
+     *
+     * @return a CompletableFuture of a boolean
+     */
     @Override
     public CompletableFuture<Boolean> startDying() {
         this.stopAllAliveAnimation();
@@ -267,29 +303,49 @@ public class Minion extends Enemy implements Runnable {
         return completionFuture;
     }
 
+    /**
+     * Performs a melee attack.
+     *
+     * @return an AttackEffect
+     */
     @Override
     public AttackEffect meleeAttack() {
         if (this.getAttackEnable() && this.action != Action.HURTING) {
+            final int animationPixel = 50;
+            final int yOffset = 10;
             this.setAttackEnable(false);
             this.currentAnimation.pause();
             this.attackingAnimation.play();
             double effectY = this.getBoundsInParent().getMinY();
-            double effectX = this.getBoundsInParent().getMinX() - 50;
-            return new MeleeEffect(effectX, effectY + 10, 50, 50, "Explosion");
+            double effectX = this.getBoundsInParent().getMinX() - animationPixel;
+            return new MeleeEffect(effectX, effectY + yOffset, animationPixel, animationPixel, "Explosion");
         }
         return null;
     }
 
+    /**
+     * Performs a range attack.
+     *
+     * @return an AttackEffect
+     */
     @Override
     public AttackEffect rangeAttack() {
         return null;
     }
 
+    /**
+     * Gets the attack damage point by the enemy.
+     *
+     * @return the attack damage point by the enemy as an int
+     */
     @Override
     public int getAttackDamage() {
         return 1;
     }
 
+    /**
+     * Runs the minion.
+     */
     @Override
     public void run() {
         this.initializeAttackingAnimation();

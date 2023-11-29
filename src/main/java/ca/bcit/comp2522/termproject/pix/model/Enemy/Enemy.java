@@ -78,9 +78,10 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
      */
     public void setDirection(final Direction direction) {
         this.direction = direction;
-    };
+    }
     /**
      *  Get the direction of the enemy.
+     *  @return the direction of the enemy as a Direction
      */
     public Direction getDirection() {
         return direction;

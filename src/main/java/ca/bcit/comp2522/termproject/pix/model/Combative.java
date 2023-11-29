@@ -13,11 +13,13 @@ import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
 public interface Combative {
     /**
      * Makes the object melee attack.
+     * @return the attack effect
      */
     AttackEffect meleeAttack();
 
     /**
      * Makes the object range attack.
+     * @return the attack effect
      */
     AttackEffect rangeAttack();
 
