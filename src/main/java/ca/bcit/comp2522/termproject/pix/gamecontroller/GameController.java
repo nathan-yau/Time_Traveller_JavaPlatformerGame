@@ -387,11 +387,12 @@ public class GameController {
                     found.set(true);
                     hitBox.stopInitialEffect();
                     hitBox.startOnHitEffect().thenAccept(isDone -> {
-                            gameRoot.getChildren().remove(hitBox);
-                            player.vanishMeleeHitBox();
+                        gameRoot.getChildren().remove(hitBox);
+                        player.vanishMeleeHitBox();
                     });
-                    final int damage = 1;
-                    if (enemy.takeDamage(damage) == 0) {
+                    final int meleeDamage = player.useWeapon(WeaponType.MELEE_WEAPON);
+                    System.out.println("Melee damage: " + meleeDamage);
+                    if (enemy.takeDamage(meleeDamage) == 0) {
                         enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
                         return true;
                     } else {
@@ -416,6 +417,8 @@ public class GameController {
                     return;
                 }
                 if (existingRangeHitBox != null) {
+                    final int rangeDamage = player.useWeapon(WeaponType.RANGE_WEAPON);
+//                    System.out.println("Range damage: " + rangeDamage);
                     if (collisionDetector.objectIntersect(existingRangeHitBox, enemy)) {
                         existingRangeHitBox.stopInitialEffect();
                         rangeTargetHit = true;
@@ -424,7 +427,7 @@ public class GameController {
                             player.vanishRangeHitBox();
                             rangeTargetHit = false;
                         });
-                        if (enemy.takeDamage(1) != 0) {
+                        if (enemy.takeDamage(rangeDamage) != 0) {
                             enemy.getHurt();
                         } else {
                             enemiesToRemove.add(enemy);
@@ -519,8 +522,6 @@ public class GameController {
             } else {
                 hitBox = null;
             }
-            int damage = player.useWeapon(WeaponType.MELEE_WEAPON);
-            AttackEffect hitBox = player.meleeAttack();
             if (hitBox != null) {
                 gameRoot.getChildren().add(hitBox);
                 enemyInteraction.meleeWithEnemies(hitBox);
@@ -529,28 +530,19 @@ public class GameController {
 
         // Listen to range attack signal
         if (isPressed(KeyCode.P) && player.getTranslateX() >= outOfBounds) {
-            AttackEffect hitBox;
-            if (player.noHitBox()) {
-                hitBox = player.rangeAttack();
-            } else {
-                hitBox = null;
-            }
-            if (hitBox != null) {
-                gameRoot.getChildren().add(hitBox);
-                hitBox.startInitialEffect().thenAccept(isDone -> {
-                    if (isDone && !rangeTargetHit) {
-                        gameRoot.getChildren().remove(hitBox);
-                        player.vanishRangeHitBox();
-                    }
-                });
-            int damage = player.useWeapon(WeaponType.RANGE_WEAPON);
-            if (damage != -1) {
-                AttackEffect hitBox = player.rangeAttack();
+            if (player.getWeapon(WeaponType.RANGE_WEAPON) != null) {
+                AttackEffect hitBox;
+                if (player.noHitBox()) {
+                    hitBox = player.rangeAttack();
+                } else {
+                    hitBox = null;
+                }
                 if (hitBox != null) {
                     gameRoot.getChildren().add(hitBox);
-                    hitBox.startEffect().thenAccept(isDone -> {
-                        if (isDone) {
+                    hitBox.startInitialEffect().thenAccept(isDone -> {
+                        if (isDone && !rangeTargetHit) {
                             gameRoot.getChildren().remove(hitBox);
+                            player.vanishRangeHitBox();
                         }
                     });
                 }
@@ -595,7 +587,6 @@ public class GameController {
         };
         timer.start();
     }
-
 
     /**
      * Gets the root of the application.
