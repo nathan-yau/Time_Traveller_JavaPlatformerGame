@@ -36,11 +36,11 @@ public class RangeWeapon extends Weapon {
      * What happens when a range weapon is used.
      */
     @Override
-    protected void onUse() {
+    public void useWeapon() {
         this.decrementAmmoCount();
-        System.out.println("Range weapon used.\nAmmo: " + this.ammoCount);
+        System.out.println("Range weapon used.\nAmmo left: " + this.ammoCount);
         if (this.ammoCount == 0) {
-            this.setWeaponState(WeaponState.UNAVAILABLE);
+            this.setWeaponIsAvailable(false);
         }
     }
 
