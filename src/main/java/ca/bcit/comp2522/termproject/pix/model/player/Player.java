@@ -300,7 +300,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Sets the Player to idle.
      */
     public void setIdle() {
-//        System.out.println(walkAnimation.getStatus());
+        System.out.println(walkAnimation.getStatus());
         if (this.action != Action.IDLE) {
             if (walkAnimation.getStatus() == Animation.Status.RUNNING) {
                 this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));

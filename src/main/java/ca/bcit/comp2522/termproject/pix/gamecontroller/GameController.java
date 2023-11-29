@@ -546,11 +546,11 @@ public class GameController {
                     });
                 }
             }
+        }
 
-            // Listen to idle signal
-            if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
-                player.setIdle();
-            }
+        // Listen to idle signal
+        if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
+            player.setIdle();
         }
     }
 
