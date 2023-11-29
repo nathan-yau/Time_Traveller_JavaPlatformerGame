@@ -14,6 +14,7 @@ import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Represents the main game loop.
@@ -50,6 +52,7 @@ public class GameController {
     private final BlockInteraction blockInteraction;
     private final ItemInteraction itemInteraction;
     private final EnemyInteraction enemyInteraction;
+    private boolean rangeTargetHit;
 
     /**
      * Constructs a GameController object with default values.
@@ -71,6 +74,7 @@ public class GameController {
         this.enemyInteraction = new EnemyInteraction();
         this.lastCacheXPosition = initialPlayerX;
         this.lastCacheYPosition = initialPlayerY;
+        this.rangeTargetHit = false;
         this.setBackground("Background/1.png");
         this.setUpPlatform();
         this.setUpCamera();
@@ -202,7 +206,7 @@ public class GameController {
         public boolean collidingDetectorX(final GameObject<? extends GameType> firstGameObject,
                                           final GameObject<? extends GameType> secondGameObject,
                                           final boolean rightSide) {
-            final int xTolerance = 10;
+            final int xTolerance = 40;
             double distance = Math.abs(firstGameObject.getMinX() - secondGameObject.getMaxX());
             if (rightSide) {
                 distance = Math.abs(firstGameObject.getMaxX() - secondGameObject.getMinX());
@@ -364,27 +368,36 @@ public class GameController {
         ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
 
         private void meleeWithEnemies(final AttackEffect hitBox) {
-                gameRoot.getChildren().add(hitBox);
-                hitBox.startEffect().thenAccept(isDone -> {
-                    if (isDone) {
-                        gameRoot.getChildren().remove(hitBox);
+            AtomicBoolean found = new AtomicBoolean(false);
+            hitBox.startInitialEffect().thenAccept(isDone -> {
+                if (isDone && !found.get()) {
+                    gameRoot.getChildren().remove(hitBox);
+                    player.vanishMeleeHitBox();
+                }
+            });
+            platform.getEnemyArray().removeIf(enemy -> {
+                if (collisionDetector.objectIntersect(hitBox, enemy)) {
+                    found.set(true);
+                    hitBox.stopInitialEffect();
+                    hitBox.startOnHitEffect().thenAccept(isDone -> {
+                            gameRoot.getChildren().remove(hitBox);
+                            player.vanishMeleeHitBox();
+                    });
+                    final int damage = 1;
+                    if (enemy.takeDamage(damage) == 0) {
+                        enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
+                        return true;
+                    } else {
+                        enemy.getHurt();
                     }
-                });
-                platform.getEnemyArray().removeIf(enemy -> {
-                    if (collisionDetector.objectIntersect(hitBox, enemy)) {
-                        final int damage = 1;
-                        if (enemy.takeDamage(damage) == 0) {
-                            enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
-                            return true;
-                        } else {
-                            enemy.getHurt();
-                        }
-                    }
-                    return false;
-                });
+
+                }
+                return false;
+            });
         }
 
         private void interactWithEnemies() {
+            AttackEffect existingRangeHitBox = player.getRangeHitBox();
             for (Enemy enemy : platform.getEnemyArray()) {
                 if (collisionDetector.objectIntersect(player, enemy)) {
                     enemy.setDirection(Direction.FORWARD);
@@ -395,7 +408,32 @@ public class GameController {
                     player.getHurt();
                     return;
                 }
+                if (existingRangeHitBox != null) {
+                    if (collisionDetector.objectIntersect(existingRangeHitBox, enemy)) {
+                        existingRangeHitBox.stopInitialEffect();
+                        rangeTargetHit = true;
+                        player.vanishRangeHitBox();
+                        existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
+                            gameRoot.getChildren().remove(existingRangeHitBox);
+                            rangeTargetHit = false;
+                        });
+                        if (enemy.takeDamage(1) != 0) {
+                            enemy.getHurt();
+                        } else {
+                            enemiesToRemove.add(enemy);
+                        }
+                    }
+                }
             }
+            platform.getEnemyArray().removeIf(deadEnemy -> {
+                if (enemiesToRemove.contains(deadEnemy)) {
+                    deadEnemy.startDying().thenAccept(isCompleted -> {
+                            gameRoot.getChildren().remove(deadEnemy);
+                    });
+                    return true;
+                }
+                return false;
+            });
         }
     }
 
@@ -465,19 +503,32 @@ public class GameController {
 
         // Listen to melee attack signal
         if (isPressed(KeyCode.O) && player.getTranslateX() >= outOfBounds) {
-            AttackEffect hitBox = player.meleeAttack();
+            AttackEffect hitBox;
+            if (player.noHitBox()) {
+                hitBox = player.meleeAttack();
+            } else {
+                hitBox = null;
+            }
             if (hitBox != null) {
+                gameRoot.getChildren().add(hitBox);
                 enemyInteraction.meleeWithEnemies(hitBox);
             }
         }
+
         // Listen to range attack signal
         if (isPressed(KeyCode.P) && player.getTranslateX() >= outOfBounds) {
-            AttackEffect hitBox = player.rangeAttack();
+            AttackEffect hitBox;
+            if (player.noHitBox()) {
+                hitBox = player.rangeAttack();
+            } else {
+                hitBox = null;
+            }
             if (hitBox != null) {
                 gameRoot.getChildren().add(hitBox);
-                hitBox.startEffect().thenAccept(isDone -> {
-                    if (isDone) {
+                hitBox.startInitialEffect().thenAccept(isDone -> {
+                    if (isDone && !rangeTargetHit) {
                         gameRoot.getChildren().remove(hitBox);
+                        player.vanishRangeHitBox();
                     }
                 });
             }

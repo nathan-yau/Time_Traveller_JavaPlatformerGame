@@ -30,9 +30,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private static final double WALK_SPEED = 3;
     private static final double RUN_SPEED = WALK_SPEED * 2;
     private int healthPoint;
-    private boolean jumpEnable = true;
-    private boolean attackEnable = true;
-    private boolean damageEnable = true;
+    private boolean jumpEnable;
+    private boolean attackEnable;
+    private boolean damageEnable;
+    private AttackEffect meleeHitBox;
+    private AttackEffect rangeHitBox;
     private double speed;
     private String currentImagePath;
     private Action action;
@@ -57,6 +59,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.velocity = new Point2D(0, 0);
         this.direction = Direction.FORWARD;
         this.action = Action.IDLE;
+        this.jumpEnable = true;
+        this.attackEnable = true;
+        this.damageEnable = true;
+        this.meleeHitBox = null;
+        this.rangeHitBox = null;
         this.currentImagePath = String.format("player/%s", direction.name());
         this.initializeMeleeAttackingAnimation();
         this.initializeRangeAttackingAnimation();
@@ -137,12 +144,13 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private void initializeRangeAttackingAnimation() {
         final int[] rangeFrame = {0};
         final int rangeAttackDuration = 100;
-        final int rangeAttackFrameCount = 7;
+        final int rangeAttackFrameCount = 8;
         rangeAnimation = new Timeline(
                 new KeyFrame(Duration.millis(rangeAttackDuration), event -> {
                     this.action = Action.RANGE_ATTACK;
+                    this.currentImagePath = String.format("player/%s", direction.name());
                     this.updatePlayerImage(String.format("%s/range_attack_%d.png", currentImagePath, rangeFrame[0]));
-                    rangeFrame[0] = (rangeFrame[0] + 1) % (rangeAttackFrameCount + 1);
+                    rangeFrame[0] = (rangeFrame[0] + 1) % (rangeAttackFrameCount);
                 })
         );
         rangeAnimation.setCycleCount(rangeAttackFrameCount);
@@ -155,12 +163,13 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private void initializeMeleeAttackingAnimation() {
         final int[] meleeFrame = {0};
         final int meleeAttackDuration = 100;
-        final int meleeAttackFrameCount = 4;
+        final int meleeAttackFrameCount = 5;
         meleeAnimation = new Timeline(
                 new KeyFrame(Duration.millis(meleeAttackDuration), event -> {
                     this.action = Action.MELEE_ATTACK;
+                    this.currentImagePath = String.format("player/%s", direction.name());
                     this.updatePlayerImage(String.format("%s/melee_attack_%d.png", currentImagePath, meleeFrame[0]));
-                    meleeFrame[0] = (meleeFrame[0] + 1) % (meleeAttackFrameCount + 1);
+                    meleeFrame[0] = (meleeFrame[0] + 1) % (meleeAttackFrameCount);
                 })
         );
         meleeAnimation.setCycleCount(meleeAttackFrameCount);
@@ -173,13 +182,13 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private void initializeHurtingAnimation() {
         final int[] hurtFrame = {0};
         final int hurtDuration = 80;
-        final int hurtFrameCount = 6;
+        final int hurtFrameCount = 7;
         hurtAnimation = new Timeline(
                 new KeyFrame(Duration.millis(hurtDuration), event -> {
                     this.action = Action.MELEE_ATTACK;
                     this.setOpacity(hurtFrame[0] % 2);
                     this.updatePlayerImage(String.format("%s/hurting_%d.png", currentImagePath, hurtFrame[0]));
-                    hurtFrame[0] = (hurtFrame[0] + 1) % (hurtFrameCount + 1);
+                    hurtFrame[0] = (hurtFrame[0] + 1) % (hurtFrameCount);
                 })
         );
         hurtAnimation.setCycleCount(hurtFrameCount);
@@ -232,7 +241,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void moveY(final boolean movingDown) {
         final double jumpingPixel = 1.0;
-        final double fallingPixel = 0.4;
+        final double fallingPixel = 0.8;
         if (movingDown) {
             this.setTranslateY(this.getTranslateY() + fallingPixel);
         } else {
@@ -250,7 +259,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     @Override
     public void moveX(final boolean movingRight) {
-        this.attackEnable = false;
         if (movingRight) {
             this.direction = Direction.FORWARD;
             this.setTranslateX(this.getTranslateX() + 1);
@@ -258,8 +266,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.direction = Direction.BACKWARD;
             this.setTranslateX(this.getTranslateX() - 1);
         }
+        System.out.println(direction);
         jumpAnimation.stop();
-        walkAnimation.play();
+        if (!(meleeAnimation.getStatus() == Animation.Status.RUNNING || rangeAnimation.getStatus() == Animation.Status.RUNNING)) {
+            walkAnimation.play();
+        }
     }
 
     /**
@@ -285,8 +296,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Sets the Player to idle.
      */
     public void setIdle() {
+        System.out.println(walkAnimation.getStatus());
         if (this.action != Action.IDLE) {
-            this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
+            if (walkAnimation.getStatus() == Animation.Status.RUNNING) {
+                this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
+            }
             this.action = Action.IDLE;
             walkAnimation.stop();
             jumpAnimation.stop();
@@ -344,14 +358,17 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             final int hitBoxHeight = 50;
             final int effectYOffset = 10;
             attackEnable = false;
+            walkAnimation.stop();
+            jumpAnimation.stop();
             meleeAnimation.play();
             double effectY = this.getBoundsInParent().getMinY();
             double effectX = this.getBoundsInParent().getMinX() - hitBoxWidth;
             if (direction == Direction.FORWARD) {
                 effectX = this.getBoundsInParent().getMaxX();
             }
-            return new MeleeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
+            this.meleeHitBox = new MeleeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
                     "Explosion");
+            return this.meleeHitBox;
         }
         return null;
     }
@@ -369,6 +386,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             final double forwardHitRange = 140;
             final double backwardHitRange = -140;
             attackEnable = false;
+            walkAnimation.stop();
+            jumpAnimation.stop();
             rangeAnimation.play();
             double effectY = this.getBoundsInParent().getMinY();
             double effectX = this.getBoundsInParent().getMinX();
@@ -379,8 +398,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             if (direction == Direction.BACKWARD) {
                 hitRange = backwardHitRange;
             }
-            return new RangeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
+            this.rangeHitBox = new RangeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
                     "FireBall", hitRange, this.direction);
+            return this.rangeHitBox;
         }
         return null;
     }
@@ -416,6 +436,26 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             pause.play();
         }
         return healthPoint;
+    }
+
+    public AttackEffect getMeleeHitBox() {
+        return this.meleeHitBox;
+    }
+
+    public AttackEffect getRangeHitBox() {
+        return this.rangeHitBox;
+    }
+
+    public void vanishMeleeHitBox() {
+        this.meleeHitBox = null;
+    }
+
+    public void vanishRangeHitBox() {
+        this.rangeHitBox = null;
+    }
+
+    public boolean noHitBox() {
+        return !(this.meleeHitBox != null || this.rangeHitBox != null);
     }
 
     /**

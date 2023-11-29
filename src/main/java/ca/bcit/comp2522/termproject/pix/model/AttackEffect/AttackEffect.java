@@ -31,9 +31,18 @@ public abstract class AttackEffect extends GameObject<EffectType> {
     }
 
     /**
-     * Starts the effect.
+     * Starts the initial effect.
      *
      * @return a CompletableFuture of a boolean
      */
-    public abstract CompletableFuture<Boolean> startEffect();
+    public abstract CompletableFuture<Boolean> startInitialEffect();
+
+    /**
+     * Starts the on hit effect.
+     *
+     * @return a CompletableFuture of a boolean
+     */
+    public abstract CompletableFuture<Boolean> startOnHitEffect();
+
+    public abstract void stopInitialEffect();
 }

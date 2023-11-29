@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 public class MeleeEffect extends AttackEffect {
     private final String imageName;
     private Timeline attackAnimation;
+    private Timeline onHitAnimation;
 
     /**
      * Constructs a MeleeEffect.
@@ -29,9 +30,10 @@ public class MeleeEffect extends AttackEffect {
      * @param imageName the name of the image as a String
      */
     public MeleeEffect(final double x, final double y, final double w, final double h, final String imageName) {
-        super(x, y, w, h, EffectType.MELEE_ATTACK, imageName);
+        super(x, y, w, h, EffectType.MELEE_ATTACK, "Empty");
         this.imageName = imageName;
         this.attackAnimation = null;
+        this.onHitAnimation  = null;
     }
 
     /**
@@ -40,17 +42,17 @@ public class MeleeEffect extends AttackEffect {
      * @return a CompletableFuture of a boolean
      */
     @Override
-    public CompletableFuture<Boolean> startEffect() {
+    public CompletableFuture<Boolean> startInitialEffect() {
         final int duration = 100;
-        final int totalFrames = 10;
+        final int totalFrames = 4;
         final int[] meleeFrame = {0};
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
         attackAnimation = new Timeline(
                 new KeyFrame(Duration.millis(duration), event -> {
                     final String sequenceIdle = String.format("Effect/%s/%s_%d.png",
-                            this.getSubtype().name(), this.imageName, meleeFrame[0]);
+                            this.getSubtype().name(), "Attack", meleeFrame[0]);
                     this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
-                    meleeFrame[0] = (meleeFrame[0] + 1) % (totalFrames + 1);
+                    meleeFrame[0] = (meleeFrame[0] + 1) % (totalFrames);
                 })
         );
         attackAnimation.setOnFinished(event -> {
@@ -59,6 +61,35 @@ public class MeleeEffect extends AttackEffect {
         });
         attackAnimation.setCycleCount(totalFrames);
         attackAnimation.play();
+
+        return completionFuture;
+    }
+
+
+    public void stopInitialEffect() {
+        attackAnimation.stop();
+    };
+
+    @Override
+    public CompletableFuture<Boolean> startOnHitEffect() {
+        final int duration = 100;
+        final int totalFrames = 10;
+        final int[] hitFrame = {0};
+        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
+        onHitAnimation = new Timeline(
+                new KeyFrame(Duration.millis(duration), event -> {
+                    final String sequenceIdle = String.format("Effect/%s/%s_%d.png",
+                            this.getSubtype().name(), this.imageName, hitFrame[0]);
+                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
+                    hitFrame[0] = (hitFrame[0] + 1) % (totalFrames);
+                })
+        );
+        onHitAnimation.setCycleCount(totalFrames);
+        onHitAnimation.setOnFinished(event -> {
+            this.setVisible(false);
+            completionFuture.complete(true);
+        });
+        onHitAnimation.play();
 
         return completionFuture;
     }
