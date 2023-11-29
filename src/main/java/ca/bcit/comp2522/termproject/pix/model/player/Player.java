@@ -10,7 +10,6 @@ import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.Movable;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
-import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponState;
 import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -335,11 +334,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * @return the weapon from the Player's weapons array if it exists, or null if not
      */
     public Weapon getWeapon(final WeaponType weaponType) {
-        if (weaponType == WeaponType.MELEE_WEAPON
-                && this.weaponArray[0].getWeaponState() == WeaponState.AVAILABLE) {
+        if (weaponType == WeaponType.MELEE_WEAPON && this.weaponArray[0] != null
+                && this.weaponArray[0].weaponIsAvailable()) {
             return this.weaponArray[0];
-        } else if (weaponType == WeaponType.RANGE_WEAPON
-                && this.weaponArray[1].getWeaponState() == WeaponState.AVAILABLE) {
+        } else if (weaponType == WeaponType.RANGE_WEAPON && this.weaponArray[1] != null
+                && this.weaponArray[1].weaponIsAvailable()) {
             return this.weaponArray[1];
         } else {
             return null;
@@ -393,7 +392,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     @Override
     public AttackEffect meleeAttack() {
-        if (attackEnable & this.weaponArray[0] != null) {
+        if (attackEnable) {
             final int hitBoxWidth = 50;
             final int hitBoxHeight = 50;
             final int effectYOffset = 10;
@@ -551,20 +550,37 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     /**
      * Use a weapon.
      *
+     * @param weaponType the type of weapon to be used as a WeaponType
+     */
+    public void useWeapon(final WeaponType weaponType) {
+        if (weaponType == WeaponType.MELEE_WEAPON) {
+            if (this.weaponArray[0] != null && this.weaponArray[0].weaponIsAvailable()) {
+                this.weaponArray[0].useWeapon();
+            }
+        } else {
+            if (this.weaponArray[1] != null && this.weaponArray[1].weaponIsAvailable()) {
+                this.weaponArray[1].useWeapon();
+            }
+        }
+    }
+
+    /**
+     * Gets the damage from a weapon.
+     *
      * @param weaponType the weapon type to use as a WeaponType
      * @return the resulting damage as an int
      */
-    public int useWeapon(final WeaponType weaponType) {
+    public int getWeaponDamage(final WeaponType weaponType) {
         if (weaponType == WeaponType.MELEE_WEAPON) {
-            if (this.weaponArray[0] == null || this.weaponArray[0].getWeaponState() != WeaponState.AVAILABLE) {
+            if (this.weaponArray[0] == null || !this.weaponArray[0].weaponIsAvailable()) {
                 return 1;
             }
-            return this.weaponArray[0].useWeapon();
+            return this.weaponArray[0].getWeaponDamage();
         } else {
-            if (this.weaponArray[1] == null || this.weaponArray[1].getWeaponState() != WeaponState.AVAILABLE) {
-                return -1;
+            if (this.weaponArray[1] == null || !this.weaponArray[1].weaponIsAvailable()) {
+                return 0;
             }
-            return this.weaponArray[1].useWeapon();
+            return this.weaponArray[1].getWeaponDamage();
         }
     }
 }
