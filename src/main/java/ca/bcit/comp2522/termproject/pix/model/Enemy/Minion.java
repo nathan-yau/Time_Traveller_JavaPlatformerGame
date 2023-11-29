@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.Enemy;
 
+import ca.bcit.comp2522.termproject.pix.AnimatedObjects;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.MeleeEffect;
@@ -26,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public class Minion extends Enemy implements Runnable {
+public class Minion extends Enemy implements Runnable, AnimatedObjects {
     private Action action;
     private final double leftmostWalkingRange;
     private final double upmostFlyingRange;
@@ -248,6 +249,19 @@ public class Minion extends Enemy implements Runnable {
                 this.translateXProperty());
     }
 
+    public void terminateAnimation() {
+        this.stopAllAliveAnimation();
+        AnimatedObjects.releaseParallelTransition(this.currentAnimation);
+        AnimatedObjects.releaseTimeline(this.hurtingAnimation);
+        AnimatedObjects.releaseTimeline(this.attackingAnimation);
+        AnimatedObjects.releaseSequentialTransition(this.movingAction);
+        if (xWalker) {
+            AnimatedObjects.releaseTimeline(this.walkingAnimation);
+        } else {
+            AnimatedObjects.releaseTimeline(this.flyingAnimation);
+        }
+    }
+
     /**
      * Pauses the current animation and plays the hurting animation.
      */
@@ -296,6 +310,9 @@ public class Minion extends Enemy implements Runnable {
         dyingAnimation.setOnFinished(event -> {
             this.setVisible(false);
             completionFuture.complete(true);
+            dyingAnimation.stop();
+            dyingAnimation.getKeyFrames().clear();
+            this.terminateAnimation();
         });
         dyingAnimation.setCycleCount(dyingFrame);
         dyingAnimation.play();
