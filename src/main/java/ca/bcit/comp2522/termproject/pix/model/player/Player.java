@@ -9,6 +9,9 @@ import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.Movable;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
+import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponState;
+import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.PauseTransition;
@@ -27,6 +30,12 @@ import java.util.concurrent.CompletableFuture;
  * @version 2023
  */
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
+    private static final int INITIAL_HEALTH_POINTS = 20;
+    private static final double WALK_SPEED = 5;
+    private static final double RUN_SPEED = 10;
+    private int healthPoint;
+    private boolean jumpEnable = true;
+    private boolean attackEnable = true;
     private static final double WALK_SPEED = 3;
     private static final double RUN_SPEED = WALK_SPEED * 2;
     private static final int MAX_HEALTH_POINT = 20;
@@ -47,6 +56,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Timeline rangeAnimation;
     private Timeline walkAnimation;
     private Timeline jumpAnimation;
+    private final Weapon[] weaponArray = new Weapon[2];
     private Timeline hurtAnimation;
 
     /**
@@ -57,6 +67,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public Player(final double x, final double y, final String imagePath) {
         super(x, y, ObjectType.PLAYER, PlayerType.PLAYER, imagePath);
+        this.healthPoint = INITIAL_HEALTH_POINTS;
         this.velocity = new Point2D(0, 0);
         this.direction = Direction.FORWARD;
         this.action = Action.IDLE;
@@ -311,10 +322,39 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
+     * Add a weapon to the Player's weapons array.
+     *
+     * @param weapon the weapon to add
+     */
+    public void addWeapon(final Weapon weapon) {
+        if (weapon.getWeaponType() == WeaponType.MELEE_WEAPON) {
+            this.weaponArray[0] = weapon;
+        } else {
+            this.weaponArray[1] = weapon;
+        }
+        System.out.println("Added: " + weapon);
+    }
+
+    /**
+     * Gets the weapon from the Player's weapons array.
+     *
+     * @param weaponType the weapon type to get
+     * @return the weapon from the Player's weapons array if it exists, or null if not
+     */
+    public Weapon getWeapon(final WeaponType weaponType) {
+        if (weaponType == WeaponType.MELEE_WEAPON) {
+            return this.weaponArray[0];
+        } else {
+            return this.weaponArray[1];
+        }
+    }
+
+    /**
      * Increments the player's health potion counter by one.
      */
     public void incrementHealthPotionCounter() {
         this.healthPotionCounter++;
+        System.out.println("Health potion count: " + this.healthPotionCounter);
     }
 
     /**
@@ -322,6 +362,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void decrementHealthPotionCounter() {
         this.healthPotionCounter--;
+        System.out.println("Health potion count: " + this.healthPotionCounter);
     }
 
     /**
@@ -337,6 +378,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void incrementGoldCoinCounter() {
         this.goldCoinCounter++;
+        System.out.println("Gold Coin count: " + this.goldCoinCounter);
     }
 
     /**
@@ -499,5 +541,33 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         return null;
     }
 
+    /**
+     * Use a health potion.
+     */
+    public void useHealthPotion() {
+        if (healthPotionCounter > 0 && healthPoint < INITIAL_HEALTH_POINTS) {
+            this.healthPotionCounter--;
+            this.healthPoint++;
+        }
+    }
 
+    /**
+     * Use a weapon.
+     *
+     * @param weaponType the weapon type to use as a WeaponType
+     * @return the resulting damage as an int
+     */
+    public int useWeapon(final WeaponType weaponType) {
+        if (weaponType == WeaponType.MELEE_WEAPON) {
+            if (this.weaponArray[0] == null || this.weaponArray[0].getWeaponState() != WeaponState.AVAILABLE) {
+                return 1;
+            }
+            return this.weaponArray[0].useWeapon();
+        } else {
+            if (this.weaponArray[1] == null || this.weaponArray[1].getWeaponState() != WeaponState.AVAILABLE) {
+                return -1;
+            }
+            return this.weaponArray[1].useWeapon();
+        }
+    }
 }

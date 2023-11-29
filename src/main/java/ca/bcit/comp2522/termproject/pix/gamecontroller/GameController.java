@@ -12,6 +12,10 @@ import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
+import ca.bcit.comp2522.termproject.pix.model.weapon.MeleeWeapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.image.Image;
@@ -191,7 +195,7 @@ public class GameController {
          * @return true if the player is colliding with the platform, false otherwise
          */
         private boolean objectIntersect(final GameObject<? extends GameType> firstGameObject,
-                                    final GameObject<? extends GameType> secondGameObject) {
+                                        final GameObject<? extends GameType> secondGameObject) {
             return firstGameObject.checkIntersect(secondGameObject.getBoundsInParent());
         }
 
@@ -349,12 +353,16 @@ public class GameController {
                 if (collisionDetector.objectIntersect(player, item) & yAxisCollision) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
-                        System.out.println("Potion count: " + player.getHealthPotionCounter());
                     } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
                         player.incrementGoldCoinCounter();
-                        System.out.println("Gold Coin count: " + player.getGoldCoinCounter());
+                    } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
+                        Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
+                        player.addWeapon(meleeWeapon);
+                    } else if (item.getSubtype() == PickUpItemType.RANGE_WEAPON) {
+                        Weapon rangeWeapon = new RangeWeapon(platform.getCurrentLevel());
+                        player.addWeapon(rangeWeapon);
                     }
-                    if (item.onPickUp()) {
+                    if (item.onPickup()) {
                         iterator.remove();
                     }
                 }
@@ -498,6 +506,11 @@ public class GameController {
             blockInteraction.interactWithBlocksX(true);
         }
 
+        // Listen to potion use signal
+        if (isPressed(KeyCode.H)) {
+            player.useHealthPotion();
+        }
+
         // Listen to melee attack signal
         if (isPressed(KeyCode.O) && player.getTranslateX() >= outOfBounds) {
             AttackEffect hitBox;
@@ -506,6 +519,8 @@ public class GameController {
             } else {
                 hitBox = null;
             }
+            int damage = player.useWeapon(WeaponType.MELEE_WEAPON);
+            AttackEffect hitBox = player.meleeAttack();
             if (hitBox != null) {
                 gameRoot.getChildren().add(hitBox);
                 enemyInteraction.meleeWithEnemies(hitBox);
@@ -528,6 +543,17 @@ public class GameController {
                         player.vanishRangeHitBox();
                     }
                 });
+            int damage = player.useWeapon(WeaponType.RANGE_WEAPON);
+            if (damage != -1) {
+                AttackEffect hitBox = player.rangeAttack();
+                if (hitBox != null) {
+                    gameRoot.getChildren().add(hitBox);
+                    hitBox.startEffect().thenAccept(isDone -> {
+                        if (isDone) {
+                            gameRoot.getChildren().remove(hitBox);
+                        }
+                    });
+                }
             }
         }
 
