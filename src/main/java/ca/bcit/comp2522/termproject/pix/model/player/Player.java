@@ -30,15 +30,9 @@ import java.util.concurrent.CompletableFuture;
  * @version 2023
  */
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
-    private static final int INITIAL_HEALTH_POINTS = 20;
+    private static final int MAX_HEALTH_POINTS = 20;
     private static final double WALK_SPEED = 5;
     private static final double RUN_SPEED = 10;
-    private int healthPoint;
-    private boolean jumpEnable = true;
-    private boolean attackEnable = true;
-    private static final double WALK_SPEED = 3;
-    private static final double RUN_SPEED = WALK_SPEED * 2;
-    private static final int MAX_HEALTH_POINT = 20;
     private int healthPoint;
     private boolean jumpEnable;
     private boolean attackEnable;
@@ -67,7 +61,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public Player(final double x, final double y, final String imagePath) {
         super(x, y, ObjectType.PLAYER, PlayerType.PLAYER, imagePath);
-        this.healthPoint = INITIAL_HEALTH_POINTS;
         this.velocity = new Point2D(0, 0);
         this.direction = Direction.FORWARD;
         this.action = Action.IDLE;
@@ -82,7 +75,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.initializeWalkingAnimation();
         this.initializeJumpingAnimation();
         this.initializeHurtingAnimation();
-        this.healthPoint = MAX_HEALTH_POINT;
+        this.healthPoint = MAX_HEALTH_POINTS;
         this.speed = WALK_SPEED;
     }
 
@@ -280,7 +273,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         }
         jumpAnimation.stop();
         if (!(meleeAnimation.getStatus() == Animation.Status.RUNNING
-            || rangeAnimation.getStatus() == Animation.Status.RUNNING)) {
+                || rangeAnimation.getStatus() == Animation.Status.RUNNING)) {
             walkAnimation.play();
         }
     }
@@ -308,7 +301,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Sets the Player to idle.
      */
     public void setIdle() {
-        System.out.println(walkAnimation.getStatus());
+//        System.out.println(walkAnimation.getStatus());
         if (this.action != Action.IDLE) {
             if (walkAnimation.getStatus() == Animation.Status.RUNNING) {
                 this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
@@ -342,10 +335,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * @return the weapon from the Player's weapons array if it exists, or null if not
      */
     public Weapon getWeapon(final WeaponType weaponType) {
-        if (weaponType == WeaponType.MELEE_WEAPON) {
+        if (weaponType == WeaponType.MELEE_WEAPON
+                && this.weaponArray[0].getWeaponState() == WeaponState.AVAILABLE) {
             return this.weaponArray[0];
-        } else {
+        } else if (weaponType == WeaponType.RANGE_WEAPON
+                && this.weaponArray[1].getWeaponState() == WeaponState.AVAILABLE) {
             return this.weaponArray[1];
+        } else {
+            return null;
         }
     }
 
@@ -545,7 +542,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Use a health potion.
      */
     public void useHealthPotion() {
-        if (healthPotionCounter > 0 && healthPoint < INITIAL_HEALTH_POINTS) {
+        if (healthPotionCounter > 0 && healthPoint < MAX_HEALTH_POINTS) {
             this.healthPotionCounter--;
             this.healthPoint++;
         }
