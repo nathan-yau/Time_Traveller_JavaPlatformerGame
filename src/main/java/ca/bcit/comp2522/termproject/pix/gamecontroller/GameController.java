@@ -411,9 +411,8 @@ public class GameController {
                     return;
                 }
                 if (existingRangeHitBox != null) {
-//                    final int rangeDamage = player.useWeapon(WeaponType.RANGE_WEAPON);
-                    final int rangeDamage = 1;
                     if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
+                        final int rangeDamage = player.useWeapon(WeaponType.RANGE_WEAPON);
                         System.out.println("Range damage: " + rangeDamage);
                         enemy.setDamageEnable(false);
                         existingRangeHitBox.stopInitialEffect();
