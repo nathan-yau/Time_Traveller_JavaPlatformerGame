@@ -384,7 +384,7 @@ public class GameController {
                         gameRoot.getChildren().remove(hitBox);
                         player.vanishMeleeHitBox();
                     });
-                    final int meleeDamage = player.useWeapon(WeaponType.MELEE_WEAPON);
+                    final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
                     System.out.println("Melee damage: " + meleeDamage);
                     if (enemy.takeDamage(meleeDamage) == 0) {
                         enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
@@ -412,7 +412,7 @@ public class GameController {
                 }
                 if (existingRangeHitBox != null) {
                     if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
-                        final int rangeDamage = player.useWeapon(WeaponType.RANGE_WEAPON);
+                        final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
                         System.out.println("Range damage: " + rangeDamage);
                         enemy.setDamageEnable(false);
                         existingRangeHitBox.stopInitialEffect();
@@ -515,6 +515,7 @@ public class GameController {
             AttackEffect hitBox;
             if (player.noHitBox()) {
                 hitBox = player.meleeAttack();
+                player.useWeapon(WeaponType.MELEE_WEAPON);
             } else {
                 hitBox = null;
             }
@@ -526,9 +527,12 @@ public class GameController {
 
         // Listen to range attack signal
         if (isPressed(KeyCode.P) && player.getTranslateX() >= outOfBounds) {
+            Weapon activeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
+            if (activeWeapon != null) {
                 AttackEffect hitBox;
                 if (player.noHitBox()) {
                     hitBox = player.rangeAttack();
+                    player.useWeapon(WeaponType.RANGE_WEAPON);
                 } else {
                     hitBox = null;
                 }
@@ -541,14 +545,15 @@ public class GameController {
                         }
                     });
                 }
-        }
+            }
 
-        // Listen to idle signal
-        if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
-            player.setIdle();
+            // Listen to idle signal
+            if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
+                player.setIdle();
+            }
         }
-
     }
+
     /**
      * Checks if the game is over.
      */
