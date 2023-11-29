@@ -15,7 +15,7 @@ import java.util.Random;
 public abstract class Weapon {
     /** Random generator. */
     protected static final Random RANDOM_GENERATOR = new Random();
-    private static final int COOL_DOWN_TIME = 1;
+    private static final double COOL_DOWN_TIME = 1.5;
     private final WeaponType weaponType;
     private final int damage;
     private final double hitRate;
