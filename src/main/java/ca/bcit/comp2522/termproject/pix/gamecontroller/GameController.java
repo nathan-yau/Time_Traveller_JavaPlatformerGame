@@ -14,7 +14,6 @@ import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
-import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -427,9 +426,7 @@ public class GameController {
             }
             platform.getEnemyArray().removeIf(deadEnemy -> {
                 if (enemiesToRemove.contains(deadEnemy)) {
-                    deadEnemy.startDying().thenAccept(isCompleted -> {
-                            gameRoot.getChildren().remove(deadEnemy);
-                    });
+                    deadEnemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(deadEnemy));
                     return true;
                 }
                 return false;
