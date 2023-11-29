@@ -340,17 +340,11 @@ public class GameController {
         // Check and handle collision with items
         private void interactWithItems() {
             Iterator<PickUpItem> iterator = platform.getItemArray().iterator();
-            boolean yAxisCollision;
 
             while (iterator.hasNext()) {
-                final int yThreshold = 10;
                 PickUpItem item = iterator.next();
 
-                yAxisCollision = (player.getBoundsInParent().getMaxY()
-                        + yThreshold >= item.getBoundsInParent().getMaxY()
-                        & player.getBoundsInParent().getMinY() - yThreshold <= item.getBoundsInParent().getMaxY());
-
-                if (collisionDetector.objectIntersect(player, item) & yAxisCollision) {
+                if (collisionDetector.objectIntersect(player, item)) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
                     } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
@@ -417,15 +411,18 @@ public class GameController {
                     return;
                 }
                 if (existingRangeHitBox != null) {
-                    final int rangeDamage = player.useWeapon(WeaponType.RANGE_WEAPON);
-//                    System.out.println("Range damage: " + rangeDamage);
-                    if (collisionDetector.objectIntersect(existingRangeHitBox, enemy)) {
+//                    final int rangeDamage = player.useWeapon(WeaponType.RANGE_WEAPON);
+                    final int rangeDamage = 1;
+                    if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
+                        System.out.println("Range damage: " + rangeDamage);
+                        enemy.setDamageEnable(false);
                         existingRangeHitBox.stopInitialEffect();
                         rangeTargetHit = true;
                         existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
                             gameRoot.getChildren().remove(existingRangeHitBox);
                             player.vanishRangeHitBox();
                             rangeTargetHit = false;
+                            enemy.setDamageEnable(true);
                         });
                         if (enemy.takeDamage(rangeDamage) != 0) {
                             enemy.getHurt();
@@ -530,7 +527,6 @@ public class GameController {
 
         // Listen to range attack signal
         if (isPressed(KeyCode.P) && player.getTranslateX() >= outOfBounds) {
-            if (player.getWeapon(WeaponType.RANGE_WEAPON) != null) {
                 AttackEffect hitBox;
                 if (player.noHitBox()) {
                     hitBox = player.rangeAttack();
@@ -546,7 +542,6 @@ public class GameController {
                         }
                     });
                 }
-            }
         }
 
         // Listen to idle signal

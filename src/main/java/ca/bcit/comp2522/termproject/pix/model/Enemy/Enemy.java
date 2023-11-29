@@ -20,6 +20,7 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     private final String folderPath;
     private boolean attackEnable;
     private final int attackPoint;
+    private boolean damageEnable;
     private Direction direction;
 
     /**
@@ -40,6 +41,7 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
                 String.format("%s/%s/%s/%s_0.png", type.name(), name.name(), Direction.BACKWARD.name(), "Idle"));
         this.direction = Direction.BACKWARD;
         this.attackEnable = true;
+        this.damageEnable = true;
         this.healthPoint = healthPoint;
         this.folderPath = String.format("%s/%s", type.name(), name.name());
         this.attackPoint = attackPoint;
@@ -61,6 +63,24 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
      */
     protected final boolean getAttackEnable() {
         return attackEnable;
+    }
+
+    /**
+     * Enables the enemy's damagable status.
+     * @param enabled the boolean value of the enemy's damagable status
+     *
+     */
+    public final void setDamageEnable(final boolean enabled) {
+        this.damageEnable = enabled;
+    }
+
+    /**
+     * Gets the enemy's damagable status.
+     *
+     * @return the boolean value of the enemy's damagable status
+     */
+    public final boolean getDamageEnable() {
+        return damageEnable;
     }
 
     /**

@@ -393,7 +393,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     @Override
     public AttackEffect meleeAttack() {
-        if (attackEnable) {
+        if (attackEnable & this.weaponArray[0] != null) {
             final int hitBoxWidth = 50;
             final int hitBoxHeight = 50;
             final int effectYOffset = 10;
@@ -419,7 +419,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     @Override
     public AttackEffect rangeAttack() {
-        if (attackEnable) {
+        if (attackEnable & this.weaponArray[1] != null) {
             final int hitBoxWidth = 70;
             final int hitBoxHeight = 50;
             final int effectYOffset = 10;
