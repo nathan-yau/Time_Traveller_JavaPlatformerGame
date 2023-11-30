@@ -2,7 +2,11 @@ package ca.bcit.comp2522.termproject.pix.model.AttackEffect;
 
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.player.Direction;
-import javafx.animation.*;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.Timeline;
 import javafx.scene.image.Image;
 import javafx.util.Duration;
 
@@ -82,9 +86,7 @@ public class RangeEffect extends AttackEffect {
         movement = new Timeline(movingToLeft);
 
         movement.setCycleCount(1);
-        movement.setOnFinished(event -> {
-            movementCompletion.complete(true);
-        });
+        movement.setOnFinished(event -> movementCompletion.complete(true));
     }
 
     /**
@@ -104,9 +106,15 @@ public class RangeEffect extends AttackEffect {
         return movementCompletion;
     }
 
+    /**
+     * Starts the on hit effect.
+     *
+     * @return a CompletableFuture of a boolean
+     */
     @Override
     public CompletableFuture<Boolean> startOnHitEffect() {
         final int duration = 100;
+        final int delayDuration = 300;
         final int totalFrames = 10;
         final int[] hitFrame = {0};
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
@@ -119,19 +127,22 @@ public class RangeEffect extends AttackEffect {
                 })
         );
         onHitAnimation.setCycleCount(totalFrames);
-        onHitAnimation.setOnFinished(event -> {
-            completionFuture.complete(true);
-        });
+        onHitAnimation.setOnFinished(event -> completionFuture.complete(true));
 
-        onHitAnimation.setDelay(Duration.millis(300));
+        onHitAnimation.setDelay(Duration.millis(delayDuration));
         onHitAnimation.play();
 
         return completionFuture;
     }
 
+    /**
+     * Stops the initial effect.
+     *
+     */
     @Override
     public void stopInitialEffect() {
-        Duration delayDuration = Duration.millis(300);
+        final int delayMillis = 300;
+        Duration delayDuration = Duration.millis(delayMillis);
         PauseTransition delay = new PauseTransition(delayDuration);
         delay.setOnFinished(event -> {
             if (currentAnimation != null) {
