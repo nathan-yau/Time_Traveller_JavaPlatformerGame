@@ -17,6 +17,7 @@ import ca.bcit.comp2522.termproject.pix.model.pickupitem.WeaponPickup;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * Manages the components of the game platform.
@@ -44,23 +45,24 @@ public class PlatformManager {
     // The array of enemies.
     private final ArrayList<Enemy> enemyArray;
 
-    // The level manager.
-    private final LevelManager levelManager;
-
     // The width of the current level.
     private final int levelWidth;
+
+    // The level manager.
+    private final LevelManager levelManager;
 
     // The height of the current level.
     private final int leveHeight;
 
     /**
      * Constructs a PlatformManager.
+     * @param levelController the current level manager
      */
-    public PlatformManager() {
+    public PlatformManager(final LevelManager levelController) {
         this.blockArray = new ArrayList<>();
         this.pickUpItemArray = new ArrayList<>();
         this.enemyArray = new ArrayList<>();
-        this.levelManager = new LevelManager();
+        this.levelManager = levelController;
         this.levelWidth = levelManager.getCurrentLevelWidth();
         this.leveHeight = levelManager.getCurrentLevelHeight();
     }
@@ -336,6 +338,25 @@ public class PlatformManager {
             }
         }
         return gamingArea(nearbyBlock);
+    }
+
+    /**
+     * Clears all the arrays.
+     */
+    public void clearAllArray() {
+        Iterator<StandardBlock> blockIterator = blockArray.iterator();
+        while (blockIterator.hasNext()) {
+            StandardBlock block = blockIterator.next();
+            block.terminateAnimation();
+            blockIterator.remove();
+        }
+        Iterator<Enemy> iterator = enemyArray.iterator();
+        while (iterator.hasNext()) {
+            Enemy enemy = iterator.next();
+            enemy.terminateAnimation();
+            iterator.remove();
+        }
+        pickUpItemArray.clear();
     }
 
     /**

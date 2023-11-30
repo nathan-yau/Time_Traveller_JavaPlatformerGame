@@ -7,6 +7,7 @@ import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
+import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
@@ -41,6 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @version 2023-11
  */
 public class GameController {
+    private int index = 1;
     private final Pane appRoot;
     private final Pane gameRoot;
     private final Pane uiRoot;
@@ -55,6 +57,7 @@ public class GameController {
     private final ItemInteraction itemInteraction;
     private final EnemyInteraction enemyInteraction;
     private boolean rangeTargetHit;
+    private final LevelManager levelManager;
 
     /**
      * Constructs a GameController object with default values.
@@ -66,7 +69,8 @@ public class GameController {
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
-        this.platform = new PlatformManager();
+        this.levelManager = new LevelManager();
+        this.platform = new PlatformManager(levelManager);
         this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
         this.cachedBlockArray = new ArrayList<>();
@@ -456,7 +460,7 @@ public class GameController {
                     });
                     final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
                     System.out.println("Melee damage: " + meleeDamage);
-                    if (enemy.takeDamage(meleeDamage) == 0) {
+                    if (enemy.takeDamage(meleeDamage) <= 0) {
                         enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
                         return true;
                     } else {
@@ -592,6 +596,18 @@ public class GameController {
         // Listen to running signal
         if (isPressed(KeyCode.I)) {
             player.run();
+        }
+
+        if (isPressed(KeyCode.L)) {
+            index = index % 3 + 1;
+            this.setBackground(String.format("Background/%s.png", index));
+            gameRoot.getChildren().clear();
+            cachedBlockArray.clear();
+            platform.clearAllArray();
+            levelManager.setCurrentLevel(index);
+            this.setUpPlatform();
+            setCachedBlockArray();
+            gameRoot.getChildren().add(player);
         }
 
         // Listen to walk signal

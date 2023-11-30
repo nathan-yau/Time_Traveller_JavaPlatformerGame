@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public class Minion extends Enemy implements Runnable, AnimatedObjects {
+public class Minion extends Enemy implements Runnable {
     private Action action;
     private final double leftmostWalkingRange;
     private final double upmostFlyingRange;
@@ -226,6 +226,7 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
         beginningTimeline.setOnFinished(event -> {
             this.setDirection(Direction.FORWARD);
             this.facingDirection = Direction.FORWARD;
+            System.out.println("Done walking once");
             this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
         });
 
@@ -255,14 +256,14 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
      */
     public void terminateAnimation() {
         this.stopAllAliveAnimation();
-        AnimatedObjects.releaseParallelTransition(this.currentAnimation);
-        AnimatedObjects.releaseTimeline(this.hurtingAnimation);
-        AnimatedObjects.releaseTimeline(this.attackingAnimation);
-        AnimatedObjects.releaseSequentialTransition(this.movingAction);
+        this.currentAnimation = AnimatedObjects.releaseParallelTransition(this.currentAnimation);
+        this.hurtingAnimation = AnimatedObjects.releaseTimeline(this.hurtingAnimation);
+        this.attackingAnimation = AnimatedObjects.releaseTimeline(this.attackingAnimation);
+        this.movingAction = AnimatedObjects.releaseSequentialTransition(this.movingAction);
         if (xWalker) {
-            AnimatedObjects.releaseTimeline(this.walkingAnimation);
+            this.walkingAnimation = AnimatedObjects.releaseTimeline(this.walkingAnimation);
         } else {
-            AnimatedObjects.releaseTimeline(this.flyingAnimation);
+            this.flyingAnimation = AnimatedObjects.releaseTimeline(this.flyingAnimation);
         }
     }
 
@@ -316,6 +317,7 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
             completionFuture.complete(true);
             dyingAnimation.stop();
             dyingAnimation.getKeyFrames().clear();
+            currentAnimation.play();
             this.terminateAnimation();
         });
         dyingAnimation.setCycleCount(dyingFrame);
