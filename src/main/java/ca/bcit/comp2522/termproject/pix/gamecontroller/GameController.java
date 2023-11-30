@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -177,7 +176,6 @@ public class GameController {
      * Represents the collision detector.
      */
     private static final class CollisionDetector {
-        private final int yTolerance = 20;
 
         /**
          * Constructs a CollisionDetector.
@@ -211,9 +209,6 @@ public class GameController {
             if (rightSide) {
                 distance = Math.abs(firstGameObject.getMaxX() - secondGameObject.getMinX());
             }
-            if (secondGameObject.getSubtype() == BlockType.TESTING_BLOCK) {
-                System.out.println("CDX Distance: " + distance);
-            }
             return distance <= xTolerance;
         }
 
@@ -227,25 +222,12 @@ public class GameController {
         private boolean collidingDetectorY(final GameObject<? extends GameType> firstGameObject,
                                            final GameObject<? extends GameType> secondGameObject,
                                            final boolean upSide) {
+            final int yTolerance = 20;
             double distance = Math.abs(firstGameObject.getMinY() - secondGameObject.getMaxY());
             if (upSide) {
                 distance = Math.abs(firstGameObject.getMaxY() - secondGameObject.getMinY());
             }
-            if (secondGameObject.getSubtype() == BlockType.TESTING_BLOCK) {
-                System.out.println("CDY Distance: " + distance);
-            }
             return distance <= yTolerance;
-        }
-
-        /**
-         * Checks if the two objects are on the same y-axis.
-         * @param firstGameObject the first game object
-         * @param secondGameObject the second game object
-         * @return true if the player is colliding with the platform, false otherwise
-         */
-        private boolean onSameYAxis(final GameObject<? extends GameType> firstGameObject,
-                                    final GameObject<? extends GameType> secondGameObject) {
-            return Math.abs(firstGameObject.getMaxY() - secondGameObject.getMaxY()) <= yTolerance;
         }
 
         /**
@@ -257,15 +239,24 @@ public class GameController {
         private boolean onSameXAxis(final GameObject<? extends GameType> firstGameObject,
                                     final GameObject<? extends GameType> secondGameObject) {
             final int edgeOffset = 10;
+            // Check if the first object is inside the second object
             boolean firstObjectInside = secondGameObject.getMinX() <= firstGameObject.getMinX()
                     && secondGameObject.getMaxX() >= firstGameObject.getMaxX();
+            // Check if the first object is on the left edge of the second object
             boolean firstObjectOnLeft = secondGameObject.getMinX() >= firstGameObject.getMinX()
                     && firstGameObject.getMaxX() >= secondGameObject.getMinX() + edgeOffset;
+            // Check if the first object is on the right edge of the second object
             boolean firstObjectOnRight = firstGameObject.getMaxX() >= secondGameObject.getMaxX()
                     && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
             return firstObjectInside || firstObjectOnLeft || firstObjectOnRight;
         }
 
+        /**
+         * Calculates the collision percentage of the two objects.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return the collision percentage as double
+         */
         public double calculateCollisionPercentage(final GameObject<? extends GameType>  firstGameObject,
                                                           final GameObject<? extends GameType>  secondGameObject) {
 
@@ -324,22 +315,11 @@ public class GameController {
             final double vectorY = player.getVelocityY();
             final boolean movingDown = vectorY > 0;
             boolean onLadder = false;
-            final double ladderCollisionPercentage = 30;
             for (int i = 0; i < Math.abs(vectorY); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
                         if (block.getSubtype() == BlockType.LADDERS) {
-                            if (collisionDetector.onSameXAxis(player, block)
-                                    && collisionDetector.calculateCollisionPercentage(player, block)
-                                    > ladderCollisionPercentage) {
-                                player.setNextToLadder(true);
-                                if (player.getCenterX() > block.getCenterX()) {
-                                    player.setClimbDirection(Direction.BACKWARD);
-                                } else {
-                                    player.setClimbDirection(Direction.FORWARD);
-                                }
-                                onLadder = true;
-                            }
+                            onLadder = interactWithLadders(block, onLadder);
                             continue;
                         }
                         if (collisionDetector.collidingDetectorY(player, block, movingDown)
@@ -348,11 +328,7 @@ public class GameController {
                                 player.offsetGravity();
                             }
                             if (block.getSubtype() == BlockType.DISAPPEARING_BLOCK) {
-                                block.animate().thenAccept(isDone -> {
-                                    if (isDone) {
-                                        this.blockRemoval(block);
-                                    }
-                                });
+                                interactWithDisappearingBlocks(block);
                             }
                             return;
                         }
@@ -373,6 +349,40 @@ public class GameController {
             platform.getBlockArray().removeIf(block::equals);
             gameRoot.getChildren().removeIf(block::equals);
             cachedBlockArray.removeIf(block::equals);
+        }
+
+        /*
+         * Interacts with the ladders.
+         * @param block the ladder block
+         * @param onLadder whether the player is on the ladder
+         * @return true if the player is on the ladder, false otherwise
+         */
+        private boolean interactWithLadders(StandardBlock block, boolean onLadder) {
+            final double ladderCollisionPercentage = 30;
+            if (collisionDetector.onSameXAxis(player, block)
+                    && collisionDetector.calculateCollisionPercentage(player, block)
+                    > ladderCollisionPercentage) {
+                player.setNextToLadder(true);
+                if (player.getCenterX() > block.getCenterX()) {
+                    player.setClimbDirection(Direction.BACKWARD);
+                } else {
+                    player.setClimbDirection(Direction.FORWARD);
+                }
+                return true;
+            }
+            return onLadder;
+        }
+
+        /*
+         * Interacts with the disappearing blocks.
+         * @param block the disappearing block
+         */
+        private void interactWithDisappearingBlocks(StandardBlock block) {
+            block.animate().thenAccept(isDone -> {
+                if (isDone) {
+                    this.blockRemoval(block);
+                }
+            });
         }
     }
 
@@ -418,6 +428,16 @@ public class GameController {
         final double hitBoxCollisionPercentage = 50;
         ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
 
+        /**
+         * Constructs an EnemyInteraction object.
+         */
+        EnemyInteraction() {}
+
+
+        /*
+         * Interacts with the enemies with melee weapon.
+         * @param hitBox the attack hit box
+         */
         private void meleeWithEnemies(final AttackEffect hitBox) {
             AtomicBoolean found = new AtomicBoolean(false);
             hitBox.startInitialEffect().thenAccept(isDone -> {
@@ -450,41 +470,61 @@ public class GameController {
             });
         }
 
+
+        /*
+         * Interacts with the enemies with range weapon.
+         * @param existingRangeHitBox the existing range hit box
+         * @param enemy the enemy
+         */
+        private void rangeWithEnemies(final AttackEffect existingRangeHitBox, final Enemy enemy) {
+            if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
+                final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
+                System.out.println("Range damage: " + rangeDamage);
+                enemy.setDamageEnable(false);
+                existingRangeHitBox.stopInitialEffect();
+                rangeTargetHit = true;
+                existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
+                    gameRoot.getChildren().remove(existingRangeHitBox);
+                    player.vanishRangeHitBox();
+                    rangeTargetHit = false;
+                    enemy.setDamageEnable(true);
+                });
+                if (enemy.takeDamage(rangeDamage) != 0) {
+                    enemy.getHurt();
+                } else {
+                    enemiesToRemove.add(enemy);
+                }
+            }
+        }
+
+        /*
+         * Interacts with the enemies.
+         */
         private void interactWithEnemies() {
             final double enemyCollisionPercentage = 40;
             AttackEffect existingRangeHitBox = player.getRangeHitBox();
             for (Enemy enemy : platform.getEnemyArray()) {
                 if (collisionDetector.objectIntersect(player, enemy)
                     && collisionDetector.calculateCollisionPercentage(player, enemy) > enemyCollisionPercentage) {
-                    enemy.setDirection(Direction.FORWARD);
-                    if (player.getCenterX() < enemy.getCenterX()) {
-                        enemy.setDirection(Direction.BACKWARD);
-                    }
-                    enemy.meleeAttack();
-                    player.getHurt();
-                    return;
+                        enemy.setDirection(Direction.FORWARD);
+                        if (player.getCenterX() < enemy.getCenterX()) {
+                            enemy.setDirection(Direction.BACKWARD);
+                        }
+                        enemy.meleeAttack();
+                        player.getHurt();
+                        return;
                 }
                 if (existingRangeHitBox != null) {
-                    if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
-                        final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
-                        System.out.println("Range damage: " + rangeDamage);
-                        enemy.setDamageEnable(false);
-                        existingRangeHitBox.stopInitialEffect();
-                        rangeTargetHit = true;
-                        existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
-                            gameRoot.getChildren().remove(existingRangeHitBox);
-                            player.vanishRangeHitBox();
-                            rangeTargetHit = false;
-                            enemy.setDamageEnable(true);
-                        });
-                        if (enemy.takeDamage(rangeDamage) != 0) {
-                            enemy.getHurt();
-                        } else {
-                            enemiesToRemove.add(enemy);
-                        }
-                    }
+                    this.rangeWithEnemies(existingRangeHitBox, enemy);
                 }
             }
+            enemiesRemoval();
+        }
+
+        /*
+         * Removes the enemy from the game.
+         */
+        private void enemiesRemoval() {
             platform.getEnemyArray().removeIf(deadEnemy -> {
                 if (enemiesToRemove.contains(deadEnemy)) {
                     deadEnemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(deadEnemy));
