@@ -44,5 +44,8 @@ public abstract class AttackEffect extends GameObject<EffectType> {
      */
     public abstract CompletableFuture<Boolean> startOnHitEffect();
 
+    /**
+     * Stops the initial effect.
+     */
     public abstract void stopInitialEffect();
 }
