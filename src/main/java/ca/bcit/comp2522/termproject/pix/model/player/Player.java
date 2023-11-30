@@ -261,6 +261,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.setTranslateY(this.getTranslateY() - 1);
             this.direction = this.climbDirection;
             turnOffGravity = true;
+            jumpAnimation.stop();
+            walkAnimation.stop();
             climbAnimation.play();
         }
     }
@@ -316,6 +318,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         } else {
             this.currentImagePath = String.format("player/%s", direction.name());
             walkAnimation.stop();
+            climbAnimation.stop();
             jumpAnimation.play();
             this.setTranslateY(this.getTranslateY() - jumpingPixel);
             this.action = Action.JUMPING;

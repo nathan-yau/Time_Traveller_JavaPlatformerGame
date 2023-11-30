@@ -376,12 +376,14 @@ public class GameController {
 
         // Check and handle collision with items
         private void interactWithItems() {
+            final double itemCollisionPercentage = 40;
             Iterator<PickUpItem> iterator = platform.getItemArray().iterator();
 
             while (iterator.hasNext()) {
                 PickUpItem item = iterator.next();
 
-                if (collisionDetector.objectIntersect(player, item)) {
+                if (collisionDetector.objectIntersect(player, item)
+                        && collisionDetector.calculateCollisionPercentage(player, item) > itemCollisionPercentage) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
                     } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
@@ -403,6 +405,7 @@ public class GameController {
 
     // Handle interactions with pickup items.
     private final class EnemyInteraction {
+        final double hitBoxCollisionPercentage = 50;
         ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
 
         private void meleeWithEnemies(final AttackEffect hitBox) {
@@ -414,7 +417,9 @@ public class GameController {
                 }
             });
             platform.getEnemyArray().removeIf(enemy -> {
-                if (collisionDetector.objectIntersect(hitBox, enemy)) {
+                System.out.println(collisionDetector.calculateCollisionPercentage(hitBox, enemy));
+                if (collisionDetector.objectIntersect(hitBox, enemy)
+                        && collisionDetector.calculateCollisionPercentage(hitBox, enemy) > hitBoxCollisionPercentage) {
                     found.set(true);
                     hitBox.stopInitialEffect();
                     hitBox.startOnHitEffect().thenAccept(isDone -> {
@@ -436,9 +441,11 @@ public class GameController {
         }
 
         private void interactWithEnemies() {
+            final double enemyCollisionPercentage = 40;
             AttackEffect existingRangeHitBox = player.getRangeHitBox();
             for (Enemy enemy : platform.getEnemyArray()) {
-                if (collisionDetector.objectIntersect(player, enemy)) {
+                if (collisionDetector.objectIntersect(player, enemy)
+                    && collisionDetector.calculateCollisionPercentage(player, enemy) > enemyCollisionPercentage) {
                     enemy.setDirection(Direction.FORWARD);
                     if (player.getCenterX() < enemy.getCenterX()) {
                         enemy.setDirection(Direction.BACKWARD);
