@@ -64,12 +64,18 @@ public class MeleeEffect extends AttackEffect {
 
         return completionFuture;
     }
-
-
+    /**
+     * Stops the initial effect.
+     */
     public void stopInitialEffect() {
         attackAnimation.stop();
-    };
+    }
 
+    /**
+     * Starts the on hit effect.
+     *
+     * @return a CompletableFuture of a boolean
+     */
     @Override
     public CompletableFuture<Boolean> startOnHitEffect() {
         final int duration = 100;
