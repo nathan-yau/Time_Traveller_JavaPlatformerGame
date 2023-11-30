@@ -256,7 +256,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         });
     }
 
-    public void climb(boolean climbUp) {
+    /**
+     * Moves the Player in the y direction by 1 pixel.
+     * @param climbUp true if climbing up, false if climbing down
+     */
+    public void climb(final boolean climbUp) {
         final int climbPerFrame;
         if (climbUp) {
             climbPerFrame = -1;
@@ -666,18 +670,30 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         }
     }
 
+    /**
+     * Checks if the Player is next to a ladder.
+     * @return true if the Player is next to a ladder, false otherwise
+     */
     public boolean isNextToLadder() {
         return this.climbEnable;
     }
 
-    public void setNextToLadder(boolean nextToLadder) {
+    /**
+     * Sets the Player to be next to a ladder.
+     * @param nextToLadder true if the Player is next to a ladder, false otherwise
+     */
+    public void setNextToLadder(final boolean nextToLadder) {
         this.climbEnable = nextToLadder;
         if (!climbEnable & this.turnOffGravity) {
             this.turnOffGravity = false;
         }
     }
 
-    public void setClimbDirection(Direction direction) {
-        this.climbDirection = direction;
+    /**
+     * Gets the direction of the Player.
+     * @param climbingDirection the direction of the Player
+     */
+    public void setClimbDirection(final Direction climbingDirection) {
+        this.climbDirection = climbingDirection;
     }
 }
