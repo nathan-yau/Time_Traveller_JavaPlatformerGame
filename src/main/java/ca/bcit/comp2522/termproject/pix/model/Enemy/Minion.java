@@ -250,6 +250,9 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
                 this.translateXProperty());
     }
 
+    /**
+     * Terminates the current animation.
+     */
     public void terminateAnimation() {
         this.stopAllAliveAnimation();
         AnimatedObjects.releaseParallelTransition(this.currentAnimation);
