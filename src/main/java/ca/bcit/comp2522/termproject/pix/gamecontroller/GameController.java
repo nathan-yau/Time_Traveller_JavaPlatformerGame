@@ -260,6 +260,7 @@ public class GameController {
         public double calculateCollisionPercentage(final GameObject<? extends GameType>  firstGameObject,
                                                           final GameObject<? extends GameType>  secondGameObject) {
 
+            final int divisor = 100;
             // Calculate overlapping area
             double overlapWidth = Math.max(0, Math.min(firstGameObject.getMaxX(), secondGameObject.getMaxX())
                     - Math.max(firstGameObject.getMinX(), secondGameObject.getMinX()));
@@ -271,10 +272,7 @@ public class GameController {
             double totalArea = firstGameObject.getWidth() * firstGameObject.getHeight();
 
             // Calculate collision percentage
-            if (secondGameObject.getSubtype() == BlockType.TESTING_BLOCK) {
-                System.out.println("OSX: " + (overlappingArea / totalArea) * 100);
-            }
-            return (overlappingArea / totalArea) * 100;
+            return (overlappingArea / totalArea) * divisor;
         }
     }
 
@@ -357,7 +355,7 @@ public class GameController {
          * @param onLadder whether the player is on the ladder
          * @return true if the player is on the ladder, false otherwise
          */
-        private boolean interactWithLadders(StandardBlock block, boolean onLadder) {
+        private boolean interactWithLadders(final StandardBlock block, final boolean onLadder) {
             final double ladderCollisionPercentage = 30;
             if (collisionDetector.onSameXAxis(player, block)
                     && collisionDetector.calculateCollisionPercentage(player, block)
@@ -377,7 +375,7 @@ public class GameController {
          * Interacts with the disappearing blocks.
          * @param block the disappearing block
          */
-        private void interactWithDisappearingBlocks(StandardBlock block) {
+        private void interactWithDisappearingBlocks(final StandardBlock block) {
             block.animate().thenAccept(isDone -> {
                 if (isDone) {
                     this.blockRemoval(block);
@@ -431,7 +429,7 @@ public class GameController {
         /**
          * Constructs an EnemyInteraction object.
          */
-        EnemyInteraction() {}
+        EnemyInteraction() { }
 
 
         /*
