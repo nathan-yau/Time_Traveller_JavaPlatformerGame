@@ -256,11 +256,18 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         });
     }
 
-    public void climb() {
+    public void climb(boolean climbUp) {
+        final int climbPerFrame;
+        if (climbUp) {
+            climbPerFrame = -1;
+        } else {
+            climbPerFrame = 1;
+        }
         if (climbEnable) {
-            this.setTranslateY(this.getTranslateY() - 1);
+            this.setTranslateY(this.getTranslateY() + climbPerFrame);
             this.direction = this.climbDirection;
             turnOffGravity = true;
+            attackEnable = false;
             jumpAnimation.stop();
             walkAnimation.stop();
             climbAnimation.play();
@@ -665,8 +672,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
 
     public void setNextToLadder(boolean nextToLadder) {
         this.climbEnable = nextToLadder;
-        if (!climbEnable) {
-            turnOffGravity = false;
+        if (!climbEnable & this.turnOffGravity) {
+            this.turnOffGravity = false;
         }
     }
 

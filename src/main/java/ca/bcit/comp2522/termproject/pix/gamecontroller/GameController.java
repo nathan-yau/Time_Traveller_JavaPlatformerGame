@@ -535,12 +535,19 @@ public class GameController {
         final int outOfBounds = 5;
 
         // Listen to jump signal and prevent for jumping out of the map
+        // If the player is next to a ladder, climb instead of jump
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
             if (player.isNextToLadder()) {
-                System.out.println("Climbing");
-                player.climb();
+                player.climb(true);
             } else {
                 player.setJumpSpeed();
+            }
+        }
+
+        // Listen to climb down signal
+        if (isPressed(KeyCode.S) && player.getMinY() >= outOfBounds) {
+            if (player.isNextToLadder()) {
+                player.climb(false);
             }
         }
 
