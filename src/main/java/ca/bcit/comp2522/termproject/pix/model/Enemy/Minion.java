@@ -98,6 +98,7 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
         this.dyingDuration = dyingDuration;
         this.dyingFrame = dyingFrame;
         this.xWalker = xWalker;
+        this.facingDirection = Direction.BACKWARD;
         this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
 
     }

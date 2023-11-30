@@ -250,6 +250,20 @@ public class PlatformManager {
         boolean leftColFilled = positions[0][0] & positions[1][0] & positions[2][0];
         boolean rightColFilled = positions[0][2] & positions[1][2] & positions[2][2];
 
+        if (!positions[0][0] & !positions[1][0]
+                & !positions[0][2] & !positions[1][2] & middleColFilled) {
+            return PlatformPosition.WALL;
+        }
+
+        if (!positions[0][0] & !positions[1][0]
+                & !positions[0][2] & !positions[1][2] & !positions[0][1] & positions[2][1]) {
+            return PlatformPosition.WALL_TOP;
+        }
+
+        if (!positions[0][0] & !positions[0][2] & middleColFilled) {
+            return PlatformPosition.WALL_BOTTOM;
+        }
+
         if (!positions[0][0] && positions[1][0] & positions[0][1]) {
             return PlatformPosition.DIRT_RIGHT_CORNER;
         }
@@ -263,6 +277,7 @@ public class PlatformManager {
                 return PlatformPosition.FLOOR_BOTTOM;
             }
         }
+
         if (middleColFilled & !leftColFilled & rightColFilled) {
             return PlatformPosition.LEFT_EDGE;
         }

@@ -250,7 +250,7 @@ public class GameController {
          */
         private boolean onSameXAxis(final GameObject<? extends GameType> firstGameObject,
                                     final GameObject<? extends GameType> secondGameObject) {
-            final int edgeOffset = 2;
+            final int edgeOffset = 10;
             boolean firstObjectOnLeft = secondGameObject.getMinX() + edgeOffset < firstGameObject.getMaxX()
                     && firstGameObject.getMaxX() <= secondGameObject.getMaxX();
             boolean firstObjectOnRight = secondGameObject.getMinX() < firstGameObject.getMaxX()
