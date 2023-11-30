@@ -36,6 +36,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private boolean jumpEnable;
     private boolean attackEnable;
     private boolean damageEnable;
+    private boolean climbEnable;
+    private boolean turnOffGravity;
     private AttackEffect meleeHitBox;
     private AttackEffect rangeHitBox;
     private double speed;
@@ -50,8 +52,10 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Timeline rangeAnimation;
     private Timeline walkAnimation;
     private Timeline jumpAnimation;
+    private Timeline climbAnimation;
     private final Weapon[] weaponArray = new Weapon[2];
     private Timeline hurtAnimation;
+    private Direction climbDirection;
 
     /**
      * Constructs a Player object.
@@ -67,8 +71,10 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.jumpEnable = true;
         this.attackEnable = true;
         this.damageEnable = true;
+        this.climbEnable = false;
         this.meleeHitBox = null;
         this.rangeHitBox = null;
+        this.climbDirection = Direction.FORWARD;
         this.currentImagePath = String.format("player/%s", direction.name());
         this.initializeMeleeAttackingAnimation();
         this.initializeRangeAttackingAnimation();
@@ -76,6 +82,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.initializeJumpingAnimation();
         this.initializeHurtingAnimation();
         this.initializePunchAttackingAnimation();
+        this.initializeClimbingAnimation();
         this.healthPoint = MAX_HEALTH_POINTS;
         this.speed = WALK_SPEED;
     }
@@ -112,17 +119,20 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private void initializeJumpingAnimation() {
         final int[] jumpFrame = {0};
         final int jumpDuration = 100;
-        final int jumpFrameCount = 8;
+        final int jumpFrameCount = 10;
         jumpAnimation = new Timeline(
                 new KeyFrame(Duration.millis(jumpDuration), event -> {
                     this.action = Action.JUMPING;
                     this.currentImagePath = String.format("player/%s", direction.name());
                     this.updatePlayerImage(String.format("%s/Jumping_%d.png", currentImagePath, jumpFrame[0]));
-                    jumpFrame[0] = (jumpFrame[0] + 1) % (jumpFrameCount + 1);
+                    jumpFrame[0] = (jumpFrame[0] + 1) % (jumpFrameCount);
                 })
         );
         jumpAnimation.setCycleCount(jumpFrameCount);
-        jumpAnimation.setOnFinished(event -> this.setIdle());
+        jumpAnimation.setOnFinished(event -> {
+            this.setIdle();
+            jumpFrame[0] = 0;
+        });
     }
 
     /*
@@ -142,6 +152,28 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         );
         walkAnimation.setCycleCount(Animation.INDEFINITE);
         walkAnimation.setOnFinished(event -> this.setIdle());
+    }
+
+    /*
+     * Initializes the jumping animation.
+     */
+    private void initializeClimbingAnimation() {
+        final int[] climbFrame = {0};
+        final int climbDuration = 100;
+        final int climbFrameCount = 6;
+        climbAnimation = new Timeline(
+                new KeyFrame(Duration.millis(climbDuration), event -> {
+                    this.action = Action.JUMPING;
+                    this.currentImagePath = String.format("player/%s", direction.name());
+                    this.updatePlayerImage(String.format("%s/Climb_%d.png", currentImagePath, climbFrame[0]));
+                    climbFrame[0] = (climbFrame[0] + 1) % (climbFrameCount);
+                })
+        );
+        climbAnimation.setCycleCount(climbFrameCount);
+        climbAnimation.setOnFinished(event -> {
+            this.setIdle();
+            climbFrame[0] = 0;
+        });
     }
 
     /*
@@ -212,6 +244,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
                 new KeyFrame(Duration.millis(hurtDuration), event -> {
                     this.action = Action.MELEE_ATTACK;
                     this.setOpacity(hurtFrame[0] % 2);
+                    this.currentImagePath = String.format("player/%s", direction.name());
                     this.updatePlayerImage(String.format("%s/hurting_%d.png", currentImagePath, hurtFrame[0]));
                     hurtFrame[0] = (hurtFrame[0] + 1) % (hurtFrameCount);
                 })
@@ -221,6 +254,15 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.setIdle();
             this.setOpacity(1);
         });
+    }
+
+    public void climb() {
+        if (climbEnable) {
+            this.setTranslateY(this.getTranslateY() - 1);
+            this.direction = this.climbDirection;
+            turnOffGravity = true;
+            climbAnimation.play();
+        }
     }
 
     /**
@@ -268,7 +310,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         final double jumpingPixel = 1.0;
         final double fallingPixel = 0.8;
         if (movingDown) {
-            this.setTranslateY(this.getTranslateY() + fallingPixel);
+            if (!turnOffGravity) {
+                this.setTranslateY(this.getTranslateY() + fallingPixel);
+            }
         } else {
             this.currentImagePath = String.format("player/%s", direction.name());
             walkAnimation.stop();
@@ -321,7 +365,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Sets the Player to idle.
      */
     public void setIdle() {
-        System.out.println(walkAnimation.getStatus());
         if (this.action != Action.IDLE) {
             if (walkAnimation.getStatus() == Animation.Status.RUNNING) {
                 this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
@@ -329,6 +372,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.action = Action.IDLE;
             walkAnimation.stop();
             jumpAnimation.stop();
+            climbAnimation.stop();
             this.attackEnable = true;
         }
 
@@ -610,5 +654,20 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             }
             return this.weaponArray[1].getWeaponDamage();
         }
+    }
+
+    public boolean isNextToLadder() {
+        return this.climbEnable;
+    }
+
+    public void setNextToLadder(boolean nextToLadder) {
+        this.climbEnable = nextToLadder;
+        if (!climbEnable) {
+            turnOffGravity = false;
+        }
+    }
+
+    public void setClimbDirection(Direction direction) {
+        this.climbDirection = direction;
     }
 }

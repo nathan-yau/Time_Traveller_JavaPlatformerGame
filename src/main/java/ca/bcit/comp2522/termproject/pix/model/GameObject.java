@@ -115,6 +115,22 @@ public abstract class GameObject<T extends GameType> extends ImageView {
     }
 
     /**
+     * Gets the width of the game object.
+     * @return the width of the game object as a double
+     */
+    public final double getWidth() {
+        return this.getBoundsInParent().getWidth();
+    }
+
+    /**
+     * Gets the height of the game object.
+     * @return the height of the game object as a double
+     */
+    public final double getHeight() {
+        return this.getBoundsInParent().getHeight();
+    }
+
+    /**
      * Check if the Player intersects with another object.
      * @param objectBounds the bounds of the object
      * @return true if intersects, false if not

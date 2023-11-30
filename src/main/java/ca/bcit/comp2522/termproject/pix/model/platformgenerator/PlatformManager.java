@@ -117,15 +117,16 @@ public class PlatformManager {
                     blockArray.add(movingBlock);
                 } else if (categorySymbol == '2') {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                            BLOCK_HEIGHT, BlockType.DECORATION_BLOCK, currentLevel, "ladder");
+                            BLOCK_HEIGHT, BlockType.LADDERS, currentLevel, "ladder");
                     blockArray.add(decorationBlock);
                 } else if (categorySymbol == '3') {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "rope");
                     blockArray.add(decorationBlock);
                 } else if (categorySymbol == 'P') {
-                    HealthPotion healthPotion = new HealthPotion(xPosition, yPosition, BLOCK_WIDTH,
-                            BLOCK_HEIGHT, currentLevel, "healthPotion");
+                    final int yPadding = 10;
+                    HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding, currentLevel, "healthPotion");
                     pickUpItemArray.add(healthPotion);
                 } else if (categorySymbol == 'C') {
                     GoldCoin goldCoin = new GoldCoin(xPosition, yPosition, BLOCK_WIDTH,
@@ -153,8 +154,9 @@ public class PlatformManager {
                     minionThread.setDaemon(true);
                     minionThread.start();
                 } else if (categorySymbol == 'M') {
-                    WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
-                            BLOCK_HEIGHT, PickUpItemType.MELEE_WEAPON, currentLevel, "melee");
+                    final int yPadding = 10;
+                    WeaponPickup weapon = new WeaponPickup(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding, PickUpItemType.MELEE_WEAPON, currentLevel, "melee");
                     pickUpItemArray.add(weapon);
                 } else if (categorySymbol == 'R') {
                     WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,

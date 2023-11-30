@@ -147,9 +147,6 @@ public class GameController {
         final int cacheThreshold = 500;
         cachedBlockArray.clear();
         for (StandardBlock block : platform.getBlockArray()) {
-            if (Objects.equals(block.getSubtype(), BlockType.DECORATION_BLOCK)) {
-                continue;
-            }
             if (player.getCenterX() + cacheThreshold >= block.getMinX()
                     && player.getCenterX() - cacheThreshold <= block.getMaxX()) {
                 if (player.getCenterY() + cacheThreshold >= block.getMinY()
@@ -260,6 +257,24 @@ public class GameController {
                     && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
             return firstObjectOnLeft || firstObjectOnRight;
         }
+
+        public double calculateCollisionPercentage(final GameObject<? extends GameType>  firstGameObject,
+                                                          final GameObject<? extends GameType>  secondGameObject) {
+
+            // Calculate overlapping area
+            double overlapWidth = Math.max(0, Math.min(firstGameObject.getMaxX(), secondGameObject.getMaxX())
+                    - Math.max(firstGameObject.getMinX(), secondGameObject.getMinX()));
+            double overlapHeight = Math.max(0, Math.min(firstGameObject.getMaxY(), secondGameObject.getMaxY())
+                    - Math.max(firstGameObject.getMinY(), secondGameObject.getMinY()));
+            double overlappingArea = overlapWidth * overlapHeight;
+
+            // Calculate total area of either object
+            double totalArea = firstGameObject.getWidth() * firstGameObject.getHeight();
+
+            // Calculate collision percentage
+
+            return (overlappingArea / totalArea) * 100;
+        }
     }
 
     /**
@@ -279,6 +294,9 @@ public class GameController {
             }
             for (int i = 0; i < Math.abs(movementDelta); i++) {
                 for (StandardBlock block : cachedBlockArray) {
+                    if (block.getSubtype() == BlockType.LADDERS) {
+                        continue;
+                    }
                     if (collisionDetector.objectIntersect(player, block)) {
                         if (collisionDetector.collidingDetectorX(player, block, movingRight)) {
                             return;
@@ -295,9 +313,25 @@ public class GameController {
         private void interactWithBlocksY() {
             final double vectorY = player.getVelocityY();
             final boolean movingDown = vectorY > 0;
+            boolean onLadder = false;
+            final double ladderCollisionPercentage = 30;
             for (int i = 0; i < Math.abs(vectorY); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
+                        if (block.getSubtype() == BlockType.LADDERS) {
+                            if (collisionDetector.onSameXAxis(player, block)
+                                    && collisionDetector.calculateCollisionPercentage(player, block)
+                                    > ladderCollisionPercentage) {
+                                player.setNextToLadder(true);
+                                if (player.getCenterX() > block.getCenterX()) {
+                                    player.setClimbDirection(Direction.BACKWARD);
+                                } else {
+                                    player.setClimbDirection(Direction.FORWARD);
+                                }
+                                onLadder = true;
+                            }
+                            continue;
+                        }
                         if (collisionDetector.collidingDetectorY(player, block, movingDown)
                                 && collisionDetector.onSameXAxis(player, block)) {
                             if (movingDown) {
@@ -313,6 +347,9 @@ public class GameController {
                             return;
                         }
                     }
+                }
+                if (!onLadder) {
+                    player.setNextToLadder(false);
                 }
                 player.moveY(movingDown);
             }
@@ -482,7 +519,12 @@ public class GameController {
 
         // Listen to jump signal and prevent for jumping out of the map
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
-            player.setJumpSpeed();
+            if (player.isNextToLadder()) {
+                System.out.println("Climbing");
+                player.climb();
+            } else {
+                player.setJumpSpeed();
+            }
         }
 
         // Listen to running signal
