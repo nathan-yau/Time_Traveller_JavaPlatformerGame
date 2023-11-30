@@ -211,6 +211,9 @@ public class GameController {
             if (rightSide) {
                 distance = Math.abs(firstGameObject.getMaxX() - secondGameObject.getMinX());
             }
+            if (secondGameObject.getSubtype() == BlockType.TESTING_BLOCK) {
+                System.out.println("CDX Distance: " + distance);
+            }
             return distance <= xTolerance;
         }
 
@@ -227,6 +230,9 @@ public class GameController {
             double distance = Math.abs(firstGameObject.getMinY() - secondGameObject.getMaxY());
             if (upSide) {
                 distance = Math.abs(firstGameObject.getMaxY() - secondGameObject.getMinY());
+            }
+            if (secondGameObject.getSubtype() == BlockType.TESTING_BLOCK) {
+                System.out.println("CDY Distance: " + distance);
             }
             return distance <= yTolerance;
         }
@@ -251,11 +257,13 @@ public class GameController {
         private boolean onSameXAxis(final GameObject<? extends GameType> firstGameObject,
                                     final GameObject<? extends GameType> secondGameObject) {
             final int edgeOffset = 10;
-            boolean firstObjectOnLeft = secondGameObject.getMinX() + edgeOffset < firstGameObject.getMaxX()
-                    && firstGameObject.getMaxX() <= secondGameObject.getMaxX();
-            boolean firstObjectOnRight = secondGameObject.getMinX() < firstGameObject.getMaxX()
+            boolean firstObjectInside = secondGameObject.getMinX() <= firstGameObject.getMinX()
+                    && secondGameObject.getMaxX() >= firstGameObject.getMaxX();
+            boolean firstObjectOnLeft = secondGameObject.getMinX() >= firstGameObject.getMinX()
+                    && firstGameObject.getMaxX() >= secondGameObject.getMinX() + edgeOffset;
+            boolean firstObjectOnRight = firstGameObject.getMaxX() >= secondGameObject.getMaxX()
                     && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
-            return firstObjectOnLeft || firstObjectOnRight;
+            return firstObjectInside || firstObjectOnLeft || firstObjectOnRight;
         }
 
         public double calculateCollisionPercentage(final GameObject<? extends GameType>  firstGameObject,
@@ -272,7 +280,9 @@ public class GameController {
             double totalArea = firstGameObject.getWidth() * firstGameObject.getHeight();
 
             // Calculate collision percentage
-
+            if (secondGameObject.getSubtype() == BlockType.TESTING_BLOCK) {
+                System.out.println("OSX: " + (overlappingArea / totalArea) * 100);
+            }
             return (overlappingArea / totalArea) * 100;
         }
     }

@@ -123,6 +123,10 @@ public class PlatformManager {
                     StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "rope");
                     blockArray.add(decorationBlock);
+                } else if (categorySymbol == '9') {
+                        StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
+                                BLOCK_HEIGHT, BlockType.TESTING_BLOCK, currentLevel, "dirt");
+                        blockArray.add(decorationBlock);
                 } else if (categorySymbol == 'P') {
                     final int yPadding = 10;
                     HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
