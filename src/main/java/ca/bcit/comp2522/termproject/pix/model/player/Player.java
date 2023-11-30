@@ -46,6 +46,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private int healthPotionCounter;
     private int goldCoinCounter;
     private Timeline meleeAnimation;
+    private Timeline punchAnimation;
     private Timeline rangeAnimation;
     private Timeline walkAnimation;
     private Timeline jumpAnimation;
@@ -74,6 +75,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.initializeWalkingAnimation();
         this.initializeJumpingAnimation();
         this.initializeHurtingAnimation();
+        this.initializePunchAttackingAnimation();
         this.healthPoint = MAX_HEALTH_POINTS;
         this.speed = WALK_SPEED;
     }
@@ -178,6 +180,25 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         );
         meleeAnimation.setCycleCount(meleeAttackFrameCount);
         meleeAnimation.setOnFinished(event -> this.setIdle());
+    }
+
+    /*
+     * Initializes the punch attacking animation.
+     */
+    private void initializePunchAttackingAnimation() {
+        final int[] punchFrame = {0};
+        final int punchAttackDuration = 100;
+        final int punchAttackFrameCount = 7;
+        punchAnimation = new Timeline(
+                new KeyFrame(Duration.millis(punchAttackDuration), event -> {
+                    this.action = Action.MELEE_ATTACK;
+                    this.currentImagePath = String.format("player/%s", direction.name());
+                    this.updatePlayerImage(String.format("%s/punch_%d.png", currentImagePath, punchFrame[0]));
+                    punchFrame[0] = (punchFrame[0] + 1) % (punchAttackFrameCount);
+                })
+        );
+        punchAnimation.setCycleCount(punchAttackFrameCount);
+        punchAnimation.setOnFinished(event -> this.setIdle());
     }
 
     /*
@@ -396,17 +417,24 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             final int hitBoxWidth = 50;
             final int hitBoxHeight = 50;
             final int effectYOffset = 10;
-            attackEnable = false;
-            walkAnimation.stop();
-            jumpAnimation.stop();
-            meleeAnimation.play();
             double effectY = this.getBoundsInParent().getMinY();
             double effectX = this.getBoundsInParent().getMinX() - hitBoxWidth;
             if (direction == Direction.FORWARD) {
                 effectX = this.getBoundsInParent().getMaxX();
             }
-            this.meleeHitBox = new MeleeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
-                    "Explosion");
+            attackEnable = false;
+            walkAnimation.stop();
+            jumpAnimation.stop();
+            if (this.weaponArray[0] != null) {
+                meleeAnimation.play();
+                this.meleeHitBox = new MeleeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
+                        "Explosion");
+            } else {
+                punchAnimation.play();
+                this.meleeHitBox = new MeleeEffect(effectX, effectY + effectYOffset, hitBoxWidth, hitBoxHeight,
+                        "Punch");
+            }
+
             return this.meleeHitBox;
         }
         return null;
