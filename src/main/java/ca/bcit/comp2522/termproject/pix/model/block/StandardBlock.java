@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.block;
 
+import ca.bcit.comp2522.termproject.pix.AnimatedObjects;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
@@ -18,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public class StandardBlock extends GameObject<BlockType> {
+public class StandardBlock extends GameObject<BlockType> implements AnimatedObjects {
     private SequentialTransition fallingAnimation;
     /**
      * Constructs a StandardBlock.
@@ -77,5 +78,10 @@ public class StandardBlock extends GameObject<BlockType> {
         });
         fallingAnimation.play();
         return completionFuture;
+    }
+
+    @Override
+    public void terminateAnimation() {
+        fallingAnimation = AnimatedObjects.releaseSequentialTransition(fallingAnimation);
     }
 }

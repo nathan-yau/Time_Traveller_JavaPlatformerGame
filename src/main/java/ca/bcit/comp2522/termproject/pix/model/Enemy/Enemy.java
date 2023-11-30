@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.Enemy;
 
+import ca.bcit.comp2522.termproject.pix.AnimatedObjects;
 import ca.bcit.comp2522.termproject.pix.model.Combative;
 import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
@@ -15,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public abstract class Enemy extends GameObject<EnemyType> implements Combative, Damageable {
+public abstract class Enemy extends GameObject<EnemyType> implements Combative, Damageable, AnimatedObjects {
     private int healthPoint;
     private final String folderPath;
     private boolean attackEnable;

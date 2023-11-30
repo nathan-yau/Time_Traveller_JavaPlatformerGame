@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.pickupitem;
 
+import ca.bcit.comp2522.termproject.pix.AnimatedObjects;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import javafx.animation.PauseTransition;
