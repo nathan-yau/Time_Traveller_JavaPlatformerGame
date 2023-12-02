@@ -1,9 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.AttackEffect;
 
-import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents an attack effect.
@@ -12,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public abstract class AttackEffect extends GameObject<EffectType> {
+public abstract class AttackEffect extends ObjectEffect implements AttackInterface {
 
     /**
      * Constructs an AttackEffect.
@@ -29,11 +26,4 @@ public abstract class AttackEffect extends GameObject<EffectType> {
         super(x, y, w, h, ObjectType.EFFECT, name,
                 String.format("Effect/%s/%s_0.png", name.name(), imageName));
     }
-
-    /**
-     * Starts the effect.
-     *
-     * @return a CompletableFuture of a boolean
-     */
-    public abstract CompletableFuture<Boolean> startEffect();
 }

@@ -3,16 +3,31 @@ package ca.bcit.comp2522.termproject.pix.gamecontroller;
 import ca.bcit.comp2522.termproject.pix.GameType;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
+import ca.bcit.comp2522.termproject.pix.model.AttackEffect.TeleportEffect;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
+import ca.bcit.comp2522.termproject.pix.model.bossfight.BossProjectiles;
+import ca.bcit.comp2522.termproject.pix.model.bossfight.BossWeapon;
+import ca.bcit.comp2522.termproject.pix.model.bossfight.BossWeaponType;
+import ca.bcit.comp2522.termproject.pix.model.bossfight.Hal;
+import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
+import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
+import ca.bcit.comp2522.termproject.pix.model.weapon.MeleeWeapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
+import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
 import javafx.animation.AnimationTimer;
+import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.property.DoubleProperty;
-import javafx.scene.Node;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -21,12 +36,13 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Represents the main game loop.
@@ -36,6 +52,9 @@ import java.util.Objects;
  * @version 2023-11
  */
 public class GameController {
+    private static final int X_CAMERA_THRESHOLD = 300;
+    private static final int X_CAMERA_ADJUSTMENT = 300;
+    private static ChangeListener<? super Number> playerXListener;
     private final Pane appRoot;
     private final Pane gameRoot;
     private final Pane uiRoot;
@@ -48,6 +67,16 @@ public class GameController {
     private final CollisionDetector collisionDetector;
     private final BlockInteraction blockInteraction;
     private final ItemInteraction itemInteraction;
+    private final EnemyInteraction enemyInteraction;
+    private final BossInteraction bossInteraction;
+    private final ArrayList<BossWeapon> bossProjectiles;
+    private final DoubleProperty playerX;
+    private Enemy activeBoss;
+    private boolean rangeTargetHit;
+    private final LevelManager levelManager;
+    private Timeline bossWeaponTimeline;
+    private boolean switching = false;
+    private BossProjectiles bossFight;
 
     /**
      * Constructs a GameController object with default values.
@@ -59,16 +88,23 @@ public class GameController {
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
-        this.platform = new PlatformManager();
+        this.levelManager = new LevelManager();
+        this.platform = new PlatformManager(levelManager);
         this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
         this.cachedBlockArray = new ArrayList<>();
         this.collisionDetector = new CollisionDetector();
         this.blockInteraction = new BlockInteraction();
         this.itemInteraction = new ItemInteraction();
+        this.enemyInteraction = new EnemyInteraction();
         this.lastCacheXPosition = initialPlayerX;
         this.lastCacheYPosition = initialPlayerY;
-        this.setBackground("Background/1.png");
+        this.rangeTargetHit = false;
+        this.playerX = player.translateXProperty();
+        this.bossInteraction = new BossInteraction();
+        this.bossProjectiles = new ArrayList<>();
+        this.setBackground(this.getLevelBackground());
+        this.platform.createGamePlatform();
         this.setUpPlatform();
         this.setUpCamera();
         this.setCachedBlockArray();
@@ -79,34 +115,39 @@ public class GameController {
      * Sets up the platform using the PlatformManager.
      */
     private void setUpPlatform() {
-        platform.createGamePlatform();
-
         for (StandardBlock block: platform.getBlockArray()) {
             gameRoot.getChildren().add(block);
         }
 
-        for (Node item: platform.getItemArray()) {
+        for (PickUpItem item: platform.getItemArray()) {
             gameRoot.getChildren().add(item);
         }
+
+        for (Enemy enemy: platform.getEnemyArray()) {
+            gameRoot.getChildren().add(enemy);
+        }
     }
+
+
 
     /**
      * Sets up the camera.
      */
     private void setUpCamera() {
-        final DoubleProperty playerX = player.translateXProperty();
-        final int xCameraThreshold = 300;
-        final int xCameraAdjustment = 300;
-
         // Adjust the camera horizontal position based on player's location
-        playerX.addListener((obs, old, newValue) -> {
+        playerXListener = (obs, old, newValue) -> {
             int offset = newValue.intValue();
 
-            if (offset > xCameraThreshold && offset < platform.getTotalLevelWidth() - xCameraThreshold) {
-                gameRoot.setLayoutX(-(offset - xCameraAdjustment));
+            if (offset > X_CAMERA_THRESHOLD && offset < platform.getTotalLevelWidth() - X_CAMERA_THRESHOLD) {
+                gameRoot.setLayoutX(-(offset - X_CAMERA_ADJUSTMENT));
             }
-        });
+        };
 
+        playerX.addListener(playerXListener);
+    }
+
+    private void disableCamera() {
+        playerX.removeListener(playerXListener);
     }
 
     /**
@@ -126,6 +167,19 @@ public class GameController {
         appRoot.setBackground(bg);
     }
 
+    private void fadeTransitionToLevels() {
+        final int fadeDuration = 150;
+        final double fadeOpacityMin = 0.75;
+        final double fadeOpacityMax = 1.0;
+        FadeTransition fadeTransition = new FadeTransition(Duration.millis(fadeDuration), appRoot);
+        fadeTransition.setFromValue(fadeOpacityMax);
+        fadeTransition.setToValue(fadeOpacityMin);
+        fadeTransition.setCycleCount(2);
+        fadeTransition.setAutoReverse(true);
+        fadeTransition.setOnFinished(event -> fadeTransition.stop());
+        fadeTransition.play();
+    }
+
     /**
      * Sets the cached block array.
      */
@@ -133,9 +187,6 @@ public class GameController {
         final int cacheThreshold = 500;
         cachedBlockArray.clear();
         for (StandardBlock block : platform.getBlockArray()) {
-            if (Objects.equals(block.getSubtype(), BlockType.DECORATION_BLOCK)) {
-                continue;
-            }
             if (player.getCenterX() + cacheThreshold >= block.getMinX()
                     && player.getCenterX() - cacheThreshold <= block.getMaxX()) {
                 if (player.getCenterY() + cacheThreshold >= block.getMinY()
@@ -163,10 +214,32 @@ public class GameController {
     }
 
     /**
+     * Switches the level.
+     * @param dimension the dimension to switch to
+     */
+    private void switchLevel(final int dimension) {
+        gameRoot.getChildren().clear();
+        cachedBlockArray.clear();
+        platform.setNextLevelArrays(dimension);
+        this.setUpPlatform();
+        setCachedBlockArray();
+        TeleportEffect teleportEffect = player.teleport();
+        gameRoot.getChildren().add(player);
+        gameRoot.getChildren().add(teleportEffect);
+        this.setBackground(this.getLevelBackground());
+        this.fadeTransitionToLevels();
+        teleportEffect.startInitialEffect().thenAccept(isDone -> {
+            if (isDone) {
+                gameRoot.getChildren().remove(teleportEffect);
+                switching = false;
+            }
+        });
+    }
+
+    /**
      * Represents the collision detector.
      */
     private static final class CollisionDetector {
-        private final int yTolerance = 20;
 
         /**
          * Constructs a CollisionDetector.
@@ -181,7 +254,7 @@ public class GameController {
          * @return true if the player is colliding with the platform, false otherwise
          */
         private boolean objectIntersect(final GameObject<? extends GameType> firstGameObject,
-                                    final GameObject<? extends GameType> secondGameObject) {
+                                        final GameObject<? extends GameType> secondGameObject) {
             return firstGameObject.checkIntersect(secondGameObject.getBoundsInParent());
         }
 
@@ -195,7 +268,7 @@ public class GameController {
         public boolean collidingDetectorX(final GameObject<? extends GameType> firstGameObject,
                                           final GameObject<? extends GameType> secondGameObject,
                                           final boolean rightSide) {
-            final int xTolerance = 10;
+            final int xTolerance = 40;
             double distance = Math.abs(firstGameObject.getMinX() - secondGameObject.getMaxX());
             if (rightSide) {
                 distance = Math.abs(firstGameObject.getMaxX() - secondGameObject.getMinX());
@@ -213,22 +286,12 @@ public class GameController {
         private boolean collidingDetectorY(final GameObject<? extends GameType> firstGameObject,
                                            final GameObject<? extends GameType> secondGameObject,
                                            final boolean upSide) {
+            final int yTolerance = 20;
             double distance = Math.abs(firstGameObject.getMinY() - secondGameObject.getMaxY());
             if (upSide) {
                 distance = Math.abs(firstGameObject.getMaxY() - secondGameObject.getMinY());
             }
             return distance <= yTolerance;
-        }
-
-        /**
-         * Checks if the two objects are on the same y-axis.
-         * @param firstGameObject the first game object
-         * @param secondGameObject the second game object
-         * @return true if the player is colliding with the platform, false otherwise
-         */
-        private boolean onSameYAxis(final GameObject<? extends GameType> firstGameObject,
-                                    final GameObject<? extends GameType> secondGameObject) {
-            return Math.abs(firstGameObject.getMaxY() - secondGameObject.getMaxY()) <= yTolerance;
         }
 
         /**
@@ -239,12 +302,41 @@ public class GameController {
          */
         private boolean onSameXAxis(final GameObject<? extends GameType> firstGameObject,
                                     final GameObject<? extends GameType> secondGameObject) {
-            final int edgeOffset = 2;
-            boolean firstObjectOnLeft = secondGameObject.getMinX() + edgeOffset < firstGameObject.getMaxX()
-                    && firstGameObject.getMaxX() <= secondGameObject.getMaxX();
-            boolean firstObjectOnRight = secondGameObject.getMinX() < firstGameObject.getMaxX()
+            final int edgeOffset = 10;
+            // Check if the first object is inside the second object
+            boolean firstObjectInside = secondGameObject.getMinX() <= firstGameObject.getMinX()
+                    && secondGameObject.getMaxX() >= firstGameObject.getMaxX();
+            // Check if the first object is on the left edge of the second object
+            boolean firstObjectOnLeft = secondGameObject.getMinX() >= firstGameObject.getMinX()
+                    && firstGameObject.getMaxX() >= secondGameObject.getMinX() + edgeOffset;
+            // Check if the first object is on the right edge of the second object
+            boolean firstObjectOnRight = firstGameObject.getMaxX() >= secondGameObject.getMaxX()
                     && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
-            return firstObjectOnLeft || firstObjectOnRight;
+            return firstObjectInside || firstObjectOnLeft || firstObjectOnRight;
+        }
+
+        /**
+         * Calculates the collision percentage of the two objects.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return the collision percentage as double
+         */
+        public double calculateCollisionPercentage(final GameObject<? extends GameType>  firstGameObject,
+                                                          final GameObject<? extends GameType>  secondGameObject) {
+
+            final int divisor = 100;
+            // Calculate overlapping area
+            double overlapWidth = Math.max(0, Math.min(firstGameObject.getMaxX(), secondGameObject.getMaxX())
+                    - Math.max(firstGameObject.getMinX(), secondGameObject.getMinX()));
+            double overlapHeight = Math.max(0, Math.min(firstGameObject.getMaxY(), secondGameObject.getMaxY())
+                    - Math.max(firstGameObject.getMinY(), secondGameObject.getMinY()));
+            double overlappingArea = overlapWidth * overlapHeight;
+
+            // Calculate total area of either object
+            double totalArea = firstGameObject.getWidth() * firstGameObject.getHeight();
+
+            // Calculate collision percentage
+            return (overlappingArea / totalArea) * divisor;
         }
     }
 
@@ -265,6 +357,9 @@ public class GameController {
             }
             for (int i = 0; i < Math.abs(movementDelta); i++) {
                 for (StandardBlock block : cachedBlockArray) {
+                    if (block.getSubtype() == BlockType.LADDERS) {
+                        continue;
+                    }
                     if (collisionDetector.objectIntersect(player, block)) {
                         if (collisionDetector.collidingDetectorX(player, block, movingRight)) {
                             return;
@@ -281,24 +376,28 @@ public class GameController {
         private void interactWithBlocksY() {
             final double vectorY = player.getVelocityY();
             final boolean movingDown = vectorY > 0;
+            boolean onLadder = false;
             for (int i = 0; i < Math.abs(vectorY); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
+                        if (block.getSubtype() == BlockType.LADDERS) {
+                            onLadder = interactWithLadders(block, onLadder);
+                            continue;
+                        }
                         if (collisionDetector.collidingDetectorY(player, block, movingDown)
                                 && collisionDetector.onSameXAxis(player, block)) {
                             if (movingDown) {
                                 player.offsetGravity();
                             }
                             if (block.getSubtype() == BlockType.DISAPPEARING_BLOCK) {
-                                block.animate().thenAccept(isDone -> {
-                                    if (isDone) {
-                                        this.blockRemoval(block);
-                                    }
-                                });
+                                interactWithDisappearingBlocks(block);
                             }
                             return;
                         }
                     }
+                }
+                if (!onLadder) {
+                    player.setNextToLadder(false);
                 }
                 player.moveY(movingDown);
             }
@@ -313,6 +412,40 @@ public class GameController {
             gameRoot.getChildren().removeIf(block::equals);
             cachedBlockArray.removeIf(block::equals);
         }
+
+        /*
+         * Interacts with the ladders.
+         * @param block the ladder block
+         * @param onLadder whether the player is on the ladder
+         * @return true if the player is on the ladder, false otherwise
+         */
+        private boolean interactWithLadders(final StandardBlock block, final boolean onLadder) {
+            final double ladderCollisionPercentage = 30;
+            if (collisionDetector.onSameXAxis(player, block)
+                    && collisionDetector.calculateCollisionPercentage(player, block)
+                    > ladderCollisionPercentage) {
+                player.setNextToLadder(true);
+                if (player.getCenterX() > block.getCenterX()) {
+                    player.setClimbDirection(Direction.BACKWARD);
+                } else {
+                    player.setClimbDirection(Direction.FORWARD);
+                }
+                return true;
+            }
+            return onLadder;
+        }
+
+        /*
+         * Interacts with the disappearing blocks.
+         * @param block the disappearing block
+         */
+        private void interactWithDisappearingBlocks(final StandardBlock block) {
+            block.animate().thenAccept(isDone -> {
+                if (isDone) {
+                    this.blockRemoval(block);
+                }
+            });
+        }
     }
 
     // Handle interactions with pickup items.
@@ -325,27 +458,243 @@ public class GameController {
 
         // Check and handle collision with items
         private void interactWithItems() {
+            final double itemCollisionPercentage = 40;
             Iterator<PickUpItem> iterator = platform.getItemArray().iterator();
-            boolean yAxisCollision;
 
             while (iterator.hasNext()) {
-                final int yThreshold = 10;
                 PickUpItem item = iterator.next();
 
-                yAxisCollision = (player.getBoundsInParent().getMaxY()
-                        + yThreshold >= item.getBoundsInParent().getMaxY()
-                        & player.getBoundsInParent().getMinY() - yThreshold <= item.getBoundsInParent().getMaxY());
-
-                if (collisionDetector.objectIntersect(player, item) & yAxisCollision) {
+                if (collisionDetector.objectIntersect(player, item)
+                        && collisionDetector.calculateCollisionPercentage(player, item) > itemCollisionPercentage) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
-                        System.out.println("Potion count: " + player.getHealthPotionCounter());
                     } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
                         player.incrementGoldCoinCounter();
-                        System.out.println("Gold Coin count: " + player.getGoldCoinCounter());
+                    } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
+                        Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
+                        player.addWeapon(meleeWeapon);
+                    } else if (item.getSubtype() == PickUpItemType.RANGE_WEAPON) {
+                        Weapon rangeWeapon = new RangeWeapon(platform.getCurrentLevel());
+                        player.addWeapon(rangeWeapon);
                     }
-                    if (item.onPickUp()) {
+                    if (item.onPickup()) {
                         iterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    // Handle interactions with pickup items.
+    private final class EnemyInteraction {
+        final double hitBoxCollisionPercentage = 50;
+        ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
+
+        /**
+         * Constructs an EnemyInteraction object.
+         */
+        EnemyInteraction() { }
+
+
+        /*
+         * Interacts with the enemies with melee weapon.
+         * @param hitBox the attack hit box
+         */
+        private void meleeWithEnemies(final AttackEffect hitBox) {
+            AtomicBoolean found = new AtomicBoolean(false);
+            hitBox.startInitialEffect().thenAccept(isDone -> {
+                if (isDone && !found.get()) {
+                    gameRoot.getChildren().remove(hitBox);
+                    player.vanishMeleeHitBox();
+                }
+            });
+            platform.getEnemyArray().removeIf(enemy -> {
+                if (collisionDetector.objectIntersect(hitBox, enemy)
+                        && collisionDetector.calculateCollisionPercentage(hitBox, enemy) > hitBoxCollisionPercentage) {
+                    found.set(true);
+                    hitBox.stopInitialEffect();
+                    hitBox.startOnHitEffect().thenAccept(isDone -> {
+                        gameRoot.getChildren().remove(hitBox);
+                        player.vanishMeleeHitBox();
+                    });
+                    final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
+                    System.out.println("Melee damage: " + meleeDamage);
+                    if (enemy.takeDamage(meleeDamage) <= 0) {
+                        enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
+                        return true;
+                    } else {
+                        enemy.getHurt();
+                    }
+
+                }
+                return false;
+            });
+        }
+
+
+        /*
+         * Interacts with the enemies with range weapon.
+         * @param existingRangeHitBox the existing range hit box
+         * @param enemy the enemy
+         */
+        private void rangeWithEnemies(final AttackEffect existingRangeHitBox, final Enemy enemy) {
+            if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
+                final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
+                System.out.println("Range damage: " + rangeDamage);
+                enemy.setDamageEnable(false);
+                existingRangeHitBox.stopInitialEffect();
+                rangeTargetHit = true;
+                existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
+                    gameRoot.getChildren().remove(existingRangeHitBox);
+                    player.vanishRangeHitBox();
+                    rangeTargetHit = false;
+                    enemy.setDamageEnable(true);
+                });
+                if (enemy.takeDamage(rangeDamage) != 0) {
+                    enemy.getHurt();
+                } else {
+                    enemiesToRemove.add(enemy);
+                }
+            }
+        }
+
+        /*
+         * Interacts with the enemies.
+         */
+        private void interactWithEnemies() {
+            final double enemyCollisionPercentage = 40;
+            AttackEffect existingRangeHitBox = player.getRangeHitBox();
+            for (Enemy enemy : platform.getEnemyArray()) {
+                if (collisionDetector.objectIntersect(player, enemy)
+                    && collisionDetector.calculateCollisionPercentage(player, enemy) > enemyCollisionPercentage) {
+                        enemy.setDirection(Direction.FORWARD);
+                        if (player.getCenterX() < enemy.getCenterX()) {
+                            enemy.setDirection(Direction.BACKWARD);
+                        }
+                        enemy.meleeAttack();
+                        player.getHurt();
+                        return;
+                }
+                if (existingRangeHitBox != null) {
+                    this.rangeWithEnemies(existingRangeHitBox, enemy);
+                }
+            }
+            enemiesRemoval();
+        }
+
+        /*
+         * Removes the enemy from the game.
+         */
+        private void enemiesRemoval() {
+            platform.getEnemyArray().removeIf(deadEnemy -> {
+                if (enemiesToRemove.contains(deadEnemy)) {
+                    deadEnemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(deadEnemy));
+                    return true;
+                }
+                return false;
+            });
+        }
+    }
+
+
+    // Handle interactions with lasers.
+    private final class BossInteraction {
+        final double hitBoxCollisionPercentage = 50;
+        ArrayList<BossWeapon> projectiles;
+
+        /**
+         * Constructs an BossWeaponInteraction object.
+         */
+        BossInteraction() { }
+
+        /*
+         * Interacts with the boss with melee weapon.
+         * @param hitBox the attack hit box
+         */
+        private void meleeWithBoss(final AttackEffect hitBox) {
+            AtomicBoolean found = new AtomicBoolean(false);
+            hitBox.startInitialEffect().thenAccept(isDone -> {
+                if (isDone && !found.get()) {
+                    gameRoot.getChildren().remove(hitBox);
+                    player.vanishMeleeHitBox();
+                }
+            });
+
+            if (collisionDetector.objectIntersect(hitBox, activeBoss)
+                    && collisionDetector.calculateCollisionPercentage(hitBox, activeBoss)
+                    > hitBoxCollisionPercentage) {
+                found.set(true);
+                hitBox.stopInitialEffect();
+                hitBox.startOnHitEffect().thenAccept(isDone -> {
+                    gameRoot.getChildren().remove(hitBox);
+                    player.vanishMeleeHitBox();
+                });
+                final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
+                System.out.println("Melee damage: " + meleeDamage);
+                if (activeBoss.takeDamage(meleeDamage) <= 0) {
+                    endBossFight();
+                } else {
+                    activeBoss.getHurt();
+                }
+            }
+        }
+
+        /*
+         * Interacts with the boss with range weapons.
+         * @param existingRangeHitBox the existing range hit box
+         */
+        private void rangeWithBoss(final AttackEffect existingRangeHitBox) {
+            if (collisionDetector.objectIntersect(existingRangeHitBox, activeBoss) & activeBoss.getDamageEnable()) {
+                final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
+                System.out.println("Boss Range damage: " + rangeDamage);
+                activeBoss.setDamageEnable(false);
+                existingRangeHitBox.stopInitialEffect();
+                rangeTargetHit = true;
+                existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
+                    gameRoot.getChildren().remove(existingRangeHitBox);
+                    player.vanishRangeHitBox();
+                    rangeTargetHit = false;
+                    activeBoss.setDamageEnable(true);
+                });
+                if (activeBoss.takeDamage(rangeDamage) != 0) {
+                    activeBoss.getHurt();
+                } else {
+                    endBossFight();
+                }
+            }
+        }
+
+        /*
+         * Interacts with the boss.
+         */
+        private void interactWithBoss() {
+            AttackEffect existingRangeHitBox = player.getRangeHitBox();
+            if (existingRangeHitBox != null) {
+                this.rangeWithBoss(existingRangeHitBox);
+            }
+        }
+
+        public void setProjectiles(final ArrayList<BossWeapon> projectiles) {
+            this.projectiles = projectiles;
+        }
+
+        // Check and handle collision with boss weapons
+        private void interactWithBossWeapon() {
+            if (this.projectiles != null) {
+                final double itemCollisionPercentage = 40;
+                Iterator<BossWeapon> iterator = this.projectiles.iterator();
+
+                while (iterator.hasNext()) {
+                    BossWeapon projectile = iterator.next();
+
+                    if (collisionDetector.objectIntersect(player, projectile)
+                            && collisionDetector.calculateCollisionPercentage(player, projectile)
+                            > itemCollisionPercentage) {
+                        if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
+                            player.getHurt();
+                            iterator.remove();
+                            gameRoot.getChildren().remove(projectile);
+                        }
                     }
                 }
             }
@@ -376,9 +725,13 @@ public class GameController {
      * @return true if any key is pressed, false otherwise
      */
     private boolean isAnyKeyPressed() {
-        for (boolean isPressed : keyboardChecker.values()) {
-            if (isPressed) {
-                return true;
+        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.I, KeyCode.O, KeyCode.P};
+        for (KeyCode key : keysToCheck) {
+            if (keyboardChecker.containsKey(key)) {
+                Boolean isPressed = keyboardChecker.get(key);
+                if (isPressed != null && isPressed) {
+                    return true;
+                }
             }
         }
         return false;
@@ -389,11 +742,37 @@ public class GameController {
      * @throws IOException if the image is not found
      */
     private void keyboardListeners() throws IOException {
+        this.movementKeyListeners();
+        this.switchPlatformKeyListener();
+        this.meleeAttackKeyListener();
+        this.rangeAttackKeyListener();
+        // Listen to potion use signal
+        if (isPressed(KeyCode.H)) {
+            player.useHealthPotion();
+        }
+        // Listen to idle signal
+        if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
+            player.setIdle();
+        }
+    }
+    /* Listen to movement signals */
+    private void movementKeyListeners() {
         final int outOfBounds = 5;
-
         // Listen to jump signal and prevent for jumping out of the map
+        // If the player is next to a ladder, climb instead of jump
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
-            player.setJumpSpeed();
+            if (player.isNextToLadder()) {
+                player.climb(true);
+            } else {
+                player.setJumpSpeed();
+            }
+        }
+
+        // Listen to climb down signal
+        if (isPressed(KeyCode.S) && player.getMinY() >= outOfBounds) {
+            if (player.isNextToLadder()) {
+                player.climb(false);
+            }
         }
 
         // Listen to running signal
@@ -415,38 +794,141 @@ public class GameController {
         if (isPressed(KeyCode.D)  && player.getMaxX() <= platform.getTotalLevelWidth() - outOfBounds) {
             blockInteraction.interactWithBlocksX(true);
         }
-
-        // Listen to melee attack signal
-        if (isPressed(KeyCode.O) && player.getTranslateX() >= outOfBounds) {
-            AttackEffect hitBox = player.meleeAttack();
-            if (hitBox != null) {
-                gameRoot.getChildren().add(hitBox);
-                hitBox.startEffect().thenAccept(isDone -> {
-                    if (isDone) {
-                        gameRoot.getChildren().remove(hitBox);
-                    }
-                });
-            }
-        }
-        // Listen to range attack signal
-        if (isPressed(KeyCode.P) && player.getTranslateX() >= outOfBounds) {
-            AttackEffect hitBox = player.rangeAttack();
-            if (hitBox != null) {
-                gameRoot.getChildren().add(hitBox);
-                hitBox.startEffect().thenAccept(isDone -> {
-                    if (isDone) {
-                        gameRoot.getChildren().remove(hitBox);
-                    }
-                });
-            }
-        }
-
-        // Listen to idle signal
-        if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
-            player.setIdle();
-        }
-
     }
+    /* Listen to attack signals */
+    private void meleeAttackKeyListener() {
+        // Listen to melee attack signal
+        if (isPressed(KeyCode.O)) {
+            AttackEffect hitBox;
+            if (player.noHitBox()) {
+                hitBox = player.meleeAttack();
+                player.useWeapon(WeaponType.MELEE_WEAPON);
+            } else {
+                hitBox = null;
+            }
+            if (hitBox != null) {
+                gameRoot.getChildren().add(hitBox);
+                enemyInteraction.meleeWithEnemies(hitBox);
+                if (activeBoss != null) {
+                    bossInteraction.meleeWithBoss(hitBox);
+                }
+            }
+        }
+    }
+    /* Listen to attack signals */
+    private void rangeAttackKeyListener() {
+        if (isPressed(KeyCode.P)) {
+            Weapon activeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
+            if (activeWeapon != null) {
+                AttackEffect hitBox;
+                if (player.noHitBox()) {
+                    hitBox = player.rangeAttack();
+                    player.useWeapon(WeaponType.RANGE_WEAPON);
+                } else {
+                    hitBox = null;
+                }
+                if (hitBox != null) {
+                    gameRoot.getChildren().add(hitBox);
+                    hitBox.startInitialEffect().thenAccept(isDone -> {
+                        if (isDone && !rangeTargetHit) {
+                            gameRoot.getChildren().remove(hitBox);
+                            player.vanishRangeHitBox();
+                        }
+                    });
+                }
+            }
+        }
+    }
+    /* Listen to switch platform signals */
+    private void switchPlatformKeyListener() {
+        if (isPressed(KeyCode.L)) {
+            if (!switching) {
+                levelManager.nextLevel();
+                this.switchLevel(levelManager.getCurrentLevel());
+                switching = true;
+            }
+        }
+
+        if (isPressed(KeyCode.K)) {
+            if (!switching) {
+                levelManager.previousLevel();
+                this.switchLevel(levelManager.getCurrentLevel());
+                switching = true;
+            }
+        }
+    }
+
+
+    // Checks if this level is a boss level.
+    private void checkForBossPresence() {
+        final int[] bossLevels = {3};
+        if (activeBoss == null && platform.getCurrentLevel() == bossLevels[0]) {
+            final int halYOffset = -100;
+            Enemy hal = new Hal(platform.getTotalLevelWidth() / 2, platform.getTotalLevelHeight() + halYOffset);
+            startBossFight(hal);
+        }
+    }
+
+    // Start a boss fight with Hal's lasers
+    private void startBossFight(final Enemy boss) {
+        final int numberOfProjectiles = 10;
+        final int projectileWidth = 50;
+        final int laserDuration = 5;
+        final int totalDuration = 15;
+
+        this.disableCamera();
+
+        activeBoss = boss;
+        gameRoot.getChildren().add(boss);
+
+        // Create Hal's lasers
+        bossFight = new BossProjectiles(numberOfProjectiles, platform.getTotalLevelWidth(),
+                platform.getTotalLevelHeight(), projectileWidth);
+
+        // Start Hal's lasers and switch positions every 10 seconds
+        bossWeaponTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(0), event -> {
+                    bossProjectiles.clear();
+                    bossProjectiles.addAll(bossFight.fireProjectiles());
+                    for (BossWeapon projectile : bossProjectiles) {
+                        if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
+                            gameRoot.getChildren().add(projectile);
+                        }
+                    }
+                    bossInteraction.setProjectiles(bossProjectiles);
+                }),
+                new KeyFrame(Duration.seconds(laserDuration), event -> {
+                    Iterator<BossWeapon> iterator = bossProjectiles.iterator();
+                    while (iterator.hasNext()) {
+                        BossWeapon laser = iterator.next();
+                        gameRoot.getChildren().remove(laser);
+                        iterator.remove();
+                    }
+                    bossInteraction.setProjectiles(null);
+                }),
+                new KeyFrame(Duration.seconds(totalDuration))
+        );
+        bossWeaponTimeline.setCycleCount(Timeline.INDEFINITE);
+        bossWeaponTimeline.play();
+    }
+
+    private void endBossFight() {
+        for (BossWeapon laser : bossProjectiles) {
+            gameRoot.getChildren().remove(laser);
+        }
+        bossWeaponTimeline.stop();
+
+        Iterator<BossWeapon> iterator = bossProjectiles.iterator();
+        while (iterator.hasNext()) {
+            BossWeapon laser = iterator.next();
+            gameRoot.getChildren().remove(laser);
+            iterator.remove();
+        }
+
+        gameRoot.getChildren().remove(activeBoss);
+        bossFight = null;
+    }
+
     /**
      * Checks if the game is over.
      */
@@ -470,6 +952,12 @@ public class GameController {
                     player.applyGravity();
                     blockInteraction.interactWithBlocksY();
                     itemInteraction.interactWithItems();
+                    enemyInteraction.interactWithEnemies();
+                    if (activeBoss != null) {
+                        bossInteraction.interactWithBoss();
+                        bossInteraction.interactWithBossWeapon();
+                    }
+                    checkForBossPresence();
                     gameOverCondition();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -479,6 +967,17 @@ public class GameController {
         timer.start();
     }
 
+    // Get the background image for the level
+    private String getLevelBackground() {
+        final String fileFormat;
+        final int bossLevel = 3;
+        if (levelManager.getCurrentLevel() == bossLevel) {
+            fileFormat = "gif";
+        } else {
+            fileFormat = "png";
+        }
+        return String.format("Background/%s.%s", levelManager.getCurrentLevel(), fileFormat);
+    }
 
     /**
      * Gets the root of the application.

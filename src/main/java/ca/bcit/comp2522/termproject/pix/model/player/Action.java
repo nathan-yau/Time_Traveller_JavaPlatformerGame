@@ -9,5 +9,5 @@ package ca.bcit.comp2522.termproject.pix.model.player;
  * @version 2023
  */
 public enum Action {
-    IDLE, WALKING, MELEE_ATTACK, RANGE_ATTACK, JUMPING, HURTING, DYING
+    IDLE, WALKING, MELEE_ATTACK, RANGE_ATTACK, JUMPING, HURTING, DYING, FLYING
 }

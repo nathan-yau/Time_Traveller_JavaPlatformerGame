@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.block;
 
+import ca.bcit.comp2522.termproject.pix.AnimatedObjects;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.SequentialTransition;
@@ -19,6 +20,8 @@ public class MovingBlock extends StandardBlock {
 
     // The distance the block moves in points.
     private static final int MOVING_BLOCK_DISTANCE = -150;
+
+    private SequentialTransition movingAnimation;
 
     /**
      * Constructs a MovingBlock.
@@ -42,8 +45,17 @@ public class MovingBlock extends StandardBlock {
         Timeline downTimeline = new Timeline(moveDown);
         Timeline upTimeline = new Timeline(moveUp);
 
-        SequentialTransition blockMovement = new SequentialTransition(downTimeline, upTimeline);
-        blockMovement.setCycleCount(Timeline.INDEFINITE);
-        blockMovement.play();
+        movingAnimation = new SequentialTransition(downTimeline, upTimeline);
+        movingAnimation.setCycleCount(Timeline.INDEFINITE);
+        movingAnimation.play();
+    }
+
+    /**
+     * Terminates the animation.
+     */
+    @Override
+    public void terminateAnimation() {
+        super.terminateAnimation();
+        movingAnimation = AnimatedObjects.releaseSequentialTransition(movingAnimation);
     }
 }

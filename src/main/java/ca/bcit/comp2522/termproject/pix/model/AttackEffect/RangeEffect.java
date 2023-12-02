@@ -5,6 +5,7 @@ import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.scene.image.Image;
 import javafx.util.Duration;
@@ -27,6 +28,7 @@ public class RangeEffect extends AttackEffect {
     private CompletableFuture<Boolean> movementCompletion;
     private final String direction;
     private ParallelTransition currentAnimation;
+    private Timeline onHitAnimation;
 
     /**
      * Constructs a RangeEffect.
@@ -41,7 +43,7 @@ public class RangeEffect extends AttackEffect {
      */
     public RangeEffect(final double x, final double y, final double w, final double h, final String imageName,
                        final double range, final Direction playerDirection) {
-        super(x, y, w, h, EffectType.RANGE_ATTACK, imageName);
+        super(x, y, w, h, EffectType.RANGE_ATTACK, "Empty");
         this.imageName = imageName;
         this.initialXPosition = x;
         this.hitRange = range;
@@ -49,6 +51,7 @@ public class RangeEffect extends AttackEffect {
         this.initialMagicAnimation();
         this.direction = playerDirection.name();
         this.currentAnimation = null;
+        this.onHitAnimation = null;
     }
 
     /**
@@ -83,10 +86,7 @@ public class RangeEffect extends AttackEffect {
         movement = new Timeline(movingToLeft);
 
         movement.setCycleCount(1);
-        movement.setOnFinished(event -> {
-            this.setVisible(false);
-            movementCompletion.complete(true);
-        });
+        movement.setOnFinished(event -> movementCompletion.complete(true));
     }
 
     /**
@@ -95,7 +95,7 @@ public class RangeEffect extends AttackEffect {
      * @return a CompletableFuture of a boolean
      */
     @Override
-    public CompletableFuture<Boolean> startEffect() {
+    public CompletableFuture<Boolean> startInitialEffect() {
         currentAnimation = new ParallelTransition(
                 this.movement,
                 this.magicAnimation
@@ -104,6 +104,52 @@ public class RangeEffect extends AttackEffect {
         currentAnimation.setCycleCount(1);
         currentAnimation.play();
         return movementCompletion;
+    }
+
+    /**
+     * Starts the on hit effect.
+     *
+     * @return a CompletableFuture of a boolean
+     */
+    @Override
+    public CompletableFuture<Boolean> startOnHitEffect() {
+        final int duration = 100;
+        final int delayDuration = 300;
+        final int totalFrames = 10;
+        final int[] hitFrame = {0};
+        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
+        onHitAnimation = new Timeline(
+                new KeyFrame(Duration.millis(duration), event -> {
+                    final String sequenceIdle = String.format("Effect/%s/%s_%d.png",
+                            this.getSubtype().name(), "Explosion", hitFrame[0]);
+                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
+                    hitFrame[0] = (hitFrame[0] + 1) % (totalFrames);
+                })
+        );
+        onHitAnimation.setCycleCount(totalFrames);
+        onHitAnimation.setOnFinished(event -> completionFuture.complete(true));
+
+        onHitAnimation.setDelay(Duration.millis(delayDuration));
+        onHitAnimation.play();
+
+        return completionFuture;
+    }
+
+    /**
+     * Stops the initial effect.
+     *
+     */
+    @Override
+    public void stopInitialEffect() {
+        final int delayMillis = 300;
+        Duration delayDuration = Duration.millis(delayMillis);
+        PauseTransition delay = new PauseTransition(delayDuration);
+        delay.setOnFinished(event -> {
+            if (currentAnimation != null) {
+                currentAnimation.stop();
+            }
+        });
+        delay.play();
     }
 
 }

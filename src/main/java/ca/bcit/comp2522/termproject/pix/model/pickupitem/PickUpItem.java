@@ -2,6 +2,8 @@ package ca.bcit.comp2522.termproject.pix.model.pickupitem;
 
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
 /**
  * Represents an item that can be picked up.
@@ -34,18 +36,24 @@ public abstract class PickUpItem extends GameObject<PickUpItemType> {
     }
 
     /**
+     * Disappear the pickup item.
+     */
+    public void disappearItem() {
+        final int pauseDuration = 150;
+        PauseTransition pause = new PauseTransition(Duration.millis(pauseDuration));
+        pause.setOnFinished(event -> this.setVisible(false));
+        pause.play();
+    }
+
+    /**
      * Determines what happens when the item is picked up.
      *
      * @return whether the item was picked up as a boolean
      */
-    public abstract boolean onPickUp();
-
-    /**
-     * Determines what happens when the item is used.
-     *
-     * @return whether the item was used as a boolean
-     */
-    public abstract boolean onUse();
+    public boolean onPickup() {
+        this.disappearItem();
+        return true;
+    }
 
     /**
      * Gets the type of the item.

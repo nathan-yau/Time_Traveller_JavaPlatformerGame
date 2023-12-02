@@ -8,5 +8,5 @@ package ca.bcit.comp2522.termproject.pix.model;
  * @version 2023-11
  */
 public enum ObjectType {
-    BLOCK, MINION, BOSS, ITEM, PLAYER, EFFECT
+    BLOCK, MINION, BOSS, ITEM, PLAYER, EFFECT, HEALTH_BAR, BOSS_WEAPON
 }
