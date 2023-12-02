@@ -3,6 +3,7 @@ package ca.bcit.comp2522.termproject.pix.gamecontroller;
 import ca.bcit.comp2522.termproject.pix.GameType;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
+import ca.bcit.comp2522.termproject.pix.model.AttackEffect.TeleportEffect;
 import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
@@ -18,7 +19,9 @@ import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
 import javafx.animation.AnimationTimer;
+import javafx.animation.FadeTransition;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -27,6 +30,7 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,7 +46,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @version 2023-11
  */
 public class GameController {
-    private int index = 1;
     private final Pane appRoot;
     private final Pane gameRoot;
     private final Pane uiRoot;
@@ -58,6 +61,8 @@ public class GameController {
     private final EnemyInteraction enemyInteraction;
     private boolean rangeTargetHit;
     private final LevelManager levelManager;
+    private boolean switching = false;
+    private ChangeListener<Number> playerXCamera;
 
     /**
      * Constructs a GameController object with default values.
@@ -81,7 +86,9 @@ public class GameController {
         this.lastCacheXPosition = initialPlayerX;
         this.lastCacheYPosition = initialPlayerY;
         this.rangeTargetHit = false;
-        this.setBackground("Background/1.png");
+        this.playerXCamera = null;
+        this.setBackground("Background/0.png");
+        this.platform.createGamePlatform();
         this.setUpPlatform();
         this.setUpCamera();
         this.setCachedBlockArray();
@@ -92,8 +99,6 @@ public class GameController {
      * Sets up the platform using the PlatformManager.
      */
     private void setUpPlatform() {
-        platform.createGamePlatform();
-
         for (StandardBlock block: platform.getBlockArray()) {
             gameRoot.getChildren().add(block);
         }
@@ -107,6 +112,7 @@ public class GameController {
         }
     }
 
+
     /**
      * Sets up the camera.
      */
@@ -115,14 +121,16 @@ public class GameController {
         final int xCameraThreshold = 300;
         final int xCameraAdjustment = 300;
 
-        // Adjust the camera horizontal position based on player's location
-        playerX.addListener((obs, old, newValue) -> {
+        this.playerXCamera = (obs, old, newValue) -> {
             int offset = newValue.intValue();
 
             if (offset > xCameraThreshold && offset < platform.getTotalLevelWidth() - xCameraThreshold) {
                 gameRoot.setLayoutX(-(offset - xCameraAdjustment));
             }
-        });
+        };
+
+        // Adjust the camera horizontal position based on player's location
+        playerX.addListener(this.playerXCamera);
 
     }
 
@@ -141,6 +149,19 @@ public class GameController {
                 new BackgroundSize(backgroundWidth, backgroundHeight, true, true, true, true));
         Background bg = new Background(bgImage);
         appRoot.setBackground(bg);
+    }
+
+    private void fadeTransitionToLevels() {
+        final int fadeDuration = 150;
+        final double fadeOpacityMin = 0.75;
+        final double fadeOpacityMax = 1.0;
+        FadeTransition fadeTransition = new FadeTransition(Duration.millis(fadeDuration), appRoot);
+        fadeTransition.setFromValue(fadeOpacityMax);
+        fadeTransition.setToValue(fadeOpacityMin);
+        fadeTransition.setCycleCount(2);
+        fadeTransition.setAutoReverse(true);
+        fadeTransition.setOnFinished(event -> fadeTransition.stop());
+        fadeTransition.play();
     }
 
     /**
@@ -174,6 +195,29 @@ public class GameController {
                 || player.getCenterY() < lastCacheYPosition - resetThreshold) {
             setCachedBlockArray();
         }
+    }
+
+    /**
+     * Switches the level.
+     * @param dimension the dimension to switch to
+     */
+    private void switchLevel(final int dimension) {
+        gameRoot.getChildren().clear();
+        cachedBlockArray.clear();
+        platform.setNextLevelArrays(dimension);
+        this.setUpPlatform();
+        setCachedBlockArray();
+        TeleportEffect teleportEffect = player.teleport();
+        gameRoot.getChildren().add(player);
+        gameRoot.getChildren().add(teleportEffect);
+        this.setBackground(String.format("Background/%s.png", dimension));
+        this.fadeTransitionToLevels();
+        teleportEffect.startInitialEffect().thenAccept(isDone -> {
+            if (isDone) {
+                gameRoot.getChildren().remove(teleportEffect);
+                switching = false;
+            }
+        });
     }
 
     /**
@@ -449,7 +493,6 @@ public class GameController {
                 }
             });
             platform.getEnemyArray().removeIf(enemy -> {
-                System.out.println(collisionDetector.calculateCollisionPercentage(hitBox, enemy));
                 if (collisionDetector.objectIntersect(hitBox, enemy)
                         && collisionDetector.calculateCollisionPercentage(hitBox, enemy) > hitBoxCollisionPercentage) {
                     found.set(true);
@@ -561,9 +604,13 @@ public class GameController {
      * @return true if any key is pressed, false otherwise
      */
     private boolean isAnyKeyPressed() {
-        for (boolean isPressed : keyboardChecker.values()) {
-            if (isPressed) {
-                return true;
+        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.I, KeyCode.O, KeyCode.P};
+        for (KeyCode key : keysToCheck) {
+            if (keyboardChecker.containsKey(key)) {
+                Boolean isPressed = keyboardChecker.get(key);
+                if (isPressed != null && isPressed) {
+                    return true;
+                }
             }
         }
         return false;
@@ -574,8 +621,22 @@ public class GameController {
      * @throws IOException if the image is not found
      */
     private void keyboardListeners() throws IOException {
+        this.movementKeyListeners();
+        this.switchPlatformKeyListener();
+        this.meleeAttackKeyListener();
+        this.rangeAttackKeyListener();
+        // Listen to potion use signal
+        if (isPressed(KeyCode.H)) {
+            player.useHealthPotion();
+        }
+        // Listen to idle signal
+        if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
+            player.setIdle();
+        }
+    }
+    /* Listen to movement signals */
+    private void movementKeyListeners() {
         final int outOfBounds = 5;
-
         // Listen to jump signal and prevent for jumping out of the map
         // If the player is next to a ladder, climb instead of jump
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
@@ -598,18 +659,6 @@ public class GameController {
             player.run();
         }
 
-        if (isPressed(KeyCode.L)) {
-            index = index % 3 + 1;
-            this.setBackground(String.format("Background/%s.png", index));
-            gameRoot.getChildren().clear();
-            cachedBlockArray.clear();
-            platform.clearAllArray();
-            levelManager.setCurrentLevel(index);
-            this.setUpPlatform();
-            setCachedBlockArray();
-            gameRoot.getChildren().add(player);
-        }
-
         // Listen to walk signal
         if (!isPressed(KeyCode.I)) {
             player.walk();
@@ -624,14 +673,11 @@ public class GameController {
         if (isPressed(KeyCode.D)  && player.getMaxX() <= platform.getTotalLevelWidth() - outOfBounds) {
             blockInteraction.interactWithBlocksX(true);
         }
-
-        // Listen to potion use signal
-        if (isPressed(KeyCode.H)) {
-            player.useHealthPotion();
-        }
-
+    }
+    /* Listen to attack signals */
+    private void meleeAttackKeyListener() {
         // Listen to melee attack signal
-        if (isPressed(KeyCode.O) && player.getTranslateX() >= outOfBounds) {
+        if (isPressed(KeyCode.O)) {
             AttackEffect hitBox;
             if (player.noHitBox()) {
                 hitBox = player.meleeAttack();
@@ -644,9 +690,10 @@ public class GameController {
                 enemyInteraction.meleeWithEnemies(hitBox);
             }
         }
-
-        // Listen to range attack signal
-        if (isPressed(KeyCode.P) && player.getTranslateX() >= outOfBounds) {
+    }
+    /* Listen to attack signals */
+    private void rangeAttackKeyListener() {
+        if (isPressed(KeyCode.P)) {
             Weapon activeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
             if (activeWeapon != null) {
                 AttackEffect hitBox;
@@ -667,13 +714,25 @@ public class GameController {
                 }
             }
         }
+    }
+    /* Listen to switch platform signals */
+    private void switchPlatformKeyListener() {
+        if (isPressed(KeyCode.L)) {
+            if (!switching) {
+                levelManager.nextLevel();
+                this.switchLevel(levelManager.getCurrentLevel());
+                switching = true;
+            }
+        }
 
-        // Listen to idle signal
-        if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
-            player.setIdle();
+        if (isPressed(KeyCode.K)) {
+            if (!switching) {
+                levelManager.previousLevel();
+                this.switchLevel(levelManager.getCurrentLevel());
+                switching = true;
+            }
         }
     }
-
     /**
      * Checks if the game is over.
      */
