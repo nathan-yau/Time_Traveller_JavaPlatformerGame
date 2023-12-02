@@ -1,6 +1,7 @@
 package ca.bcit.comp2522.termproject.pix;
 
 import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
 
@@ -15,33 +16,44 @@ public interface AnimatedObjects {
     /**
      * Releases the timeline resources.
      * @param timeline the timeline to be released
+     * @return null
      */
-    static void releaseTimeline(Timeline timeline) {
+    static Timeline releaseTimeline(final Timeline timeline) {
         if (timeline != null) {
             timeline.stop();
             timeline.getKeyFrames().clear();
         }
+        return null;
     }
 
     /**
      * Releases the parallel transition resources.
      * @param transition the parallel transition to be released
+     * @return null
      */
-    static void releaseParallelTransition(ParallelTransition transition) {
+    static ParallelTransition releaseParallelTransition(final ParallelTransition transition) {
         if (transition != null) {
             transition.stop();
             transition.getChildren().clear();
         }
+        return null;
     }
 
     /**
      * Releases the sequential transition resources.
      * @param transition the sequential transition to be released
+     * @return null
      */
-    static void releaseSequentialTransition(SequentialTransition transition) {
+    static SequentialTransition releaseSequentialTransition(final SequentialTransition transition) {
         if (transition != null) {
             transition.stop();
             transition.getChildren().clear();
         }
+        return null;
     }
+
+    /**
+     * Terminates the animation.
+     */
+    void terminateAnimation();
 }

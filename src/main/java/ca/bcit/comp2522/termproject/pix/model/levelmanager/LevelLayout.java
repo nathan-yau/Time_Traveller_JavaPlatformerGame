@@ -97,15 +97,42 @@ public final class LevelLayout {
             "0000000000000000000000000000000"
     };
 
+
+    private static final String[][] LEVEL_DATA = new String[][]{LEVEL1, LEVEL2, LEVEL3};
     // Private constructor since this class should not be instantiated.
     private LevelLayout() { }
 
-    static String[] getLevelData(final int level) throws IllegalArgumentException {
-        String[][] levelData = new String[][]{LEVEL1, LEVEL2, LEVEL3, LEVEL4};
-        if (0 >= level || level > levelData.length) {
+    /**
+     * Gets the specific level data.
+     *
+     * @param level the level to get the data from
+     * @throws IllegalArgumentException if the level does not exist
+     * @return the level data as a String[]
+     */
+    public static String[] getLevelData(final int level) throws IllegalArgumentException {
+        if (0 > level || level > LEVEL_DATA.length) {
             throw new IllegalArgumentException("Level does not exist!");
         }
-        return levelData[level - 1];
+        return LEVEL_DATA[level];
+    }
+
+    /**
+     * Gets the number of levels.
+     *
+     * @return the number of levels as an int
+     */
+    public static int getNumberOfLevels() {
+        return LEVEL_DATA.length;
+    }
+
+    /**
+     * Gets all level data.
+     *
+     * @throws IllegalArgumentException if the level does not exist
+     * @return the level data as a String[][]
+     */
+    public static String[][] getAllLevelsData() throws IllegalArgumentException {
+        return LEVEL_DATA;
     }
 
 }

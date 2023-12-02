@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public class Minion extends Enemy implements Runnable, AnimatedObjects {
+public class Minion extends Enemy implements Runnable {
     private Action action;
     private final double leftmostWalkingRange;
     private final double upmostFlyingRange;
@@ -151,8 +151,8 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
         flyingAnimation = new Timeline(
                 new KeyFrame(Duration.millis(movingDuration), event -> {
                     this.action = Action.FLYING;
-                    final String sequenceIdle = String.format("%s/Walk_%d.png", imagePath, flyingImageFrame[0]);
-                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
+                    final String sequenceFly = String.format("%s/Walk_%d.png", imagePath, flyingImageFrame[0]);
+                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceFly))));
                     flyingImageFrame[0] = (flyingImageFrame[0] + 1) % (movingFrame + 1);
                 })
         );
@@ -167,8 +167,8 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
         walkingAnimation = new Timeline(
                 new KeyFrame(Duration.millis(movingDuration), event -> {
                     this.action = Action.WALKING;
-                    final String sequenceIdle = String.format("%s/Walk_%d.png", imagePath, walkingImageFrame[0]);
-                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
+                    final String sequenceWalk = String.format("%s/Walk_%d.png", imagePath, walkingImageFrame[0]);
+                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceWalk))));
                     walkingImageFrame[0] = (walkingImageFrame[0] + 1) % (movingFrame + 1);
                 })
         );
@@ -184,8 +184,8 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
                 new KeyFrame(Duration.millis(attackingDuration), event -> {
                     this.action = Action.MELEE_ATTACK;
                     this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
-                    final String sequenceIdle = String.format("%s/Attack_%d.png", imagePath, attackImageFrame[0]);
-                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
+                    final String sequenceAttack = String.format("%s/Attack_%d.png", imagePath, attackImageFrame[0]);
+                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceAttack))));
                     attackImageFrame[0] = (attackImageFrame[0] + 1) % (attackingFrame + 1);
                 })
         );
@@ -255,14 +255,14 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
      */
     public void terminateAnimation() {
         this.stopAllAliveAnimation();
-        AnimatedObjects.releaseParallelTransition(this.currentAnimation);
-        AnimatedObjects.releaseTimeline(this.hurtingAnimation);
-        AnimatedObjects.releaseTimeline(this.attackingAnimation);
-        AnimatedObjects.releaseSequentialTransition(this.movingAction);
+        this.currentAnimation = AnimatedObjects.releaseParallelTransition(this.currentAnimation);
+        this.hurtingAnimation = AnimatedObjects.releaseTimeline(this.hurtingAnimation);
+        this.attackingAnimation = AnimatedObjects.releaseTimeline(this.attackingAnimation);
+        this.movingAction = AnimatedObjects.releaseSequentialTransition(this.movingAction);
         if (xWalker) {
-            AnimatedObjects.releaseTimeline(this.walkingAnimation);
+            this.walkingAnimation = AnimatedObjects.releaseTimeline(this.walkingAnimation);
         } else {
-            AnimatedObjects.releaseTimeline(this.flyingAnimation);
+            this.flyingAnimation = AnimatedObjects.releaseTimeline(this.flyingAnimation);
         }
     }
 
@@ -304,8 +304,8 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
         Timeline dyingAnimation = new Timeline(
                 new KeyFrame(Duration.millis(dyingDuration), event -> {
                     this.action = Action.DYING;
-                    final String sequenceIdle = String.format("%s/Dying_%d.png", imagePath, dyingImageFrame[0]);
-                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceIdle))));
+                    final String sequenceDying = String.format("%s/Dying_%d.png", imagePath, dyingImageFrame[0]);
+                    this.setImage(new Image(String.valueOf(MainApplication.class.getResource(sequenceDying))));
                     double newOpacity = Math.max(0.0, this.getOpacity() - opacityDelta);
                     this.setOpacity(newOpacity);
                     dyingImageFrame[0] = (dyingImageFrame[0] + 1) % (dyingFrame + 1);
@@ -316,6 +316,7 @@ public class Minion extends Enemy implements Runnable, AnimatedObjects {
             completionFuture.complete(true);
             dyingAnimation.stop();
             dyingAnimation.getKeyFrames().clear();
+            currentAnimation.play();
             this.terminateAnimation();
         });
         dyingAnimation.setCycleCount(dyingFrame);

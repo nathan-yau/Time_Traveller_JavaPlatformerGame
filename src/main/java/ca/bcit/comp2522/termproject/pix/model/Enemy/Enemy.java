@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.Enemy;
 
+import ca.bcit.comp2522.termproject.pix.AnimatedObjects;
 import ca.bcit.comp2522.termproject.pix.model.Combative;
 import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
@@ -15,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public abstract class Enemy extends GameObject<EnemyType> implements Combative, Damageable {
+public abstract class Enemy extends GameObject<EnemyType> implements Combative, Damageable, AnimatedObjects {
     private int healthPoint;
     private final String folderPath;
     private boolean attackEnable;
@@ -38,7 +39,7 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     public Enemy(final int x, final int y, final int width, final int height,
                  final ObjectType type, final EnemyType name, final int healthPoint, final int attackPoint) {
         super(x, y, width, height, type, name,
-                String.format("%s/%s/%s/%s_0.png", type.name(), name.name(), Direction.BACKWARD.name(), "Idle"));
+                String.format("%s/%s/%s/%s_0.png", type.name(), name.name(), Direction.BACKWARD.name(), "Walk"));
         this.direction = Direction.BACKWARD;
         this.attackEnable = true;
         this.damageEnable = true;

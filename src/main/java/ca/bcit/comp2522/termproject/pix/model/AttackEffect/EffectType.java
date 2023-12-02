@@ -10,5 +10,5 @@ import ca.bcit.comp2522.termproject.pix.GameType;
  * @version 2023-11
  */
 public enum EffectType implements GameType {
-    MELEE_ATTACK, RANGE_ATTACK
+    MELEE_ATTACK, RANGE_ATTACK, TELEPORT_EFFECT
 }
