@@ -4,6 +4,7 @@ import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.MeleeEffect;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.RangeEffect;
+import ca.bcit.comp2522.termproject.pix.model.AttackEffect.TeleportEffect;
 import ca.bcit.comp2522.termproject.pix.model.Combative;
 import ca.bcit.comp2522.termproject.pix.model.Damageable;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
@@ -463,6 +464,19 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public int getGoldCoinCounter() {
         return this.goldCoinCounter;
+    }
+
+    /**
+     * Gets the player's teleport effect.
+     *
+     * @return the player's teleport effect
+     */
+    public TeleportEffect teleport() {
+        this.setVisible(false);
+        PauseTransition pause = new PauseTransition(Duration.millis(250));
+        pause.setOnFinished(event -> this.setVisible(true));
+        pause.play();
+        return new TeleportEffect(this.getMinX() - 75, this.getMinY() - 75, 200, 200, "Teleport");
     }
 
     /**
