@@ -809,7 +809,9 @@ public class GameController {
             if (hitBox != null) {
                 gameRoot.getChildren().add(hitBox);
                 enemyInteraction.meleeWithEnemies(hitBox);
-                bossInteraction.meleeWithBoss(hitBox);
+                if (activeBoss != null) {
+                    bossInteraction.meleeWithBoss(hitBox);
+                }
             }
         }
     }
@@ -951,8 +953,10 @@ public class GameController {
                     blockInteraction.interactWithBlocksY();
                     itemInteraction.interactWithItems();
                     enemyInteraction.interactWithEnemies();
-                    bossInteraction.interactWithBoss();
-                    bossInteraction.interactWithBossWeapon();
+                    if (activeBoss != null) {
+                        bossInteraction.interactWithBoss();
+                        bossInteraction.interactWithBossWeapon();
+                    }
                     checkForBossPresence();
                     gameOverCondition();
                 } catch (IOException e) {
