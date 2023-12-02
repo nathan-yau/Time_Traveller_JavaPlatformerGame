@@ -79,4 +79,9 @@ public class Boss extends Enemy {
     public CompletableFuture<Boolean> startDying() {
         return null;
     }
+
+    @Override
+    public void terminateAnimation() {
+
+    }
 }

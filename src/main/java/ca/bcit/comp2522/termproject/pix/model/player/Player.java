@@ -472,11 +472,15 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * @return the player's teleport effect
      */
     public TeleportEffect teleport() {
+        final int teleportDuration = 250;
+        final int teleportOffset = 75;
+        final int teleportDimension = 200;
         this.setVisible(false);
-        PauseTransition pause = new PauseTransition(Duration.millis(250));
+        PauseTransition pause = new PauseTransition(Duration.millis(teleportDuration));
         pause.setOnFinished(event -> this.setVisible(true));
         pause.play();
-        return new TeleportEffect(this.getMinX() - 75, this.getMinY() - 75, 200, 200, "Teleport");
+        return new TeleportEffect(this.getMinX() - teleportOffset,
+                this.getMinY() - teleportOffset, teleportDimension, teleportDimension, "Teleport");
     }
 
     /**

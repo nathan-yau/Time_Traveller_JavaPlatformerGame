@@ -111,7 +111,7 @@ public class PlatformManager {
     public void createGamePlatform() {
         final int movingBlockYPadding = 5;
         final String[][] allDimension = LevelLayout.getAllLevelsData();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 4; i++) {
             String[] currentLevelData = allDimension[i];
             totalBlockArray.add(new ArrayList<>());
             totalEnemyArray.add(new ArrayList<>());
@@ -144,6 +144,10 @@ public class PlatformManager {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.TESTING_BLOCK, i, "dirt");
                         totalBlockArray.get(i).add(decorationBlock);
+                    } else if (categorySymbol == 'B') {
+                        StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
+                                BlockType.BOSS_FIGHT_BLOCK, "Boss/BossFight/TRIGGER", "bossFight");
+                        blockArray.add(solidBlock);
                     } else if (categorySymbol == 'P') {
                         final int yPadding = 10;
                         HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,

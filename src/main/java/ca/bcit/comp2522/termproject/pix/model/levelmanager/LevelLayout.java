@@ -98,7 +98,7 @@ public final class LevelLayout {
     };
 
 
-    private static final String[][] LEVEL_DATA = new String[][]{LEVEL1, LEVEL2, LEVEL3};
+    private static final String[][] LEVEL_DATA = new String[][]{LEVEL1, LEVEL2, LEVEL3, LEVEL4};
     // Private constructor since this class should not be instantiated.
     private LevelLayout() { }
 
