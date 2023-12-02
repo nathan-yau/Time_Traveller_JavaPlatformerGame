@@ -20,7 +20,7 @@ public class LevelManager {
      * Constructs a LevelManager.
      */
     public LevelManager() {
-        this.currentLevel = 1;
+        this.currentLevel = 0;
         this.currentLevelLayout = LevelLayout.getLevelData(this.currentLevel);
     }
 
@@ -31,15 +31,6 @@ public class LevelManager {
      */
     public int getCurrentLevel() {
         return currentLevel;
-    }
-
-    /**
-     * Gets the current level layout.
-     *
-     * @return the current level layout as a String[]
-     */
-    public String[] getCurrentLevelLayout() {
-        return currentLevelLayout;
     }
 
     /**
@@ -61,12 +52,18 @@ public class LevelManager {
     }
 
     /**
-     * Sets the current level.
-     *
-     * @param level the level to set as an int
+     * Sets the current level to next available level.
      */
-    public void setCurrentLevel(final int level) {
-        this.currentLevel = level;
+    public void nextLevel() {
+        this.currentLevel = Math.abs(this.currentLevel + 1) % LevelLayout.getNumberOfLevels();
+        this.currentLevelLayout = LevelLayout.getLevelData(this.currentLevel);
+    }
+
+    /**
+     * Sets the current level to previous available level.
+     */
+    public void previousLevel() {
+        this.currentLevel = Math.abs(this.currentLevel + 2) % LevelLayout.getNumberOfLevels();
         this.currentLevelLayout = LevelLayout.getLevelData(this.currentLevel);
     }
 
