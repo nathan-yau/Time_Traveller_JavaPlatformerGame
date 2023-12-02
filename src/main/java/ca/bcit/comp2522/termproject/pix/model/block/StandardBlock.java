@@ -80,6 +80,9 @@ public class StandardBlock extends GameObject<BlockType> implements AnimatedObje
         return completionFuture;
     }
 
+    /**
+     * Terminates the animation and free the memory.
+     */
     @Override
     public void terminateAnimation() {
         fallingAnimation = AnimatedObjects.releaseSequentialTransition(fallingAnimation);
