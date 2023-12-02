@@ -1,9 +1,9 @@
 package ca.bcit.comp2522.termproject.pix.model.platformgenerator;
 
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.Enemy.Minion;
 import ca.bcit.comp2522.termproject.pix.model.Enemy.Minotaur;
 import ca.bcit.comp2522.termproject.pix.model.Enemy.Wraith;
-import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
@@ -51,7 +51,7 @@ public class PlatformManager {
     private final int levelWidth;
 
     // The height of the current level.
-    private final int leveHeight;
+    private final int levelHeight;
 
     /**
      * Constructs a PlatformManager.
@@ -62,7 +62,7 @@ public class PlatformManager {
         this.enemyArray = new ArrayList<>();
         this.levelManager = new LevelManager();
         this.levelWidth = levelManager.getCurrentLevelWidth();
-        this.leveHeight = levelManager.getCurrentLevelHeight();
+        this.levelHeight = levelManager.getCurrentLevelHeight();
     }
 
     /**
@@ -99,7 +99,7 @@ public class PlatformManager {
         final int movingBlockYPadding = 5;
         String[] currentLevelData = levelManager.getCurrentLevelLayout();
         int currentLevel = levelManager.getCurrentLevel();
-        for (int row = 0; row < leveHeight; row++) {
+        for (int row = 0; row < levelHeight; row++) {
             String line = currentLevelData[row];
             for (int col = 0; col < line.length(); col++) {
                 int xPosition = col * BLOCK_WIDTH;
@@ -127,6 +127,10 @@ public class PlatformManager {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.TESTING_BLOCK, currentLevel, "dirt");
                         blockArray.add(decorationBlock);
+                } else if (categorySymbol == 'B') {
+                    StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
+                            BlockType.BOSS_FIGHT_BLOCK, "Boss/BossFight/TRIGGER", "bossFight");
+                    blockArray.add(solidBlock);
                 } else if (categorySymbol == 'P') {
                     final int yPadding = 10;
                     HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
@@ -217,7 +221,7 @@ public class PlatformManager {
      * @return the height of the current level as an int
      */
     public int getTotalLevelHeight() {
-        return leveHeight * BLOCK_HEIGHT;
+        return levelHeight * BLOCK_HEIGHT;
     }
 
     /**
@@ -358,7 +362,7 @@ public class PlatformManager {
         if (levelWidth != that.levelWidth) {
             return false;
         }
-        if (leveHeight != that.leveHeight) {
+        if (levelHeight != that.levelHeight) {
             return false;
         }
         if (!blockArray.equals(that.blockArray)) {
@@ -378,7 +382,7 @@ public class PlatformManager {
         int result = blockArray.hashCode();
         result = prime * result + levelManager.hashCode();
         result = prime * result + levelWidth;
-        result = prime * result + leveHeight;
+        result = prime * result + levelHeight;
         return result;
     }
 
@@ -397,7 +401,7 @@ public class PlatformManager {
                 + ", levelWidth="
                 + levelWidth
                 + ", leveHeight="
-                + leveHeight
+                + levelHeight
                 + '}';
     }
 }
