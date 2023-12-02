@@ -75,11 +75,33 @@ public final class LevelLayout {
             "000000000000000000000000..........00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     };
 
+    // Level 3 layout.
+    private static final String[] LEVEL4 = new String[] {
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..............................0",
+            "..M..R........................0",
+            "0000000000000000000000000000000",
+            "0000000000000000000000000000000"
+    };
+
     // Private constructor since this class should not be instantiated.
     private LevelLayout() { }
 
     static String[] getLevelData(final int level) throws IllegalArgumentException {
-        String[][] levelData = new String[][]{LEVEL1, LEVEL2, LEVEL3};
+        String[][] levelData = new String[][]{LEVEL1, LEVEL2, LEVEL3, LEVEL4};
         if (0 >= level || level > levelData.length) {
             throw new IllegalArgumentException("Level does not exist!");
         }
