@@ -56,7 +56,6 @@ public class MovingBlock extends StandardBlock {
     @Override
     public void terminateAnimation() {
         super.terminateAnimation();
-        System.out.println("Terminating moving block animation");
         movingAnimation = AnimatedObjects.releaseSequentialTransition(movingAnimation);
     }
 }
