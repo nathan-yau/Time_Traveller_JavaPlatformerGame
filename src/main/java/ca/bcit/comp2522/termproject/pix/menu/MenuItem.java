@@ -26,7 +26,8 @@ public class MenuItem extends Pane {
     public MenuItem(final String name)  {
         final int textXOffset = 5;
         final int textYOffset = 20;
-        final int shadowRadius = 25;
+        final int shadowRadius = 10;
+        final int hoverShadowRadius = 25;
         Font font = DefaultFont.getDefaultBodyFont();
 
         Text text = new Text(name);
@@ -36,8 +37,8 @@ public class MenuItem extends Pane {
         text.setFill(Color.WHITE);
         text.effectProperty().bind(
                 Bindings.when(hoverProperty())
-                        .then(new DropShadow(shadowRadius, Color.BLACK))
-                        .otherwise(new DropShadow(0, Color.BLACK)
+                        .then(new DropShadow(hoverShadowRadius, Color.BLACK))
+                        .otherwise(new DropShadow(shadowRadius, Color.GRAY)
                         )
         );
         text.cursorProperty().bind(
