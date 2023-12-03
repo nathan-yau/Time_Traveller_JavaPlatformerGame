@@ -243,7 +243,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         final int hurtFrameCount = 7;
         hurtAnimation = new Timeline(
                 new KeyFrame(Duration.millis(hurtDuration), event -> {
-                    this.action = Action.MELEE_ATTACK;
+                    this.action = Action.HURTING;
                     this.setOpacity(hurtFrame[0] % 2);
                     this.currentImagePath = String.format("player/%s", direction.name());
                     this.updatePlayerImage(String.format("%s/hurting_%d.png", currentImagePath, hurtFrame[0]));
@@ -352,7 +352,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         }
         jumpAnimation.stop();
         if (!(meleeAnimation.getStatus() == Animation.Status.RUNNING
-                || rangeAnimation.getStatus() == Animation.Status.RUNNING)) {
+                || rangeAnimation.getStatus() == Animation.Status.RUNNING ||
+                punchAnimation.getStatus() == Animation.Status.RUNNING)) {
             walkAnimation.play();
         }
     }
@@ -380,6 +381,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Sets the Player to idle.
      */
     public void setIdle() {
+        System.out.println("Setting");
         if (this.action != Action.IDLE) {
             if (walkAnimation.getStatus() == Animation.Status.RUNNING) {
                 this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
@@ -549,14 +551,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
-     * Checks if the Player is facing forward.
-     * @return true if the Player is facing forward, false otherwise
-     */
-    public boolean facingForward() {
-        return this.direction == Direction.FORWARD;
-    }
-
-    /**
      * Gets the attack point of the Player.
      * @return the attack point of the Player
      */
@@ -579,14 +573,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             pause.play();
         }
         return healthPoint;
-    }
-
-    /**
-     * Get Melee Hit Box.
-     * @return the melee hit box
-     */
-    public AttackEffect getMeleeHitBox() {
-        return this.meleeHitBox;
     }
 
     /**
