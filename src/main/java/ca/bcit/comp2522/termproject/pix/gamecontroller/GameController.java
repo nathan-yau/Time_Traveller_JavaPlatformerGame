@@ -18,6 +18,7 @@ import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
+import ca.bcit.comp2522.termproject.pix.model.uimanager.UIManager;
 import ca.bcit.comp2522.termproject.pix.model.weapon.MeleeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
@@ -74,6 +75,7 @@ public class GameController {
     private BossFight activeBossFight;
     private boolean rangeTargetHit;
     private final LevelManager levelManager;
+    private final UIManager uiManager;
     private boolean switching = false;
 
     /**
@@ -83,7 +85,7 @@ public class GameController {
      * @param windowWidth the width of the window as an int
      * @param windowHeight the height of the window as an int
      */
-    public GameController(final int windowWidth, final int windowHeight) {
+    public GameController(final int windowWidth, final int windowHeight) throws IOException {
         final double initialPlayerX = 0;
         final double initialPlayerY = 500;
         this.windowWidth = windowWidth;
@@ -92,6 +94,7 @@ public class GameController {
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
         this.levelManager = new LevelManager();
+        this.uiManager = new UIManager();
         this.platform = new PlatformManager(levelManager);
         this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
@@ -110,6 +113,8 @@ public class GameController {
         this.setUpCamera();
         this.setCachedBlockArray();
         gameRoot.getChildren().add(player);
+        uiRoot.getChildren().add(uiManager.getBatteryCounter());
+        uiRoot.getChildren().add(uiManager.getWorldName());
     }
 
     /**
@@ -457,7 +462,7 @@ public class GameController {
         ItemInteraction() { }
 
         // Check and handle collision with items
-        private void interactWithItems() {
+        private void interactWithItems() throws IOException {
             final double itemCollisionPercentage = 40;
             Iterator<PickUpItem> iterator = platform.getItemArray().iterator();
 
@@ -468,8 +473,9 @@ public class GameController {
                         && collisionDetector.calculateCollisionPercentage(player, item) > itemCollisionPercentage) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
-                    } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
-                        player.incrementGoldCoinCounter();
+                    } else if (item.getSubtype() == PickUpItemType.ENERGY) {
+                        player.incrementEnergyCounter();
+                        uiManager.refreshBatteryCounter(player.getEnergyCounter());
                     } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
                         Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
                         player.addWeapon(meleeWeapon);
@@ -742,19 +748,25 @@ public class GameController {
     }
 
     /* Listen to switch platform signals */
-    private void switchPlatformKeyListener() {
+    private void switchPlatformKeyListener() throws IOException {
         if (isPressed(KeyCode.L)) {
-            if (!switching) {
+            if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.nextLevel();
                 this.switchLevel(levelManager.getCurrentLevel());
+                uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                player.decrementEnergyCounter();
+                uiManager.refreshBatteryCounter(player.getEnergyCounter());
                 switching = true;
             }
         }
 
         if (isPressed(KeyCode.K)) {
-            if (!switching) {
+            if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.previousLevel();
                 this.switchLevel(levelManager.getCurrentLevel());
+                uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                player.decrementEnergyCounter();
+                uiManager.refreshBatteryCounter(player.getEnergyCounter());
                 switching = true;
             }
         }
