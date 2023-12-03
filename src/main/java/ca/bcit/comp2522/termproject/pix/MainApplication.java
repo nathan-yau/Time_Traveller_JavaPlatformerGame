@@ -5,6 +5,8 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+
 /**
  * Represents the main application window.
  *
@@ -25,7 +27,7 @@ public class MainApplication extends Application {
      * @param stage the stage to run the application
      */
     @Override
-    public void start(final Stage stage) {
+    public void start(final Stage stage) throws IOException {
         GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
