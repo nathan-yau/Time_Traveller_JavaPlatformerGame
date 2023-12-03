@@ -26,7 +26,7 @@ public class MainApplication extends Application {
      */
     @Override
     public void start(final Stage stage) {
-        GameController gameApp = new GameController();
+        GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
         stage.setTitle("Lowkey Time Travellers");
