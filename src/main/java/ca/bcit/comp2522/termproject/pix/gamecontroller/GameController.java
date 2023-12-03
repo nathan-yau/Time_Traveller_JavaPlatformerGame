@@ -94,10 +94,10 @@ public class GameController {
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
         this.levelManager = new LevelManager();
-        this.uiManager = new UIManager();
         this.platform = new PlatformManager(levelManager);
         this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
+        this.uiManager = new UIManager(player.getMaxHealthPoints());
         this.cachedBlockArray = new ArrayList<>();
         this.collisionDetector = new CollisionDetector();
         this.blockInteraction = new BlockInteraction();
@@ -115,6 +115,7 @@ public class GameController {
         gameRoot.getChildren().add(player);
         uiRoot.getChildren().add(uiManager.getBatteryCounter());
         uiRoot.getChildren().add(uiManager.getWorldName());
+        uiRoot.getChildren().add(uiManager.getPlayerStatus());
     }
 
     /**
@@ -571,6 +572,7 @@ public class GameController {
                         }
                         enemy.meleeAttack();
                         player.getHurt();
+                        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         return;
                 }
                 if (existingRangeHitBox != null) {
@@ -979,6 +981,7 @@ public class GameController {
                         > itemCollisionPercentage) {
                     if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
                         player.getHurt();
+                        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         iterator.remove();
                         gameRoot.getChildren().remove(projectile);
                     }
