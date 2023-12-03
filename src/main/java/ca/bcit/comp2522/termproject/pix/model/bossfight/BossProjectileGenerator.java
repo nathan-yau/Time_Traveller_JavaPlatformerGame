@@ -10,8 +10,7 @@ import java.util.Random;
  * @author Derek Woo
  * @version 2023-12
  */
-public class BossProjectiles {
-    /** Random Generator. */
+public class BossProjectileGenerator {
     private static final Random RANDOM_GENERATOR = new Random();
     private final int maxProjectiles;
     private final int levelWidth;
@@ -27,25 +26,33 @@ public class BossProjectiles {
      * @param levelHeight the level height as an int
      * @param blockWidth the block width as an int
      */
-    public BossProjectiles(final int maxProjectiles, final int levelWidth, final int levelHeight, final int blockWidth) {
+    public BossProjectileGenerator(final int maxProjectiles, final int levelWidth,
+                                   final int levelHeight, final int blockWidth) {
         this.maxProjectiles = maxProjectiles;
         this.levelWidth = levelWidth;
         this.levelHeight = levelHeight;
         this.blockWidth = blockWidth;
     }
 
-    // Pick a random column to spawn the projectiles.
+    /*
+     * Picks a random column to spawn the projectiles.
+     *
+     * @return the random column as an int
+     */
     private int pickRandomColumn() {
         return RANDOM_GENERATOR.nextInt(0, this.levelWidth);
     }
 
-    // Generate projectiles and store them in an ArrayList.
+    /*
+     * Generate projectiles and store them in an ArrayList.
+     */
     private void generateProjectiles() {
         this.projectiles.clear();
+        final int groundOffset = 75;
         for (int i = 0; i < this.maxProjectiles; i++) {
             int x = pickRandomColumn();
             int y = 0;
-            Laser laser = new Laser(x, y, blockWidth, levelHeight);
+            Laser laser = new Laser(x, y, blockWidth, levelHeight - groundOffset);
             this.projectiles.add(laser);
         }
     }
@@ -57,6 +64,15 @@ public class BossProjectiles {
      */
     public ArrayList<BossWeapon> fireProjectiles() {
         generateProjectiles();
+        return this.projectiles;
+    }
+
+    /**
+     * Gets the projectiles.
+     *
+     * @return the projectiles as an ArrayList
+     */
+    public ArrayList<BossWeapon> getProjectiles() {
         return this.projectiles;
     }
 }
