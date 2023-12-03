@@ -8,7 +8,7 @@ import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
-import ca.bcit.comp2522.termproject.pix.model.bossfight.BossProjectiles;
+import ca.bcit.comp2522.termproject.pix.model.bossfight.BossProjectileGenerator;
 import ca.bcit.comp2522.termproject.pix.model.bossfight.BossWeapon;
 import ca.bcit.comp2522.termproject.pix.model.bossfight.BossWeaponType;
 import ca.bcit.comp2522.termproject.pix.model.bossfight.Hal;
@@ -55,6 +55,8 @@ public class GameController {
     private static final int X_CAMERA_THRESHOLD = 300;
     private static final int X_CAMERA_ADJUSTMENT = 300;
     private static ChangeListener<? super Number> playerXListener;
+    private final int windowWidth;
+    private final int windowHeight;
     private final Pane appRoot;
     private final Pane gameRoot;
     private final Pane uiRoot;
@@ -68,23 +70,24 @@ public class GameController {
     private final BlockInteraction blockInteraction;
     private final ItemInteraction itemInteraction;
     private final EnemyInteraction enemyInteraction;
-    private final BossInteraction bossInteraction;
-    private final ArrayList<BossWeapon> bossProjectiles;
     private final DoubleProperty playerX;
-    private Enemy activeBoss;
+    private BossFight activeBossFight;
     private boolean rangeTargetHit;
     private final LevelManager levelManager;
-    private Timeline bossWeaponTimeline;
     private boolean switching = false;
-    private BossProjectiles bossFight;
 
     /**
      * Constructs a GameController object with default values.
      * Set up the initial platform and player.
+     *
+     * @param windowWidth the width of the window as an int
+     * @param windowHeight the height of the window as an int
      */
-    public GameController() {
+    public GameController(final int windowWidth, final int windowHeight) {
         final double initialPlayerX = 0;
         final double initialPlayerY = 500;
+        this.windowWidth = windowWidth;
+        this.windowHeight = windowHeight;
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
@@ -101,8 +104,6 @@ public class GameController {
         this.lastCacheYPosition = initialPlayerY;
         this.rangeTargetHit = false;
         this.playerX = player.translateXProperty();
-        this.bossInteraction = new BossInteraction();
-        this.bossProjectiles = new ArrayList<>();
         this.setBackground(this.getLevelBackground());
         this.platform.createGamePlatform();
         this.setUpPlatform();
@@ -245,7 +246,6 @@ public class GameController {
          * Constructs a CollisionDetector.
          */
         CollisionDetector() { }
-
 
         /**
          * Checks if the two objects are intersecting.
@@ -541,15 +541,7 @@ public class GameController {
             if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
                 final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
                 System.out.println("Range damage: " + rangeDamage);
-                enemy.setDamageEnable(false);
-                existingRangeHitBox.stopInitialEffect();
-                rangeTargetHit = true;
-                existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
-                    gameRoot.getChildren().remove(existingRangeHitBox);
-                    player.vanishRangeHitBox();
-                    rangeTargetHit = false;
-                    enemy.setDamageEnable(true);
-                });
+                rangeCombat(existingRangeHitBox, enemy);
                 if (enemy.takeDamage(rangeDamage) != 0) {
                     enemy.getHurt();
                 } else {
@@ -596,109 +588,17 @@ public class GameController {
         }
     }
 
-
-    // Handle interactions with lasers.
-    private final class BossInteraction {
-        final double hitBoxCollisionPercentage = 50;
-        ArrayList<BossWeapon> projectiles;
-
-        /**
-         * Constructs an BossWeaponInteraction object.
-         */
-        BossInteraction() { }
-
-        /*
-         * Interacts with the boss with melee weapon.
-         * @param hitBox the attack hit box
-         */
-        private void meleeWithBoss(final AttackEffect hitBox) {
-            AtomicBoolean found = new AtomicBoolean(false);
-            hitBox.startInitialEffect().thenAccept(isDone -> {
-                if (isDone && !found.get()) {
-                    gameRoot.getChildren().remove(hitBox);
-                    player.vanishMeleeHitBox();
-                }
-            });
-
-            if (collisionDetector.objectIntersect(hitBox, activeBoss)
-                    && collisionDetector.calculateCollisionPercentage(hitBox, activeBoss)
-                    > hitBoxCollisionPercentage) {
-                found.set(true);
-                hitBox.stopInitialEffect();
-                hitBox.startOnHitEffect().thenAccept(isDone -> {
-                    gameRoot.getChildren().remove(hitBox);
-                    player.vanishMeleeHitBox();
-                });
-                final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
-                System.out.println("Melee damage: " + meleeDamage);
-                if (activeBoss.takeDamage(meleeDamage) <= 0) {
-                    endBossFight();
-                } else {
-                    activeBoss.getHurt();
-                }
-            }
-        }
-
-        /*
-         * Interacts with the boss with range weapons.
-         * @param existingRangeHitBox the existing range hit box
-         */
-        private void rangeWithBoss(final AttackEffect existingRangeHitBox) {
-            if (collisionDetector.objectIntersect(existingRangeHitBox, activeBoss) & activeBoss.getDamageEnable()) {
-                final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
-                System.out.println("Boss Range damage: " + rangeDamage);
-                activeBoss.setDamageEnable(false);
-                existingRangeHitBox.stopInitialEffect();
-                rangeTargetHit = true;
-                existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
-                    gameRoot.getChildren().remove(existingRangeHitBox);
-                    player.vanishRangeHitBox();
-                    rangeTargetHit = false;
-                    activeBoss.setDamageEnable(true);
-                });
-                if (activeBoss.takeDamage(rangeDamage) != 0) {
-                    activeBoss.getHurt();
-                } else {
-                    endBossFight();
-                }
-            }
-        }
-
-        /*
-         * Interacts with the boss.
-         */
-        private void interactWithBoss() {
-            AttackEffect existingRangeHitBox = player.getRangeHitBox();
-            if (existingRangeHitBox != null) {
-                this.rangeWithBoss(existingRangeHitBox);
-            }
-        }
-
-        public void setProjectiles(final ArrayList<BossWeapon> projectiles) {
-            this.projectiles = projectiles;
-        }
-
-        // Check and handle collision with boss weapons
-        private void interactWithBossWeapon() {
-            if (this.projectiles != null) {
-                final double itemCollisionPercentage = 40;
-                Iterator<BossWeapon> iterator = this.projectiles.iterator();
-
-                while (iterator.hasNext()) {
-                    BossWeapon projectile = iterator.next();
-
-                    if (collisionDetector.objectIntersect(player, projectile)
-                            && collisionDetector.calculateCollisionPercentage(player, projectile)
-                            > itemCollisionPercentage) {
-                        if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
-                            player.getHurt();
-                            iterator.remove();
-                            gameRoot.getChildren().remove(projectile);
-                        }
-                    }
-                }
-            }
-        }
+    // Handle ranged combat hit box and collision detection
+    private void rangeCombat(final AttackEffect existingRangeHitBox, final Enemy enemy) {
+        enemy.setDamageEnable(false);
+        existingRangeHitBox.stopInitialEffect();
+        rangeTargetHit = true;
+        existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
+            gameRoot.getChildren().remove(existingRangeHitBox);
+            player.vanishRangeHitBox();
+            rangeTargetHit = false;
+            enemy.setDamageEnable(true);
+        });
     }
 
     /**
@@ -809,12 +709,13 @@ public class GameController {
             if (hitBox != null) {
                 gameRoot.getChildren().add(hitBox);
                 enemyInteraction.meleeWithEnemies(hitBox);
-                if (activeBoss != null) {
-                    bossInteraction.meleeWithBoss(hitBox);
+                if (activeBossFight != null) {
+                    activeBossFight.meleeWithBoss(hitBox);
                 }
             }
         }
     }
+
     /* Listen to attack signals */
     private void rangeAttackKeyListener() {
         if (isPressed(KeyCode.P)) {
@@ -839,6 +740,7 @@ public class GameController {
             }
         }
     }
+
     /* Listen to switch platform signals */
     private void switchPlatformKeyListener() {
         if (isPressed(KeyCode.L)) {
@@ -858,75 +760,219 @@ public class GameController {
         }
     }
 
-
-    // Checks if this level is a boss level.
+    /*
+     * Checks if this level is a boss level.
+     */
     private void checkForBossPresence() {
         final int[] bossLevels = {3};
-        if (activeBoss == null && platform.getCurrentLevel() == bossLevels[0]) {
-            final int halYOffset = -100;
-            Enemy hal = new Hal(platform.getTotalLevelWidth() / 2, platform.getTotalLevelHeight() + halYOffset);
-            startBossFight(hal);
+        if (platform.getCurrentLevel() == bossLevels[0]) {
+            final int numberOfProjectiles = 10;
+            final int projectileWidth = 50;
+            final int startDelay = 2;
+            final int laserDuration = 3;
+            final int endDuration = 2;
+
+            if (activeBossFight == null || activeBossFight.bossLevel != bossLevels[0]) {
+                Enemy hal = new Hal(windowWidth / 2, windowHeight);
+                activeBossFight = new BossFight(bossLevels[0], hal);
+            }
+            activeBossFight.startBossFight(numberOfProjectiles,
+                    projectileWidth, startDelay, laserDuration, endDuration);
+        } else {
+            if (activeBossFight != null) {
+                activeBossFight.endBossFight();
+                activeBossFight = null;
+            }
         }
     }
 
-    // Start a boss fight with Hal's lasers
-    private void startBossFight(final Enemy boss) {
-        final int numberOfProjectiles = 10;
-        final int projectileWidth = 50;
-        final int laserDuration = 5;
-        final int totalDuration = 15;
+    /**
+     * Represents a boss fight object.
+     */
+    private class BossFight {
+        private static final double HIT_BOX_COLLISION_PERCENTAGE = 50;
+        private final ArrayList<BossWeapon> projectiles = new ArrayList<>();
+        private final int bossLevel;
+        private final Enemy activeBoss;
+        private BossProjectileGenerator projectileGenerator;
+        private Timeline projectileTimeline;
 
-        this.disableCamera();
+        /**
+         * Constructs a BossFight object.
+         *
+         * @param bossLevel the boss level
+         * @param boss the boss to fight
+         */
+        BossFight(final int bossLevel, final Enemy boss) {
+            this.bossLevel = bossLevel;
+            this.activeBoss = boss;
+        }
 
-        activeBoss = boss;
-        gameRoot.getChildren().add(boss);
+        /**
+         * Starts the boss fight.
+         *
+         * @param numberOfProjectiles the number of projectiles to be fired at once
+         * @param projectileWidth the width of the projectile
+         * @param startDelay the delay before the boss attack
+         * @param laserDuration the duration of the laser
+         * @param totalDuration the total duration of the boss attack
+         */
+        public void startBossFight(final int numberOfProjectiles, final int projectileWidth,
+                                   final int startDelay, final int laserDuration, final int totalDuration) {
+            disableCamera();
 
-        // Create Hal's lasers
-        bossFight = new BossProjectiles(numberOfProjectiles, platform.getTotalLevelWidth(),
-                platform.getTotalLevelHeight(), projectileWidth);
+            if (!gameRoot.getChildren().contains(activeBoss)) {
+                gameRoot.getChildren().add(activeBoss);
+            }
 
-        // Start Hal's lasers and switch positions every 10 seconds
-        bossWeaponTimeline = new Timeline(
-                new KeyFrame(Duration.seconds(0), event -> {
-                    bossProjectiles.clear();
-                    bossProjectiles.addAll(bossFight.fireProjectiles());
-                    for (BossWeapon projectile : bossProjectiles) {
-                        if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
-                            gameRoot.getChildren().add(projectile);
+            if (this.projectileGenerator == null) {
+                this.projectileGenerator = new BossProjectileGenerator(numberOfProjectiles, windowWidth,
+                        windowHeight, projectileWidth);
+            }
+
+            if (this.projectileTimeline == null) {
+                this.projectileTimeline = createProjectileTimeline(startDelay, laserDuration, totalDuration);
+                this.projectileTimeline.setCycleCount(Timeline.INDEFINITE);
+                this.projectileTimeline.play();
+            }
+        }
+
+        /*
+         * Creates the timeline for the boss projectiles.
+         *
+         * @param startDelay delay before lasers are fired
+         * @param laserDuration duration of the laser
+         * @param endDelay delay after lasers are fired
+         */
+        private Timeline createProjectileTimeline(final int startDelay, final int laserDuration, final int endDelay) {
+            final double projectileDamageDelay = 0.5;
+            return new Timeline(
+                    new KeyFrame(Duration.seconds(startDelay), event -> {
+                        // Add projectiles to gameRoot
+                        for (BossWeapon projectile : projectileGenerator.fireProjectiles()) {
+                            if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
+                                gameRoot.getChildren().add(projectile);
+                            }
                         }
+                    }),
+
+                    new KeyFrame(Duration.seconds(projectileDamageDelay + startDelay), event -> {
+                        // Add projectiles to the projectiles list after a delay
+                        projectiles.addAll(projectileGenerator.getProjectiles());
+                    }),
+
+                    new KeyFrame(Duration.seconds(laserDuration + projectileDamageDelay + startDelay), event -> {
+                        Iterator<BossWeapon> iterator = projectiles.iterator();
+                        while (iterator.hasNext()) {
+                            BossWeapon laser = iterator.next();
+                            gameRoot.getChildren().remove(laser);
+                            iterator.remove();
+                        }
+                    }),
+                    new KeyFrame(Duration.seconds(laserDuration + projectileDamageDelay + startDelay + endDelay))
+            );
+        }
+
+        /**
+         * Ends the current boss fight.
+         */
+        public void endBossFight() {
+            for (BossWeapon laser : projectiles) {
+                gameRoot.getChildren().remove(laser);
+            }
+            this.projectileTimeline.stop();
+            Iterator<BossWeapon> iterator = projectiles.iterator();
+            while (iterator.hasNext()) {
+                BossWeapon laser = iterator.next();
+                gameRoot.getChildren().remove(laser);
+                iterator.remove();
+            }
+            this.activeBoss.setDamageEnable(false);
+            this.activeBoss.setVisible(false);
+        }
+
+        /*
+         * Interacts with the boss with melee weapons.
+         * @param hitBox the melee attack hit box
+         */
+        private void meleeWithBoss(final AttackEffect hitBox) {
+            if (activeBoss.getDamageEnable()) {
+                AtomicBoolean found = new AtomicBoolean(false);
+                hitBox.startInitialEffect().thenAccept(isDone -> {
+                    if (isDone && !found.get()) {
+                        gameRoot.getChildren().remove(hitBox);
+                        player.vanishMeleeHitBox();
                     }
-                    bossInteraction.setProjectiles(bossProjectiles);
-                }),
-                new KeyFrame(Duration.seconds(laserDuration), event -> {
-                    Iterator<BossWeapon> iterator = bossProjectiles.iterator();
-                    while (iterator.hasNext()) {
-                        BossWeapon laser = iterator.next();
-                        gameRoot.getChildren().remove(laser);
+                });
+
+                if (collisionDetector.objectIntersect(hitBox, activeBoss)
+                        && collisionDetector.calculateCollisionPercentage(hitBox, activeBoss)
+                        > HIT_BOX_COLLISION_PERCENTAGE) {
+                    found.set(true);
+                    hitBox.stopInitialEffect();
+                    hitBox.startOnHitEffect().thenAccept(isDone -> {
+                        gameRoot.getChildren().remove(hitBox);
+                        player.vanishMeleeHitBox();
+                    });
+                    final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
+                    if (activeBoss.takeDamage(meleeDamage) <= 0) {
+                        endBossFight();
+                    } else {
+                        activeBoss.getHurt();
+                    }
+                }
+            }
+        }
+
+        /*
+         * Interacts with the boss with range weapons.
+         * @param existingRangeHitBox the existing range hit box
+         */
+        private void rangeWithBoss(final AttackEffect existingRangeHitBox) {
+            if (activeBoss.getDamageEnable()) {
+                if (collisionDetector.objectIntersect(existingRangeHitBox, activeBoss) & activeBoss.getDamageEnable()) {
+                    final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
+                    rangeCombat(existingRangeHitBox, activeBoss);
+                    if (activeBoss.takeDamage(rangeDamage) != 0) {
+                        activeBoss.getHurt();
+                    } else {
+                        endBossFight();
+                    }
+                }
+            }
+        }
+
+        /*
+         * Interacts with the boss.
+         */
+        private void interactWithBoss() {
+            AttackEffect existingRangeHitBox = player.getRangeHitBox();
+            if (existingRangeHitBox != null) {
+                this.rangeWithBoss(existingRangeHitBox);
+            }
+        }
+
+        /*
+         * Check and handle collision with boss weapons
+         */
+        private void interactWithBossProjectiles() {
+            final double itemCollisionPercentage = 40;
+            Iterator<BossWeapon> iterator = this.projectiles.iterator();
+
+            while (iterator.hasNext()) {
+                BossWeapon projectile = iterator.next();
+
+                if (collisionDetector.objectIntersect(player, projectile)
+                        && collisionDetector.calculateCollisionPercentage(player, projectile)
+                        > itemCollisionPercentage) {
+                    if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
+                        player.getHurt();
                         iterator.remove();
+                        gameRoot.getChildren().remove(projectile);
                     }
-                    bossInteraction.setProjectiles(null);
-                }),
-                new KeyFrame(Duration.seconds(totalDuration))
-        );
-        bossWeaponTimeline.setCycleCount(Timeline.INDEFINITE);
-        bossWeaponTimeline.play();
-    }
-
-    private void endBossFight() {
-        for (BossWeapon laser : bossProjectiles) {
-            gameRoot.getChildren().remove(laser);
+                }
+            }
         }
-        bossWeaponTimeline.stop();
-
-        Iterator<BossWeapon> iterator = bossProjectiles.iterator();
-        while (iterator.hasNext()) {
-            BossWeapon laser = iterator.next();
-            gameRoot.getChildren().remove(laser);
-            iterator.remove();
-        }
-
-        gameRoot.getChildren().remove(activeBoss);
-        bossFight = null;
     }
 
     /**
@@ -953,9 +999,9 @@ public class GameController {
                     blockInteraction.interactWithBlocksY();
                     itemInteraction.interactWithItems();
                     enemyInteraction.interactWithEnemies();
-                    if (activeBoss != null) {
-                        bossInteraction.interactWithBoss();
-                        bossInteraction.interactWithBossWeapon();
+                    if (activeBossFight != null) {
+                        activeBossFight.interactWithBoss();
+                        activeBossFight.interactWithBossProjectiles();
                     }
                     checkForBossPresence();
                     gameOverCondition();
