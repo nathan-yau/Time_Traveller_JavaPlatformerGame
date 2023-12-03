@@ -706,4 +706,12 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     public void setClimbDirection(final Direction climbingDirection) {
         this.climbDirection = climbingDirection;
     }
+
+    public int getHealthPoint() {
+        return healthPoint;
+    }
+
+    public int getMaxHealthPoints() {
+        return MAX_HEALTH_POINTS;
+    }
 }
