@@ -47,7 +47,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private Direction direction;
     private Point2D velocity;
     private int healthPotionCounter;
-    private int goldCoinCounter;
+    private int energyCounter;
     private Timeline meleeAnimation;
     private Timeline punchAnimation;
     private Timeline rangeAnimation;
@@ -381,7 +381,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Sets the Player to idle.
      */
     public void setIdle() {
-        System.out.println("Setting");
         if (this.action != Action.IDLE) {
             if (walkAnimation.getStatus() == Animation.Status.RUNNING) {
                 this.updatePlayerImage(String.format("%s/idle.png", currentImagePath));
@@ -452,20 +451,19 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
-     * Increments the player's gold coin counter by one.
+     * Increments the player's energy counter by one.
      */
-    public void incrementGoldCoinCounter() {
-        this.goldCoinCounter++;
-        System.out.println("Gold Coin count: " + this.goldCoinCounter);
+    public void incrementEnergyCounter() {
+        this.energyCounter++;
     }
 
     /**
-     * Gets the player's gold coin counter.
+     * Gets the player's energy counter.
      *
-     * @return the player's gold coin counter
+     * @return the player's energy counter
      */
-    public int getGoldCoinCounter() {
-        return this.goldCoinCounter;
+    public int getEnergyCounter() {
+        return this.energyCounter;
     }
 
     /**
