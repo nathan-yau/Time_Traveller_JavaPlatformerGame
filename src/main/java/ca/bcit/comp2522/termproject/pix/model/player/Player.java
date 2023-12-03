@@ -458,6 +458,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
+     * Decrements the player's energy counter by one.
+     */
+    public void decrementEnergyCounter() {
+        this.energyCounter--;
+    }
+
+
+    /**
      * Gets the player's energy counter.
      *
      * @return the player's energy counter
