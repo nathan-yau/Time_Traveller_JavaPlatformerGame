@@ -1,4 +1,4 @@
-package ca.bcit.comp2522.termproject.pix.menu;
+package ca.bcit.comp2522.termproject.pix.screens.screenelements;
 
 import ca.bcit.comp2522.termproject.pix.DefaultFont;
 import javafx.beans.binding.Bindings;
@@ -8,6 +8,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 
 /**
  * Represents a menu item.
@@ -23,7 +24,7 @@ public class MenuItem extends Pane {
      *
      * @param name the name of the menu item as a String
      */
-    public MenuItem(final String name)  {
+    public MenuItem(final String name, final TextAlignment alignment)  {
         final int textXOffset = 5;
         final int textYOffset = 20;
         final int shadowRadius = 10;
@@ -35,6 +36,7 @@ public class MenuItem extends Pane {
         text.setTranslateY(textYOffset);
         text.setFont(font);
         text.setFill(Color.WHITE);
+        text.setTextAlignment(alignment);
         text.effectProperty().bind(
                 Bindings.when(hoverProperty())
                         .then(new DropShadow(hoverShadowRadius, Color.BLACK))
