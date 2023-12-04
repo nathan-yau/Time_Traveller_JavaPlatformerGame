@@ -116,6 +116,7 @@ public class GameController {
         uiRoot.getChildren().add(uiManager.getBatteryCounter());
         uiRoot.getChildren().add(uiManager.getWorldName());
         uiRoot.getChildren().add(uiManager.getPlayerStatus());
+        uiRoot.getChildren().add(uiManager.getBackpack());
     }
 
     /**

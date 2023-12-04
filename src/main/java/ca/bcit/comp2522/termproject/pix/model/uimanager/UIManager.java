@@ -2,11 +2,14 @@ package ca.bcit.comp2522.termproject.pix.model.uimanager;
 
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -19,6 +22,15 @@ import java.util.ArrayList;
 public class UIManager {
     ArrayList<HBox> uiItems;
     HBox batteryCounter;
+    VBox meleeSlot;
+    VBox rangeSlot;
+    VBox ammoSlot;
+    VBox potionSlot;
+    VBox meleeIcon;
+    VBox rangeIcon;
+    VBox ammoIcon;
+    VBox potionIcon;
+
     HBox worldName;
     HBox playerStatus;
     HBox backpack;
@@ -29,22 +41,84 @@ public class UIManager {
        this.batteryCounter = new HBox();
        this.worldName = new HBox();
        this.playerStatus = new HBox();
+       this.backpack = new HBox(20);
+       this.meleeSlot = new VBox(5);
+       this.rangeSlot = new VBox();
+       this.ammoSlot = new VBox();
+       this.potionSlot = new VBox();
+       this.meleeIcon = new VBox();
+       this.rangeIcon = new VBox();
+       this.ammoIcon = new VBox();
+       this.potionIcon = new VBox();
        this.healthBar = new ProgressBar();
        this.healthLabel = new Label();
-       this.initialSetting(batteryCounter);
+       this.initialSetting(batteryCounter, 40);
        this.refreshBatteryCounter(0);
-       this.initialSetting(worldName);
+       this.initialSetting(worldName, 40);
        this.refreshWorldName(0);
        this.initialHealthBar();
        this.refreshHealthBar(playerHP, playerHP);
-       this.initialSetting(playerStatus);
+       this.initialSetting(playerStatus, 40);
+       this.initialSetting(backpack, 10);
+       this.initializeSlots();
+       this.initializeBackPack();
        this.refreshPlayerStatus();
     }
 
-    public final void initialSetting(HBox section) {
-        section.setPadding(new Insets(5, 40, 5, 10));
+    public final void initialSetting(HBox section, int rightPadding) {
+        section.setPadding(new Insets(5, rightPadding, 5, 10));
         section.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); " +
                 "-fx-background-radius: " + 10 + ";");
+    }
+
+    private void initializeSlots() throws IOException {
+        setPictureContent(meleeIcon, "ui/punch.png");
+        meleeIcon.setPadding(new Insets(5, 5, 5, 5));
+        meleeIcon.setStyle("-fx-background-color: rgba(255, 255, 255, 0.5); " +
+                "-fx-background-radius: " + 10 + ";");
+        meleeSlot.getChildren().clear();
+        meleeSlot.setAlignment(Pos.CENTER);
+        meleeSlot.getChildren().add(meleeIcon);
+        setTextContent(meleeSlot, 13, "Fist",0, 0);
+
+        setPictureContent(rangeIcon, "ui/backpack.png");
+        rangeIcon.setPadding(new Insets(5, 5, 5, 5));
+        rangeIcon.setStyle("-fx-background-color: rgba(255, 255, 255, 0.5); " +
+                "-fx-background-radius: " + 10 + ";");
+        rangeSlot.getChildren().clear();
+        rangeSlot.setAlignment(Pos.CENTER);
+        rangeSlot.getChildren().add(rangeIcon);
+        setTextContent(rangeSlot, 13, "Empty",0, 0);
+
+        setPictureContent(ammoIcon, "ui/backpack.png");
+        ammoIcon.setPadding(new Insets(5, 5, 5, 5));
+        ammoIcon.setStyle("-fx-background-color: rgba(255, 255, 255, 0.5); " +
+                "-fx-background-radius: " + 10 + ";");
+        ammoSlot.getChildren().clear();
+        ammoSlot.setAlignment(Pos.CENTER);
+        ammoSlot.getChildren().add(ammoIcon);
+        setTextContent(ammoSlot, 13, "Empty",0, 0);
+
+        setPictureContent(potionIcon, "ui/backpack.png");
+        potionIcon.setPadding(new Insets(5, 5, 5, 5));
+        potionIcon.setStyle("-fx-background-color: rgba(255, 255, 255, 0.5); " +
+                "-fx-background-radius: " + 10 + ";");
+        potionSlot.getChildren().clear();
+        potionSlot.setAlignment(Pos.CENTER);
+        potionSlot.getChildren().add(potionIcon);
+        setTextContent(potionSlot, 13, "Empty", 0, 0);
+
+    }
+
+    private void initializeBackPack() {
+        final double translateY = MainApplication.WINDOW_HEIGHT - 100;
+        final double translateX = MainApplication.WINDOW_WIDTH - 350;
+        backpack.getChildren().add(meleeSlot);
+        backpack.getChildren().add(rangeSlot);
+        backpack.getChildren().add(ammoSlot);
+        backpack.getChildren().add(potionSlot);
+        backpack.setTranslateX(translateX);
+        backpack.setTranslateY(translateY);
     }
 
     public final void refreshBatteryCounter(int batteryCount) throws IOException {
@@ -53,7 +127,7 @@ public class UIManager {
         batteryCounter.getChildren().clear();
         setPictureContent(batteryCounter, "ui/battery.png");
         setTextContent(batteryCounter, 24, String.format("x %s", batteryCount),
-                18);
+                18, 10);
         batteryCounter.setTranslateX(translateX);
         batteryCounter.setTranslateY(translateY);
     }
@@ -62,7 +136,7 @@ public class UIManager {
         final double translateY = 80;
         final double translateX = 50;
         playerStatus.getChildren().clear();
-        setTextContent(playerStatus, 18, "HP",0);
+        setTextContent(playerStatus, 18, "HP",0, 10);
         playerStatus.getChildren().add(healthLabel);
         playerStatus.getChildren().add(healthBar);
         playerStatus.setTranslateX(translateX);
@@ -75,7 +149,7 @@ public class UIManager {
         String[] world = {"In the Past", "Present Day", "In the Future", "Boss Dimension"};
         worldName.getChildren().clear();
         setPictureContent(worldName, "ui/world.png");
-        setTextContent(worldName, 18, String.format("Timeline - %s", world[level]),12);
+        setTextContent(worldName, 18, String.format("Timeline - %s", world[level]),12, 10);
         worldName.setTranslateX(translateX);
         worldName.setTranslateY(translateY);
     }
@@ -92,18 +166,18 @@ public class UIManager {
         return font;
     }
 
-    private void setTextContent(final HBox box, final int fontSize, final String text,
-                                final double fontTranslateY) throws IOException {
+    private void setTextContent(final Pane box, final int fontSize, final String text,
+                                final double fontTranslateY, final double fontTranslateX) throws IOException {
         Text description = new Text(text);
         description.setFont(this.setDefaultFont(fontSize));
         description.setFill(Color.WHITE);
         description.setTranslateY(fontTranslateY);
-        description.setTranslateX(10);
+        description.setTranslateX(fontTranslateX);
 
         box.getChildren().add(description);
     }
 
-    private void setPictureContent(final HBox box, final String imagePath) {
+    private void setPictureContent(final Pane box, final String imagePath) {
         ImageView imageView = new ImageView(new Image(String.valueOf(MainApplication.class.getResource(imagePath))));
         box.getChildren().add(imageView);
     }
@@ -147,5 +221,9 @@ public class UIManager {
 
     public HBox getPlayerStatus() {
         return playerStatus;
+    }
+
+    public HBox getBackpack() {
+        return backpack;
     }
 }

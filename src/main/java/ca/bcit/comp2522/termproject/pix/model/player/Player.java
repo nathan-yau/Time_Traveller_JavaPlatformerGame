@@ -302,7 +302,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      *  Sets the Player when it is on the ground.
      */
     public void offsetGravity() {
-        this.setTranslateY(this.getTranslateY() - 1);
+        this.setTranslateY(this.getTranslateY() - 0.8);
         jumpEnable = true;
     }
 
