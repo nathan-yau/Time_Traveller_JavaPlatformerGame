@@ -22,12 +22,14 @@ import ca.bcit.comp2522.termproject.pix.model.weapon.MeleeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
+import ca.bcit.comp2522.termproject.pix.screens.ResultsScreen;
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -36,6 +38,9 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
+import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -55,6 +60,7 @@ public class GameController {
     private static final int X_CAMERA_THRESHOLD = 300;
     private static final int X_CAMERA_ADJUSTMENT = 300;
     private static ChangeListener<? super Number> playerXListener;
+    private final Stage stage;
     private final int windowWidth;
     private final int windowHeight;
     private final Pane appRoot;
@@ -82,10 +88,12 @@ public class GameController {
      *
      * @param windowWidth the width of the window as an int
      * @param windowHeight the height of the window as an int
+     * @param stage the current application stage
      */
-    public GameController(final int windowWidth, final int windowHeight) {
+    public GameController(final int windowWidth, final int windowHeight, final Stage stage) {
         final double initialPlayerX = 0;
         final double initialPlayerY = 500;
+        this.stage = stage;
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.appRoot = new Pane();
@@ -783,6 +791,8 @@ public class GameController {
                 activeBossFight.endBossFight();
                 activeBossFight = null;
             }
+            // Erase this!!1
+            startVictoryCondition(stage);
         }
     }
 
@@ -916,7 +926,8 @@ public class GameController {
                     });
                     final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
                     if (activeBoss.takeDamage(meleeDamage) <= 0) {
-                        endBossFight();
+                        this.endBossFight();
+                        startVictoryCondition(stage);
                     } else {
                         activeBoss.getHurt();
                     }
@@ -936,7 +947,8 @@ public class GameController {
                     if (activeBoss.takeDamage(rangeDamage) != 0) {
                         activeBoss.getHurt();
                     } else {
-                        endBossFight();
+                        this.endBossFight();
+                        startVictoryCondition(stage);
                     }
                 }
             }
@@ -1023,6 +1035,30 @@ public class GameController {
             fileFormat = "png";
         }
         return String.format("Background/%s.%s", levelManager.getCurrentLevel(), fileFormat);
+    }
+
+    /*
+     * Start the winning condition.
+     */
+    private void startVictoryCondition(final Stage currentStage) {
+        final int titleWidth = 350;
+        final int titleXOffset = (this.windowWidth / 2) - (titleWidth / 2);
+        final int titleYOffset = this.windowHeight / 2 - 25;
+
+        final int bodyWidth = 590;
+        final int bodyXOffset = (this.windowWidth / 2) - (bodyWidth / 2);
+        final int bodyYOffset = (this.windowHeight / 2) + 25;
+
+        ResultsScreen victoryScreen = new ResultsScreen(this.windowWidth, this.windowHeight);
+        Scene scene = new Scene(victoryScreen.getRoot(), this.windowWidth, this.windowHeight);
+
+        currentStage.setScene(scene);
+
+        victoryScreen.addBackground("victoryBg.gif");
+        victoryScreen.addTitle("YOU DID IT!", Color.WHITE, TextAlignment.CENTER, titleWidth,
+                titleXOffset, titleYOffset);
+        victoryScreen.addBodyText("Your epic conquests through time have saved the world",
+                Color.WHITE, TextAlignment.CENTER, bodyWidth, bodyXOffset, bodyYOffset);
     }
 
     /**
