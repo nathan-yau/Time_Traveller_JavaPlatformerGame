@@ -994,7 +994,8 @@ public class GameController {
      * Checks if the game is over.
      */
     private void gameOverCondition() {
-        if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT) {
+        if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT
+            || player.getHealthPoint() <= 0) {
             System.out.println("Game Over");
             System.exit(0);
         }

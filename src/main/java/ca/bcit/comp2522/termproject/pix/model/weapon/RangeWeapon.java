@@ -19,7 +19,7 @@ public class RangeWeapon extends Weapon {
      * @param currentLevel the current game level as an int
      */
     public RangeWeapon(final int currentLevel) {
-        super(WeaponType.RANGE_WEAPON, RANDOM_GENERATOR.nextInt(1, currentLevel + 1), RANGE_HIT_RATE);
+        super(WeaponType.RANGE_WEAPON, RANDOM_GENERATOR.nextInt(1, currentLevel + 2), RANGE_HIT_RATE);
         this.ammoCount = RANDOM_GENERATOR.nextInt(MIN_AMMO_COUNT, MAX_AMMO_COUNT);
     }
 

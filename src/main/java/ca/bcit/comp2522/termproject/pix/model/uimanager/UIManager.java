@@ -21,6 +21,7 @@ public class UIManager {
     HBox batteryCounter;
     HBox worldName;
     HBox playerStatus;
+    HBox backpack;
     ProgressBar healthBar;
     Label healthLabel;
     public UIManager(double playerHP) throws IOException {
@@ -35,7 +36,7 @@ public class UIManager {
        this.initialSetting(worldName);
        this.refreshWorldName(0);
        this.initialHealthBar();
-       this.refreshHealthBar(20, 20);
+       this.refreshHealthBar(playerHP, playerHP);
        this.initialSetting(playerStatus);
        this.refreshPlayerStatus();
     }
@@ -147,6 +148,4 @@ public class UIManager {
     public HBox getPlayerStatus() {
         return playerStatus;
     }
-
-
 }
