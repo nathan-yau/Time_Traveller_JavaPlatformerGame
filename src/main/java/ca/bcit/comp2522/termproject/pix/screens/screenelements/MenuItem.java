@@ -23,6 +23,7 @@ public class MenuItem extends Pane {
      * Constructs a menu item.
      *
      * @param name the name of the menu item as a String
+     * @param alignment the alignment of the menu item as a TextAlignment
      */
     public MenuItem(final String name, final TextAlignment alignment)  {
         final int textXOffset = 5;
