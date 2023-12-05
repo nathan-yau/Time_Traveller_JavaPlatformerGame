@@ -34,6 +34,9 @@ public class MeleeWeapon extends Weapon {
         return 0;
     }
 
+    @Override
+    public void addAmmo(int newAmmo) { }
+
     /**
      * Gets the string representation of this MeleeWeapon.
      *

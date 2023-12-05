@@ -81,4 +81,6 @@ public abstract class Weapon {
      * @return the ammo count as an int
      */
     public abstract int getAmmoCount();
+
+    public abstract void addAmmo(int newAmmo);
 }

@@ -13,11 +13,7 @@ import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelLayout;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.Energy;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.WeaponPickup;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.*;
 
 
 import java.util.ArrayList;
@@ -119,8 +115,9 @@ public class PlatformManager {
             for (int row = 0; row < leveHeight; row++) {
                 String line = currentLevelData[row];
                 for (int col = 0; col < line.length(); col++) {
-                    int xPosition = col * BLOCK_WIDTH;
-                    int yPosition = row * BLOCK_HEIGHT;
+                    final int xPosition = col * BLOCK_WIDTH;
+                    final int yPosition = row * BLOCK_HEIGHT;
+                    final int yPadding = 10;
                     char categorySymbol = line.charAt(col);
                     if (categorySymbol == '0') {
                         PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
@@ -144,35 +141,29 @@ public class PlatformManager {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.TESTING_BLOCK, i, "dirt");
                         totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == 'B') {
-                        StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
-                                BlockType.BOSS_FIGHT_BLOCK, "Boss/BossFight/TRIGGER", "bossFight");
-                        blockArray.add(solidBlock);
                     } else if (categorySymbol == 'P') {
-                        final int yPadding = 10;
                         HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding, i, "healthPotion");
+                                BLOCK_HEIGHT + yPadding);
                         totalPickUpItemArray.get(i).add(healthPotion);
-                    } else if (categorySymbol == 'C') {
-                        final int yPadding = 10;
+                    } else if (categorySymbol == 'E') {
                         Energy battery = new Energy(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding, i, "battery");
+                                BLOCK_HEIGHT + yPadding);
                         totalPickUpItemArray.get(i).add(battery);
-                    } else if (categorySymbol == 'W') {
+                    } else if (categorySymbol == 'D') {
                         Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                                 yPosition + BLOCK_HEIGHT, i, true, false);
                         totalEnemyArray.get(i).add(minion);
                         Thread minionThread = new Thread(minion);
                         minionThread.setDaemon(true);
                         minionThread.start();
-                    } else if (categorySymbol == 'F') {
+                    } else if (categorySymbol == 'B') {
                         Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                                 yPosition + BLOCK_HEIGHT, i, false, true);
                         totalEnemyArray.get(i).add(minion);
                         Thread minionThread = new Thread(minion);
                         minionThread.setDaemon(true);
                         minionThread.start();
-                    } else if (categorySymbol == 'S') {
+                    } else if (categorySymbol == 'C') {
                         Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                                 yPosition + BLOCK_HEIGHT, i, true, true);
                         totalEnemyArray.get(i).add(minion);
@@ -180,14 +171,25 @@ public class PlatformManager {
                         minionThread.setDaemon(true);
                         minionThread.start();
                     } else if (categorySymbol == 'M') {
-                        final int yPadding = 10;
                         WeaponPickup weapon = new WeaponPickup(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding, PickUpItemType.MELEE_WEAPON, i, "melee");
+                                BLOCK_HEIGHT + yPadding, PickUpItemType.MELEE_WEAPON);
                         totalPickUpItemArray.get(i).add(weapon);
                     } else if (categorySymbol == 'R') {
                         WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, PickUpItemType.RANGE_WEAPON, i, "range");
+                                BLOCK_HEIGHT, PickUpItemType.RANGE_WEAPON);
                         totalPickUpItemArray.get(i).add(weapon);
+                    } else if (categorySymbol == 'S') {
+                        SaveEvent saveItem = new SaveEvent(xPosition, yPosition, BLOCK_WIDTH,
+                                BLOCK_HEIGHT);
+                        totalPickUpItemArray.get(i).add(saveItem);
+                    } else if (categorySymbol == 'F') {
+                        BossEvent bossItem = new BossEvent(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                                BLOCK_HEIGHT + yPadding);
+                        totalPickUpItemArray.get(i).add(bossItem);
+                    } else if (categorySymbol == 'A') {
+                        Ammo ammo = new Ammo(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                                BLOCK_HEIGHT + yPadding);
+                        totalPickUpItemArray.get(i).add(ammo);
                     }
                 }
             }
@@ -206,16 +208,16 @@ public class PlatformManager {
         Minion minion;
         if (airWalker) {
             minion = switch (currentLevel) {
-                case 0 -> new Wraith(xAxis, yAxis, true);
-                case 1 -> new Spector(xAxis, yAxis, true);
-                case 2 -> new SpaceShip(xAxis, yAxis, true);
+                case 0 -> new Wraith(xAxis, yAxis, xWalker);
+                case 1 -> new Spector(xAxis, yAxis, xWalker);
+                case 2 -> new SpaceShip(xAxis, yAxis, xWalker);
                 default -> throw new IllegalArgumentException("Invalid level");
             };
         } else {
             minion = switch (currentLevel) {
-                case 0 -> new Minotaur(xAxis, yAxis, xWalker);
-                case 1 -> new Knight(xAxis, yAxis, xWalker);
-                case 2 -> new Robot(xAxis, yAxis, xWalker);
+                case 0 -> new Minotaur(xAxis, yAxis, true);
+                case 1 -> new Knight(xAxis, yAxis, true);
+                case 2 -> new Robot(xAxis, yAxis, true);
                 default -> throw new IllegalArgumentException("Invalid level");
             };
         }

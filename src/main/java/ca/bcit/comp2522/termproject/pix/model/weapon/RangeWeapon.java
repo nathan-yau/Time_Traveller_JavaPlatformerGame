@@ -32,6 +32,11 @@ public class RangeWeapon extends Weapon {
         return this.ammoCount;
     }
 
+    @Override
+    public void addAmmo(int newAmmo) {
+        this.ammoCount += newAmmo;
+    }
+
     /**
      * What happens when a range weapon is used.
      */

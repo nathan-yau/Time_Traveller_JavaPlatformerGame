@@ -17,11 +17,8 @@ public class Energy extends PickUpItem {
      * @param y the y coordinate of the energy plate as an int
      * @param w the width of the energy plate as an int
      * @param h the height of the energy plate as an int
-     * @param currentLevel the current game level as an int
-     * @param imageName the image name of the energy plate as a String
      */
-    public Energy(final int x, final int y, final int w, final int h,
-                    final int currentLevel, final String imageName) {
-        super(x, y, w, h, ObjectType.ITEM, PickUpItemType.ENERGY, currentLevel, imageName);
+    public Energy(final int x, final int y, final int w, final int h) {
+        super(x, y, w, h, PickUpItemType.ENERGY);
     }
 }

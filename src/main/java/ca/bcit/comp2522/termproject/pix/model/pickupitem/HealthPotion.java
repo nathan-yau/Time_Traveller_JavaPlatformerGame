@@ -21,9 +21,8 @@ public class HealthPotion extends PickUpItem {
      * @param currentLevel the current game level as an int
      * @param imageName the name of the image file as a String
      */
-    public HealthPotion(final int x, final int y, final int w, final int h,
-                        final int currentLevel, final String imageName) {
-        super(x, y, w, h, ObjectType.ITEM, PickUpItemType.HEALTH_POTION, currentLevel, imageName);
+    public HealthPotion(final int x, final int y, final int w, final int h) {
+        super(x, y, w, h, PickUpItemType.HEALTH_POTION);
     }
 }
 
