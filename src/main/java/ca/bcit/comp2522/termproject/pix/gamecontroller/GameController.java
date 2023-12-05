@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.gamecontroller;
 
+import ca.bcit.comp2522.termproject.pix.Command;
 import ca.bcit.comp2522.termproject.pix.GameType;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
@@ -22,11 +23,12 @@ import ca.bcit.comp2522.termproject.pix.model.weapon.MeleeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
-import ca.bcit.comp2522.termproject.pix.screens.ResultsScreen;
+import ca.bcit.comp2522.termproject.pix.screens.Screen;
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Scene;
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -81,6 +84,8 @@ public class GameController {
     private boolean rangeTargetHit;
     private final LevelManager levelManager;
     private boolean switching = false;
+
+    private boolean endGameConditionReached;
 
     /**
      * Constructs a GameController object with default values.
@@ -117,6 +122,7 @@ public class GameController {
         this.setUpPlatform();
         this.setUpCamera();
         this.setCachedBlockArray();
+        this.endGameConditionReached = false;
         gameRoot.getChildren().add(player);
     }
 
@@ -791,8 +797,6 @@ public class GameController {
                 activeBossFight.endBossFight();
                 activeBossFight = null;
             }
-            // Erase this!!1
-            startVictoryCondition(stage);
         }
     }
 
@@ -993,7 +997,7 @@ public class GameController {
     private void gameOverCondition() {
         if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT) {
             System.out.println("Game Over");
-            System.exit(0);
+            this.startGameOverCondition(stage);
         }
     }
 
@@ -1038,28 +1042,58 @@ public class GameController {
     }
 
     /*
-     * Start the winning condition.
+     * Start end game condition.
+     */
+    private void startEndGameCondition(final Stage currentStage, final String title,
+                                       final String bodyText, final String backgroundImage) {
+        if (!this.endGameConditionReached) {
+            final int titleWidth = 350;
+            final int titleXOffset = (this.windowWidth / 2) - (titleWidth / 2);
+            final int titleYOffset = this.windowHeight / 2 - 70;
+
+            final int bodyWidth = 625;
+            final int bodyXOffset = (this.windowWidth / 2) - (bodyWidth / 2);
+            final int bodyYOffset = (this.windowHeight / 2) - 20;
+
+            final int menuWidth = 110;
+            final int menuBoxXOffset = (this.windowWidth / 2) - (menuWidth / 2);
+            final int menuBoxYOffset = (this.windowHeight / 2) + 70;
+            final int menuBoxItemTopPadding = 20;
+
+            this.endGameConditionReached = true;
+            Screen gameScreen = new Screen(this.windowWidth, this.windowHeight);
+            Scene scene = new Scene(gameScreen.getRoot(), this.windowWidth, this.windowHeight);
+
+            final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
+            menuItems.put("Quit", Platform::exit);
+
+            currentStage.setScene(scene);
+
+            gameScreen.addBackground(backgroundImage);
+            gameScreen.addTitle(title, Color.WHITE, TextAlignment.CENTER, titleWidth, titleXOffset, titleYOffset);
+            gameScreen.addBodyText(bodyText, Color.WHITE, TextAlignment.CENTER, bodyWidth, bodyXOffset, bodyYOffset);
+            gameScreen.addMenu(menuItems, TextAlignment.CENTER, menuBoxXOffset, menuBoxYOffset, menuBoxItemTopPadding);
+        }
+    }
+
+    /*
+     * Start the victory condition.
      */
     private void startVictoryCondition(final Stage currentStage) {
-        final int titleWidth = 350;
-        final int titleXOffset = (this.windowWidth / 2) - (titleWidth / 2);
-        final int titleYOffset = this.windowHeight / 2 - 25;
-
-        final int bodyWidth = 590;
-        final int bodyXOffset = (this.windowWidth / 2) - (bodyWidth / 2);
-        final int bodyYOffset = (this.windowHeight / 2) + 25;
-
-        ResultsScreen victoryScreen = new ResultsScreen(this.windowWidth, this.windowHeight);
-        Scene scene = new Scene(victoryScreen.getRoot(), this.windowWidth, this.windowHeight);
-
-        currentStage.setScene(scene);
-
-        victoryScreen.addBackground("victoryBg.gif");
-        victoryScreen.addTitle("YOU DID IT!", Color.WHITE, TextAlignment.CENTER, titleWidth,
-                titleXOffset, titleYOffset);
-        victoryScreen.addBodyText("Your epic conquests through time have saved the world",
-                Color.WHITE, TextAlignment.CENTER, bodyWidth, bodyXOffset, bodyYOffset);
+        startEndGameCondition(currentStage, "YOU DID IT!",
+                "Your unwavering courage and\ndetermination have triumphed\nover the AI menace",
+                "victoryBg.gif");
     }
+
+    /*
+     * Start the loss condition.
+     */
+    private void startGameOverCondition(final Stage currentStage) {
+        startEndGameCondition(currentStage, "OH NO...",
+                "Despite your valiant efforts,\nthe world has succumbed to\nthe cold grip of AI",
+                "gameOverBg.gif");
+    }
+
 
     /**
      * Gets the root of the application.
