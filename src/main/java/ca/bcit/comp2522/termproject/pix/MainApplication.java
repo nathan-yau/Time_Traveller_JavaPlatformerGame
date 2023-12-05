@@ -11,9 +11,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.LinkedHashMap;
 
 /**
@@ -34,6 +31,7 @@ public class MainApplication extends Application {
      * Starts the Game.
      *
      * @param stage the stage to run the game in as a Stage
+     * @throws IOException if the game cannot be started
      */
     public void startGame(final Stage stage) throws IOException {
         GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
@@ -87,7 +85,7 @@ public class MainApplication extends Application {
      * @param stage the stage to run the application
      */
     @Override
-    public void start(final Stage stage) throws IOException{
+    public void start(final Stage stage) {
         Screen menuScreen = createMenuScreen(stage);
         Scene scene = new Scene(menuScreen.getRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
