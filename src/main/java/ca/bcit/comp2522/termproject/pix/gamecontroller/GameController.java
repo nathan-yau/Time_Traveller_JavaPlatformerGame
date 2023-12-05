@@ -475,15 +475,19 @@ public class GameController {
                         && collisionDetector.calculateCollisionPercentage(player, item) > itemCollisionPercentage) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
+                        uiManager.refreshPotionSlot(player.getHealthPotionCounter());
                     } else if (item.getSubtype() == PickUpItemType.ENERGY) {
                         player.incrementEnergyCounter();
                         uiManager.refreshBatteryCounter(player.getEnergyCounter());
                     } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
                         Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
                         player.addWeapon(meleeWeapon);
+                        uiManager.refreshMeleeSlot(true);
                     } else if (item.getSubtype() == PickUpItemType.RANGE_WEAPON) {
                         Weapon rangeWeapon = new RangeWeapon(platform.getCurrentLevel());
                         player.addWeapon(rangeWeapon);
+                        uiManager.refreshRangeSlot(true);
+                        uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
                     }
                     if (item.onPickup()) {
                         iterator.remove();
@@ -634,7 +638,8 @@ public class GameController {
      * @return true if any key is pressed, false otherwise
      */
     private boolean isAnyKeyPressed() {
-        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.I, KeyCode.O, KeyCode.P};
+        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D,
+                KeyCode.I, KeyCode.O, KeyCode.P, KeyCode.H};
         for (KeyCode key : keysToCheck) {
             if (keyboardChecker.containsKey(key)) {
                 Boolean isPressed = keyboardChecker.get(key);
@@ -658,7 +663,10 @@ public class GameController {
         // Listen to potion use signal
         if (isPressed(KeyCode.H)) {
             player.useHealthPotion();
+            uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
+            uiManager.refreshPotionSlot(player.getHealthPotionCounter());
         }
+
         // Listen to idle signal
         if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
             player.setIdle();
@@ -726,7 +734,7 @@ public class GameController {
     }
 
     /* Listen to attack signals */
-    private void rangeAttackKeyListener() {
+    private void rangeAttackKeyListener() throws IOException {
         if (isPressed(KeyCode.P)) {
             Weapon activeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
             if (activeWeapon != null) {
@@ -734,6 +742,7 @@ public class GameController {
                 if (player.noHitBox()) {
                     hitBox = player.rangeAttack();
                     player.useWeapon(WeaponType.RANGE_WEAPON);
+                    uiManager.refreshAmmoSlot(activeWeapon.getAmmoCount());
                 } else {
                     hitBox = null;
                 }

@@ -76,4 +76,10 @@ public abstract class Weapon {
     public void setWeaponIsAvailable(final boolean weaponIsAvailable) {
         this.weaponIsAvailable = weaponIsAvailable;
     }
+
+    /**
+     * Gets the ammo count.
+     * @return the ammo count as an int
+     */
+    public abstract int getAmmoCount();
 }

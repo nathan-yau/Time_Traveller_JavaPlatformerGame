@@ -27,6 +27,16 @@ public class MeleeWeapon extends Weapon {
     }
 
     /**
+     * Gets the ammo count.
+     *
+     * @return the ammo count as an int
+     */
+    @Override
+    public int getAmmoCount() {
+        return 0;
+    }
+
+    /**
      * Gets the string representation of this MeleeWeapon.
      *
      * @return the string representation of this MeleeWeapon as a String

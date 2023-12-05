@@ -681,6 +681,20 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
+     * Gets the damage from a weapon.
+     *
+     * @param weaponType the weapon type to use as a WeaponType
+     * @return the resulting damage as an int
+     */
+    public int getWeaponAmmo(final WeaponType weaponType) {
+        if (weaponType == WeaponType.RANGE_WEAPON) {
+            return this.weaponArray[1].getAmmoCount();
+        } else {
+            return 0;
+        }
+    }
+
+    /**
      * Checks if the Player is next to a ladder.
      * @return true if the Player is next to a ladder, false otherwise
      */

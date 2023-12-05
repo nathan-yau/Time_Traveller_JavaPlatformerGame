@@ -20,24 +20,24 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 public class UIManager {
-    ArrayList<HBox> uiItems;
-    HBox batteryCounter;
-    VBox meleeSlot;
-    VBox rangeSlot;
-    VBox ammoSlot;
-    VBox potionSlot;
-    VBox meleeIcon;
-    VBox rangeIcon;
-    VBox ammoIcon;
-    VBox potionIcon;
+    private final HBox batteryCounter;
+    private final VBox meleeSlot;
+    private final VBox rangeSlot;
+    private final VBox ammoSlot;
+    private final VBox potionSlot;
+    private final VBox meleeIcon;
+    private final VBox rangeIcon;
+    private final VBox ammoIcon;
+    private final VBox potionIcon;
+    private final HBox worldName;
+    private final HBox playerStatus;
+    private final HBox backpack;
+    private final ProgressBar healthBar;
+    private final Label healthLabel;
 
-    HBox worldName;
-    HBox playerStatus;
-    HBox backpack;
-    ProgressBar healthBar;
-    Label healthLabel;
-    public UIManager(double playerHP) throws IOException {
-       this.uiItems = new ArrayList<>();
+
+    public UIManager(final double playerHP) throws IOException {
+       final Insets backpackPadding = new Insets(5, 10, 5, 10);
        this.batteryCounter = new HBox();
        this.worldName = new HBox();
        this.playerStatus = new HBox();
@@ -52,62 +52,99 @@ public class UIManager {
        this.potionIcon = new VBox();
        this.healthBar = new ProgressBar();
        this.healthLabel = new Label();
-       this.initialSetting(batteryCounter, 40);
+       this.initialSetting(batteryCounter);
        this.refreshBatteryCounter(0);
-       this.initialSetting(worldName, 40);
+       this.initialSetting(worldName);
        this.refreshWorldName(0);
        this.initialHealthBar();
        this.refreshHealthBar(playerHP, playerHP);
-       this.initialSetting(playerStatus, 40);
-       this.initialSetting(backpack, 10);
+       this.initialSetting(playerStatus);
+       this.initialSetting(backpack, backpackPadding, "rgba(0, 0, 0, 0.5)");
        this.initializeSlots();
        this.initializeBackPack();
        this.refreshPlayerStatus();
     }
 
-    public final void initialSetting(HBox section, int rightPadding) {
-        section.setPadding(new Insets(5, rightPadding, 5, 10));
-        section.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); " +
-                "-fx-background-radius: " + 10 + ";");
+    private void initialSetting(final Pane section) {
+        final Insets padding = new Insets(5, 40, 5, 10);
+        final String colorCode = "rgba(0, 0, 0, 0.5)";
+        this.initialSetting(section, padding, colorCode);
     }
 
+    private void initialSetting(final Pane section, final Insets padding, final String colorCode) {
+        final int borderRadius = 10;
+        section.setPadding(padding);
+        section.setStyle("-fx-background-color:" + colorCode + "; -fx-background-radius: " + borderRadius + ";");
+    }
+
+    /**
+     * Refreshes the backpack slot.
+     *
+     * @param slot the slot to refresh as a VBox
+     * @param icon the icon to refresh as a VBox
+     * @param imagePath the image path as a String
+     * @param text the text to refresh as a String
+     * @throws IOException if the image path is invalid
+     */
+    public void refreshBackpackSlot(final VBox slot, final VBox icon, final String imagePath,
+                                    final String text) throws IOException {
+        final Insets innerPadding = new Insets(5, 5, 5, 5);
+        final int fontSize = 13;
+        final int textTranslateProperty = 0;
+        icon.getChildren().clear();
+        setPictureContent(icon, imagePath);
+        initialSetting(icon, innerPadding, "rgba(255, 255, 255, 0.5)");
+        slot.getChildren().clear();
+        slot.setAlignment(Pos.CENTER);
+        slot.getChildren().add(icon);
+        setTextContent(slot, fontSize, text, textTranslateProperty, textTranslateProperty);
+    }
+
+
+    public void refreshMeleeSlot(final boolean isSword) throws IOException {
+        if (isSword) {
+            refreshBackpackSlot(meleeSlot, meleeIcon, "ui/sword.png", "Sword");
+        } else {
+            refreshBackpackSlot(meleeSlot, meleeIcon, "ui/punch.png", "Fist");
+        }
+    }
+
+    public void refreshRangeSlot(final boolean isBow) throws IOException {
+        if (isBow) {
+            refreshBackpackSlot(rangeSlot, rangeIcon, "ui/bow.png", "Bow");
+        } else {
+            refreshBackpackSlot(rangeSlot, rangeIcon, "ui/backpack.png", "Empty");
+        }
+    }
+
+    public void refreshAmmoSlot(final int ammoCount) throws IOException {
+        if (ammoCount <= 0) {
+            refreshBackpackSlot(ammoSlot, ammoIcon, "ui/backpack.png", "Empty");
+        } else {
+            final String text = String.format("%s", ammoCount);
+            refreshBackpackSlot(ammoSlot, ammoIcon, "ui/ammo.png", text);
+        }
+    }
+
+    public void refreshPotionSlot(final int potionCount) throws IOException {
+        if (potionCount <= 0) {
+            refreshBackpackSlot(potionSlot, potionIcon, "ui/backpack.png", "Empty");
+        } else {
+            final String text = String.format("%s", potionCount);
+            refreshBackpackSlot(potionSlot, potionIcon, "ui/potion.png", text);
+        }
+    }
+
+
+    /*
+     * Initializes the backpack slots.
+     * @throws IOException if the image path is invalid
+     */
     private void initializeSlots() throws IOException {
-        setPictureContent(meleeIcon, "ui/punch.png");
-        meleeIcon.setPadding(new Insets(5, 5, 5, 5));
-        meleeIcon.setStyle("-fx-background-color: rgba(255, 255, 255, 0.5); " +
-                "-fx-background-radius: " + 10 + ";");
-        meleeSlot.getChildren().clear();
-        meleeSlot.setAlignment(Pos.CENTER);
-        meleeSlot.getChildren().add(meleeIcon);
-        setTextContent(meleeSlot, 13, "Fist",0, 0);
-
-        setPictureContent(rangeIcon, "ui/backpack.png");
-        rangeIcon.setPadding(new Insets(5, 5, 5, 5));
-        rangeIcon.setStyle("-fx-background-color: rgba(255, 255, 255, 0.5); " +
-                "-fx-background-radius: " + 10 + ";");
-        rangeSlot.getChildren().clear();
-        rangeSlot.setAlignment(Pos.CENTER);
-        rangeSlot.getChildren().add(rangeIcon);
-        setTextContent(rangeSlot, 13, "Empty",0, 0);
-
-        setPictureContent(ammoIcon, "ui/backpack.png");
-        ammoIcon.setPadding(new Insets(5, 5, 5, 5));
-        ammoIcon.setStyle("-fx-background-color: rgba(255, 255, 255, 0.5); " +
-                "-fx-background-radius: " + 10 + ";");
-        ammoSlot.getChildren().clear();
-        ammoSlot.setAlignment(Pos.CENTER);
-        ammoSlot.getChildren().add(ammoIcon);
-        setTextContent(ammoSlot, 13, "Empty",0, 0);
-
-        setPictureContent(potionIcon, "ui/backpack.png");
-        potionIcon.setPadding(new Insets(5, 5, 5, 5));
-        potionIcon.setStyle("-fx-background-color: rgba(255, 255, 255, 0.5); " +
-                "-fx-background-radius: " + 10 + ";");
-        potionSlot.getChildren().clear();
-        potionSlot.setAlignment(Pos.CENTER);
-        potionSlot.getChildren().add(potionIcon);
-        setTextContent(potionSlot, 13, "Empty", 0, 0);
-
+        refreshMeleeSlot(false);
+        refreshRangeSlot(false);
+        refreshAmmoSlot(0);
+        refreshPotionSlot(0);
     }
 
     private void initializeBackPack() {
