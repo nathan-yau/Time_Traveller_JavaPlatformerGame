@@ -1,11 +1,14 @@
 package ca.bcit.comp2522.termproject.pix;
 
-import ca.bcit.comp2522.termproject.pix.screens.MenuScreen;
+import ca.bcit.comp2522.termproject.pix.gamecontroller.GameController;
+import ca.bcit.comp2522.termproject.pix.screens.Screen;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import java.util.LinkedHashMap;
 
 /**
  * Represents the main application window.
@@ -22,28 +25,64 @@ public class MainApplication extends Application {
     public static final int WINDOW_HEIGHT = 720;
 
     /**
+     * Starts the Game.
+     *
+     * @param stage the stage to run the game in as a Stage
+     */
+    public void startGame(final Stage stage) {
+        GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
+        Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        stage.setScene(scene);
+        gameApp.insertKeyboardListeners();
+        gameApp.startGameLoop();
+    }
+
+    /**
+     * Creates the menu screen.
+     *
+     * @param stage the stage to run the menu screen in as a Stage
+     * @return the menu screen as a Screen
+     */
+    public Screen createMenuScreen(final Stage stage) {
+        final int maxMenuTitleWidth = 390;
+        final int titleXOffset = 75;
+        final int titleYOffset = 410;
+
+        final int menuBoxXOffset = 75;
+        final int menuBoxYOffset = 505;
+        final int menuBoxItemTopPadding = 20;
+
+        final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
+        menuItems.put("New Game", () -> startGame(stage));
+        menuItems.put("Load", () -> System.out.println("Load"));
+        menuItems.put("Quit", Platform::exit);
+
+        Screen menuScreen = new Screen(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        menuScreen.addBackground("menuBg.gif");
+        menuScreen.addTitle("Lowkey Time Travellers", Color.WHITE, TextAlignment.LEFT,
+                maxMenuTitleWidth, titleXOffset, titleYOffset);
+        menuScreen.addMenu(menuItems, TextAlignment.LEFT, menuBoxXOffset,
+                menuBoxYOffset, menuBoxItemTopPadding);
+
+        return menuScreen;
+    }
+
+    /**
      * Starts the application.
      *
      * @param stage the stage to run the application
      */
     @Override
     public void start(final Stage stage) {
-        final int maxMenuTitleWidth = 390;
-        final int titleXOffset = 75;
-        final int titleYOffset = 410;
-
-        MenuScreen menuScreen = new MenuScreen(WINDOW_WIDTH, WINDOW_HEIGHT);
+        Screen menuScreen = createMenuScreen(stage);
         Scene scene = new Scene(menuScreen.getRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
         stage.setTitle("Lowkey Time Travellers");
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
-
-        menuScreen.addBackground("menuBg.gif");
-        menuScreen.addTitle("Lowkey Time Travellers", Color.WHITE, TextAlignment.LEFT,
-                maxMenuTitleWidth, titleXOffset, titleYOffset);
-        menuScreen.addMenu();
     }
 
     /**
