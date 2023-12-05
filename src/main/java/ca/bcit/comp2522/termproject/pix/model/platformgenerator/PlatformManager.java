@@ -13,7 +13,7 @@ import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelLayout;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.GoldCoin;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.Energy;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
@@ -154,9 +154,10 @@ public class PlatformManager {
                                 BLOCK_HEIGHT + yPadding, i, "healthPotion");
                         totalPickUpItemArray.get(i).add(healthPotion);
                     } else if (categorySymbol == 'C') {
-                        GoldCoin goldCoin = new GoldCoin(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, i, "goldCoin");
-                        totalPickUpItemArray.get(i).add(goldCoin);
+                        final int yPadding = 10;
+                        Energy battery = new Energy(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                                BLOCK_HEIGHT + yPadding, i, "battery");
+                        totalPickUpItemArray.get(i).add(battery);
                     } else if (categorySymbol == 'W') {
                         Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                                 yPosition + BLOCK_HEIGHT, i, true, false);

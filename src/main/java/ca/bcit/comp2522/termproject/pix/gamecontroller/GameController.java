@@ -18,6 +18,7 @@ import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
+import ca.bcit.comp2522.termproject.pix.model.uimanager.UIManager;
 import ca.bcit.comp2522.termproject.pix.model.weapon.MeleeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
@@ -36,6 +37,7 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -74,6 +76,7 @@ public class GameController {
     private BossFight activeBossFight;
     private boolean rangeTargetHit;
     private final LevelManager levelManager;
+    private final UIManager uiManager;
     private boolean switching = false;
 
     /**
@@ -82,8 +85,9 @@ public class GameController {
      *
      * @param windowWidth the width of the window as an int
      * @param windowHeight the height of the window as an int
+     * @throws IOException if the image is not found
      */
-    public GameController(final int windowWidth, final int windowHeight) {
+    public GameController(final int windowWidth, final int windowHeight) throws IOException {
         final double initialPlayerX = 0;
         final double initialPlayerY = 500;
         this.windowWidth = windowWidth;
@@ -95,6 +99,7 @@ public class GameController {
         this.platform = new PlatformManager(levelManager);
         this.keyboardChecker = new HashMap<>();
         this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
+        this.uiManager = new UIManager(player.getMaxHealthPoints());
         this.cachedBlockArray = new ArrayList<>();
         this.collisionDetector = new CollisionDetector();
         this.blockInteraction = new BlockInteraction();
@@ -110,6 +115,14 @@ public class GameController {
         this.setUpCamera();
         this.setCachedBlockArray();
         gameRoot.getChildren().add(player);
+        this.uiSetUp();
+    }
+    /* Set up the initial ui layout. */
+    private void uiSetUp() {
+        uiRoot.getChildren().add(uiManager.getBatteryCounter());
+        uiRoot.getChildren().add(uiManager.getWorldName());
+        uiRoot.getChildren().add(uiManager.getPlayerStatus());
+        uiRoot.getChildren().add(uiManager.getBackpack());
     }
 
     /**
@@ -457,7 +470,7 @@ public class GameController {
         ItemInteraction() { }
 
         // Check and handle collision with items
-        private void interactWithItems() {
+        private void interactWithItems() throws IOException {
             final double itemCollisionPercentage = 40;
             Iterator<PickUpItem> iterator = platform.getItemArray().iterator();
 
@@ -468,14 +481,19 @@ public class GameController {
                         && collisionDetector.calculateCollisionPercentage(player, item) > itemCollisionPercentage) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
-                    } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
-                        player.incrementGoldCoinCounter();
+                        uiManager.refreshPotionSlot(player.getHealthPotionCounter());
+                    } else if (item.getSubtype() == PickUpItemType.ENERGY) {
+                        player.incrementEnergyCounter();
+                        uiManager.refreshBatteryCounter(player.getEnergyCounter());
                     } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
                         Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
                         player.addWeapon(meleeWeapon);
+                        uiManager.refreshMeleeSlot(true);
                     } else if (item.getSubtype() == PickUpItemType.RANGE_WEAPON) {
                         Weapon rangeWeapon = new RangeWeapon(platform.getCurrentLevel());
                         player.addWeapon(rangeWeapon);
+                        uiManager.refreshRangeSlot(true);
+                        uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
                     }
                     if (item.onPickup()) {
                         iterator.remove();
@@ -518,17 +536,29 @@ public class GameController {
                         player.vanishMeleeHitBox();
                     });
                     final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
-                    System.out.println("Melee damage: " + meleeDamage);
-                    if (enemy.takeDamage(meleeDamage) <= 0) {
+                    int enemyHealth = enemy.takeDamage(meleeDamage);
+                    this.updateEnemyHealthBar(enemy);
+                    if (enemyHealth <= 0) {
                         enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
                         return true;
                     } else {
                         enemy.getHurt();
                     }
-
                 }
                 return false;
             });
+        }
+
+        private void updateEnemyHealthBar(final Enemy enemy) {
+            try {
+                uiManager.addEnemyHealthBar(enemy.getSubtype(), enemy.getHealthPoint());
+                for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                    uiRoot.getChildren().remove(enemyHealthBar);
+                    uiRoot.getChildren().add(enemyHealthBar);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
 
@@ -547,6 +577,7 @@ public class GameController {
                 } else {
                     enemiesToRemove.add(enemy);
                 }
+                this.updateEnemyHealthBar(enemy);
             }
         }
 
@@ -564,7 +595,12 @@ public class GameController {
                             enemy.setDirection(Direction.BACKWARD);
                         }
                         enemy.meleeAttack();
-                        player.getHurt();
+                        if (player.takeDamage(enemy.getAttackDamage()) <= 0) {
+                            System.out.println("Player died");
+                        } else {
+                            player.getHurt();
+                        }
+                        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         return;
                 }
                 if (existingRangeHitBox != null) {
@@ -625,7 +661,8 @@ public class GameController {
      * @return true if any key is pressed, false otherwise
      */
     private boolean isAnyKeyPressed() {
-        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.I, KeyCode.O, KeyCode.P};
+        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D,
+                KeyCode.I, KeyCode.O, KeyCode.P, KeyCode.H};
         for (KeyCode key : keysToCheck) {
             if (keyboardChecker.containsKey(key)) {
                 Boolean isPressed = keyboardChecker.get(key);
@@ -649,7 +686,10 @@ public class GameController {
         // Listen to potion use signal
         if (isPressed(KeyCode.H)) {
             player.useHealthPotion();
+            uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
+            uiManager.refreshPotionSlot(player.getHealthPotionCounter());
         }
+
         // Listen to idle signal
         if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
             player.setIdle();
@@ -707,6 +747,10 @@ public class GameController {
                 hitBox = null;
             }
             if (hitBox != null) {
+                for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                    uiRoot.getChildren().remove(enemyHealthBar);
+                }
+                uiManager.clearEnemyHealthBars();
                 gameRoot.getChildren().add(hitBox);
                 enemyInteraction.meleeWithEnemies(hitBox);
                 if (activeBossFight != null) {
@@ -717,7 +761,7 @@ public class GameController {
     }
 
     /* Listen to attack signals */
-    private void rangeAttackKeyListener() {
+    private void rangeAttackKeyListener() throws IOException {
         if (isPressed(KeyCode.P)) {
             Weapon activeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
             if (activeWeapon != null) {
@@ -725,10 +769,15 @@ public class GameController {
                 if (player.noHitBox()) {
                     hitBox = player.rangeAttack();
                     player.useWeapon(WeaponType.RANGE_WEAPON);
+                    uiManager.refreshAmmoSlot(activeWeapon.getAmmoCount());
                 } else {
                     hitBox = null;
                 }
                 if (hitBox != null) {
+                    for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                        uiRoot.getChildren().remove(enemyHealthBar);
+                    }
+                    uiManager.clearEnemyHealthBars();
                     gameRoot.getChildren().add(hitBox);
                     hitBox.startInitialEffect().thenAccept(isDone -> {
                         if (isDone && !rangeTargetHit) {
@@ -742,19 +791,25 @@ public class GameController {
     }
 
     /* Listen to switch platform signals */
-    private void switchPlatformKeyListener() {
+    private void switchPlatformKeyListener() throws IOException {
         if (isPressed(KeyCode.L)) {
-            if (!switching) {
+            if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.nextLevel();
                 this.switchLevel(levelManager.getCurrentLevel());
+                uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                player.decrementEnergyCounter();
+                uiManager.refreshBatteryCounter(player.getEnergyCounter());
                 switching = true;
             }
         }
 
         if (isPressed(KeyCode.K)) {
-            if (!switching) {
+            if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.previousLevel();
                 this.switchLevel(levelManager.getCurrentLevel());
+                uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                player.decrementEnergyCounter();
+                uiManager.refreshBatteryCounter(player.getEnergyCounter());
                 switching = true;
             }
         }
@@ -967,6 +1022,7 @@ public class GameController {
                         > itemCollisionPercentage) {
                     if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
                         player.getHurt();
+                        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         iterator.remove();
                         gameRoot.getChildren().remove(projectile);
                     }
@@ -979,7 +1035,8 @@ public class GameController {
      * Checks if the game is over.
      */
     private void gameOverCondition() {
-        if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT) {
+        if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT
+            || player.getHealthPoint() <= 0) {
             System.out.println("Game Over");
             System.exit(0);
         }

@@ -12,6 +12,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -116,7 +118,7 @@ public class MainApplication extends Application {
      * @param stage the stage to run the application
      */
     @Override
-    public void start(final Stage stage) {
+    public void start(final Stage stage) throws IOException{
         Menu menu = new Menu(new String[]{"New Game", "Load", "Exit"});
         Scene scene = new Scene(menu.root, WINDOW_WIDTH, WINDOW_HEIGHT);
 

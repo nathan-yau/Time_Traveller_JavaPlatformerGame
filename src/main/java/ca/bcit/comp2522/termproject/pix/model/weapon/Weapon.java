@@ -12,7 +12,6 @@ import java.util.Random;
 public abstract class Weapon {
     /** Random generator. */
     protected static final Random RANDOM_GENERATOR = new Random();
-    private static final double COOL_DOWN_TIME = 1.5;
     private final WeaponType weaponType;
     private final int damage;
     private final double hitRate;
@@ -76,4 +75,10 @@ public abstract class Weapon {
     public void setWeaponIsAvailable(final boolean weaponIsAvailable) {
         this.weaponIsAvailable = weaponIsAvailable;
     }
+
+    /**
+     * Gets the ammo count.
+     * @return the ammo count as an int
+     */
+    public abstract int getAmmoCount();
 }

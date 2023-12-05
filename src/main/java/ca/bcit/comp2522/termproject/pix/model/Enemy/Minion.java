@@ -356,16 +356,6 @@ public class Minion extends Enemy implements Runnable {
     }
 
     /**
-     * Gets the attack damage point by the enemy.
-     *
-     * @return the attack damage point by the enemy as an int
-     */
-    @Override
-    public int getAttackDamage() {
-        return 1;
-    }
-
-    /**
      * Runs the minion.
      */
     @Override

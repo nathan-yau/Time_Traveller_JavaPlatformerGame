@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class Enemy extends GameObject<EnemyType> implements Combative, Damageable, AnimatedObjects {
     private int healthPoint;
+    private final double maxHealthPoint;
     private final String folderPath;
     private boolean attackEnable;
     private final int attackPoint;
@@ -43,6 +44,7 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
         this.direction = Direction.BACKWARD;
         this.attackEnable = true;
         this.damageEnable = true;
+        this.maxHealthPoint = healthPoint;
         this.healthPoint = healthPoint;
         this.folderPath = String.format("%s/%s", type.name(), name.name());
         this.attackPoint = attackPoint;
@@ -67,8 +69,8 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     }
 
     /**
-     * Enables the enemy's damagable status.
-     * @param enabled the boolean value of the enemy's damagable status
+     * Enables the enemy's attack enable status.
+     * @param enabled the boolean value of the enemy's attack enable status
      *
      */
     public final void setDamageEnable(final boolean enabled) {
@@ -76,9 +78,9 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     }
 
     /**
-     * Gets the enemy's damagable status.
+     * Gets the enemy's damage enable status.
      *
-     * @return the boolean value of the enemy's damagable status
+     * @return the boolean value of the enemy's damage enable status
      */
     public final boolean getDamageEnable() {
         return damageEnable;
@@ -116,6 +118,24 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     public int takeDamage(final int point) {
        this.healthPoint -= point;
        return this.healthPoint;
+    }
+
+    /**
+     * Gets the health point percentage of the enemy.
+     *
+     * @return the attack point of the enemy as an int
+     */
+    public double getHealthPoint() {
+        return healthPoint / maxHealthPoint;
+    }
+
+    /**
+     * Gets the attack point of the enemy.
+     *
+     * @return the attack point of the enemy as an int
+     */
+    public int getAttackDamage() {
+        return attackPoint;
     }
 
     /**

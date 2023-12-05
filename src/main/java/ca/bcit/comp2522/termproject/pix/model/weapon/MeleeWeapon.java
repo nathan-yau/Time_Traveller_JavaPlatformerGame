@@ -15,15 +15,23 @@ public class MeleeWeapon extends Weapon {
      * @param currentLevel the current game level as an int
      */
     public MeleeWeapon(final int currentLevel) {
-        super(WeaponType.MELEE_WEAPON, RANDOM_GENERATOR.nextInt(1, currentLevel + 1), MELEE_HIT_RATE);
+        super(WeaponType.MELEE_WEAPON, RANDOM_GENERATOR.nextInt(1, currentLevel + 2), MELEE_HIT_RATE);
     }
 
     /**
      * What happens when a melee weapon is used.
      */
     @Override
-    public void useWeapon() {
-        System.out.println("Melee weapon used.");
+    public void useWeapon() { }
+
+    /**
+     * Gets the ammo count.
+     *
+     * @return the ammo count as an int
+     */
+    @Override
+    public int getAmmoCount() {
+        return 0;
     }
 
     /**
