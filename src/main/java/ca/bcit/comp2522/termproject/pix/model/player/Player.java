@@ -302,7 +302,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      *  Sets the Player when it is on the ground.
      */
     public void offsetGravity() {
-        this.setTranslateY(this.getTranslateY() - 0.8);
+        final double offset = 0.8;
+        this.setTranslateY(this.getTranslateY() - offset);
         jumpEnable = true;
     }
 
@@ -352,8 +353,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         }
         jumpAnimation.stop();
         if (!(meleeAnimation.getStatus() == Animation.Status.RUNNING
-                || rangeAnimation.getStatus() == Animation.Status.RUNNING ||
-                punchAnimation.getStatus() == Animation.Status.RUNNING)) {
+                || rangeAnimation.getStatus() == Animation.Status.RUNNING
+                || punchAnimation.getStatus() == Animation.Status.RUNNING)) {
             walkAnimation.play();
         }
     }
@@ -431,16 +432,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void incrementHealthPotionCounter() {
         this.healthPotionCounter++;
-        System.out.println("Health potion count: " + this.healthPotionCounter);
     }
 
-    /**
-     * Decrements the player's health potion counter by one.
-     */
-    public void decrementHealthPotionCounter() {
-        this.healthPotionCounter--;
-        System.out.println("Health potion count: " + this.healthPotionCounter);
-    }
 
     /**
      * Gets the player's health potion counter.
@@ -573,7 +566,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     public int takeDamage(final int point) {
         if (damageEnable) {
             healthPoint -= point;
-            damageEnable = false;
             PauseTransition pause = new PauseTransition(Duration.seconds(1));
             pause.setOnFinished(event -> damageEnable = true);
             pause.play();
@@ -618,8 +610,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     public void getHurt() {
         if (damageEnable) {
             this.attackEnable = false;
+            damageEnable = false;
             this.hurtAnimation.play();
-            this.takeDamage(1);
             this.action = Action.HURTING;
         }
     }
@@ -681,20 +673,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
-     * Gets the damage from a weapon.
-     *
-     * @param weaponType the weapon type to use as a WeaponType
-     * @return the resulting damage as an int
-     */
-    public int getWeaponAmmo(final WeaponType weaponType) {
-        if (weaponType == WeaponType.RANGE_WEAPON) {
-            return this.weaponArray[1].getAmmoCount();
-        } else {
-            return 0;
-        }
-    }
-
-    /**
      * Checks if the Player is next to a ladder.
      * @return true if the Player is next to a ladder, false otherwise
      */
@@ -721,10 +699,18 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.climbDirection = climbingDirection;
     }
 
+    /**
+     * Gets the health point of the Player.
+     * @return the health point of the Player
+     */
     public int getHealthPoint() {
         return healthPoint;
     }
 
+    /**
+     * Gets the max health point of the Player.
+     * @return the max health point of the Player
+     */
     public int getMaxHealthPoints() {
         return MAX_HEALTH_POINTS;
     }

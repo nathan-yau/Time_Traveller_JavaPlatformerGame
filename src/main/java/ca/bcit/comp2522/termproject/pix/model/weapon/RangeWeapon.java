@@ -38,7 +38,6 @@ public class RangeWeapon extends Weapon {
     @Override
     public void useWeapon() {
         this.decrementAmmoCount();
-        System.out.println("Range weapon used.\nAmmo left: " + this.ammoCount);
         if (this.ammoCount == 0) {
             this.setWeaponIsAvailable(false);
         }

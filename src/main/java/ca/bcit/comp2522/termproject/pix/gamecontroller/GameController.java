@@ -31,7 +31,13 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -79,6 +85,7 @@ public class GameController {
      *
      * @param windowWidth the width of the window as an int
      * @param windowHeight the height of the window as an int
+     * @throws IOException if the image is not found
      */
     public GameController(final int windowWidth, final int windowHeight) throws IOException {
         final double initialPlayerX = 0;
@@ -108,6 +115,10 @@ public class GameController {
         this.setUpCamera();
         this.setCachedBlockArray();
         gameRoot.getChildren().add(player);
+        this.uiSetUp();
+    }
+    /* Set up the initial ui layout. */
+    private void uiSetUp() {
         uiRoot.getChildren().add(uiManager.getBatteryCounter());
         uiRoot.getChildren().add(uiManager.getWorldName());
         uiRoot.getChildren().add(uiManager.getPlayerStatus());
@@ -526,15 +537,7 @@ public class GameController {
                     });
                     final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
                     int enemyHealth = enemy.takeDamage(meleeDamage);
-                    try {
-                        uiManager.addEnemyHealthBar(enemy.getSubtype(), enemy.getHealthPoint());
-                        for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
-                            uiRoot.getChildren().remove(enemyHealthBar);
-                            uiRoot.getChildren().add(enemyHealthBar);
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    this.updateEnemyHealthBar(enemy);
                     if (enemyHealth <= 0) {
                         enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
                         return true;
@@ -544,6 +547,18 @@ public class GameController {
                 }
                 return false;
             });
+        }
+
+        private void updateEnemyHealthBar(final Enemy enemy) {
+            try {
+                uiManager.addEnemyHealthBar(enemy.getSubtype(), enemy.getHealthPoint());
+                for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                    uiRoot.getChildren().remove(enemyHealthBar);
+                    uiRoot.getChildren().add(enemyHealthBar);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
 
@@ -562,14 +577,7 @@ public class GameController {
                 } else {
                     enemiesToRemove.add(enemy);
                 }
-                try {
-                    uiManager.addEnemyHealthBar(enemy.getSubtype(), enemy.getHealthPoint());
-                    for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
-                        uiRoot.getChildren().add(enemyHealthBar);
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                this.updateEnemyHealthBar(enemy);
             }
         }
 
@@ -587,7 +595,11 @@ public class GameController {
                             enemy.setDirection(Direction.BACKWARD);
                         }
                         enemy.meleeAttack();
-                        player.getHurt();
+                        if (player.takeDamage(enemy.getAttackDamage()) <= 0) {
+                            System.out.println("Player died");
+                        } else {
+                            player.getHurt();
+                        }
                         uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         return;
                 }

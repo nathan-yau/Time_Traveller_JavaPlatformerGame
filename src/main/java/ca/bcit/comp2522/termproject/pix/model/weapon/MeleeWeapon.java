@@ -22,9 +22,7 @@ public class MeleeWeapon extends Weapon {
      * What happens when a melee weapon is used.
      */
     @Override
-    public void useWeapon() {
-        System.out.println("Melee weapon used.");
-    }
+    public void useWeapon() { }
 
     /**
      * Gets the ammo count.

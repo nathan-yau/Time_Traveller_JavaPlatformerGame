@@ -69,8 +69,8 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     }
 
     /**
-     * Enables the enemy's damagable status.
-     * @param enabled the boolean value of the enemy's damagable status
+     * Enables the enemy's attack enable status.
+     * @param enabled the boolean value of the enemy's attack enable status
      *
      */
     public final void setDamageEnable(final boolean enabled) {
@@ -78,9 +78,9 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     }
 
     /**
-     * Gets the enemy's damagable status.
+     * Gets the enemy's damage enable status.
      *
-     * @return the boolean value of the enemy's damagable status
+     * @return the boolean value of the enemy's damage enable status
      */
     public final boolean getDamageEnable() {
         return damageEnable;
@@ -120,8 +120,22 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
        return this.healthPoint;
     }
 
+    /**
+     * Gets the health point percentage of the enemy.
+     *
+     * @return the attack point of the enemy as an int
+     */
     public double getHealthPoint() {
         return healthPoint / maxHealthPoint;
+    }
+
+    /**
+     * Gets the attack point of the enemy.
+     *
+     * @return the attack point of the enemy as an int
+     */
+    public int getAttackDamage() {
+        return attackPoint;
     }
 
     /**
