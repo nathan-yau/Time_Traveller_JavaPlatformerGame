@@ -235,15 +235,6 @@ public class PlatformManager {
     }
 
     /**
-     * Gets the height of the current level.
-     *
-     * @return the height of the current level as an int
-     */
-    public int getTotalLevelHeight() {
-        return leveHeight * BLOCK_HEIGHT;
-    }
-
-    /**
      * Gets the width of the current level.
      *
      * @return the width of the current level as an int
@@ -364,25 +355,6 @@ public class PlatformManager {
             }
         }
         return gamingArea(nearbyBlock);
-    }
-
-    /**
-     * Clears all the arrays.
-     */
-    public void clearAllArray() {
-        Iterator<StandardBlock> blockIterator = blockArray.iterator();
-        while (blockIterator.hasNext()) {
-            StandardBlock block = blockIterator.next();
-            block.terminateAnimation();
-            blockIterator.remove();
-        }
-        Iterator<Enemy> iterator = enemyArray.iterator();
-        while (iterator.hasNext()) {
-            Enemy enemy = iterator.next();
-            enemy.terminateAnimation();
-            iterator.remove();
-        }
-        pickUpItemArray.clear();
     }
 
     /**

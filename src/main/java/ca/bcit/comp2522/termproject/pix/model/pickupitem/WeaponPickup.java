@@ -1,7 +1,5 @@
 package ca.bcit.comp2522.termproject.pix.model.pickupitem;
 
-import ca.bcit.comp2522.termproject.pix.model.ObjectType;
-
 /**
  * Represents a weapon.
  *
