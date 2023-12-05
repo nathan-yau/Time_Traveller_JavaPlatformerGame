@@ -20,6 +20,8 @@ public abstract class GameObject<T extends GameType> extends ImageView {
 
     // The type of the object.
     private final ObjectType objectType;
+    private final double initialXPosition;
+    private final double initialYPosition;
 
     /**
      * Constructs a GameObject with dimensions.
@@ -54,6 +56,8 @@ public abstract class GameObject<T extends GameType> extends ImageView {
         this.setTranslateY(y);
         this.objectSubtype = subtype;
         this.objectType = type;
+        this.initialXPosition = x;
+        this.initialYPosition = y;
     }
 
     /**
@@ -129,6 +133,18 @@ public abstract class GameObject<T extends GameType> extends ImageView {
     public final double getHeight() {
         return this.getBoundsInParent().getHeight();
     }
+
+    /**
+     * Gets the initial X Position of the game object.
+     * @return the initial X Position of the game object as a double
+     */
+    public final double getInitialXPosition() {return this.initialXPosition;}
+
+    /**
+     * Gets the initial Y Position of the game object.
+     * @return the initial Y Position of the game object as a double
+     */
+    public final double getInitialYPosition() {return this.initialYPosition;}
 
     /**
      * Check if the Player intersects with another object.
