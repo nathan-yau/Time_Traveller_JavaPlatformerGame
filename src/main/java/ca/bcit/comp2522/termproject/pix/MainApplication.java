@@ -35,7 +35,7 @@ public class MainApplication extends Application {
      *
      * @param stage the stage to run the game in as a Stage
      */
-    public void startGame(final Stage stage) {
+    public void startGame(final Stage stage) throws IOException {
         GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -60,7 +60,13 @@ public class MainApplication extends Application {
         final int menuBoxItemTopPadding = 20;
 
         final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
-        menuItems.put("New Game", () -> startGame(stage));
+        menuItems.put("New Game", () -> {
+            try {
+                startGame(stage);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
         menuItems.put("Load", () -> System.out.println("Load"));
         menuItems.put("Quit", Platform::exit);
 
@@ -82,9 +88,6 @@ public class MainApplication extends Application {
      */
     @Override
     public void start(final Stage stage) throws IOException{
-        Menu menu = new Menu(new String[]{"New Game", "Load", "Exit"});
-        Scene scene = new Scene(menu.root, WINDOW_WIDTH, WINDOW_HEIGHT);
-    public void start(final Stage stage) {
         Screen menuScreen = createMenuScreen(stage);
         Scene scene = new Scene(menuScreen.getRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
