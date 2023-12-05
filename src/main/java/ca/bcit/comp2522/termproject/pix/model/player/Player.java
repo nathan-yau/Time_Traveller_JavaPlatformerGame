@@ -406,7 +406,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         } else {
             this.weaponArray[1] = weapon;
         }
-        System.out.println("Added: " + weapon);
     }
 
     /**
