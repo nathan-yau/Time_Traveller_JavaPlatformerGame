@@ -87,7 +87,6 @@ public class GameController {
     private final LevelManager levelManager;
     private final UIManager uiManager;
     private boolean switching = false;
-
     private boolean endGameConditionReached;
 
     /**
@@ -124,7 +123,7 @@ public class GameController {
         this.rangeTargetHit = false;
         this.playerX = player.translateXProperty();
         this.setBackground(this.getLevelBackground());
-        this.platform.createGamePlatform();
+        this.platform.createRegularLevels();
         this.setUpPlatform();
         this.setUpCamera();
         this.setCachedBlockArray();
@@ -246,12 +245,16 @@ public class GameController {
      * Switches the level.
      * @param dimension the dimension to switch to
      */
-    private void switchLevel(final int dimension) {
+    private void switchLevel(final int dimension, final boolean resetPlayerPosition) {
         gameRoot.getChildren().clear();
         cachedBlockArray.clear();
         platform.setNextLevelArrays(dimension);
         this.setUpPlatform();
         setCachedBlockArray();
+        if (resetPlayerPosition) {
+            player.resetPosition();
+            gameRoot.setLayoutX(0);
+        }
         TeleportEffect teleportEffect = player.teleport();
         gameRoot.getChildren().add(player);
         gameRoot.getChildren().add(teleportEffect);
@@ -501,11 +504,11 @@ public class GameController {
                         player.incrementEnergyCounter();
                         uiManager.refreshBatteryCounter(player.getEnergyCounter());
                     } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
-                        Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
+                        Weapon meleeWeapon = new MeleeWeapon(levelManager.getCurrentLevel());
                         player.addWeapon(meleeWeapon);
                         uiManager.refreshMeleeSlot(true);
                     } else if (item.getSubtype() == PickUpItemType.RANGE_WEAPON) {
-                        Weapon rangeWeapon = new RangeWeapon(platform.getCurrentLevel());
+                        Weapon rangeWeapon = new RangeWeapon(levelManager.getCurrentLevel());
                         player.addWeapon(rangeWeapon);
                         uiManager.refreshRangeSlot(true);
                         uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
@@ -518,7 +521,11 @@ public class GameController {
                     } else if (item.getSubtype() == PickUpItemType.SAVE_TRIGGER) {
                         System.out.println("Trigger Save");
                     } else if (item.getSubtype() == PickUpItemType.BOSS_TRIGGER) {
-                        System.out.println("Trigger Boss");
+                        levelManager.enterBossLevel();
+                        platform.createBossLevel();
+                        switchLevel(levelManager.getCurrentLevel(), true);
+                        uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                        switching = true;
                     }
                     if (item.onPickup()) {
                         iterator.remove();
@@ -819,7 +826,7 @@ public class GameController {
         if (isPressed(KeyCode.L)) {
             if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.nextLevel();
-                this.switchLevel(levelManager.getCurrentLevel());
+                this.switchLevel(levelManager.getCurrentLevel(), false);
                 uiManager.refreshWorldName(levelManager.getCurrentLevel());
                 player.decrementEnergyCounter();
                 uiManager.refreshBatteryCounter(player.getEnergyCounter());
@@ -830,7 +837,7 @@ public class GameController {
         if (isPressed(KeyCode.K)) {
             if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.previousLevel();
-                this.switchLevel(levelManager.getCurrentLevel());
+                this.switchLevel(levelManager.getCurrentLevel(), false);
                 uiManager.refreshWorldName(levelManager.getCurrentLevel());
                 player.decrementEnergyCounter();
                 uiManager.refreshBatteryCounter(player.getEnergyCounter());
@@ -844,7 +851,7 @@ public class GameController {
      */
     private void checkForBossPresence() {
         final int[] bossLevels = {3};
-        if (platform.getCurrentLevel() == bossLevels[0]) {
+        if (levelManager.getCurrentLevel() == bossLevels[0]) {
             final int numberOfProjectiles = 10;
             final int projectileWidth = 50;
             final int startDelay = 2;
