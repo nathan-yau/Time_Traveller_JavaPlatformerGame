@@ -18,7 +18,6 @@ import ca.bcit.comp2522.termproject.pix.model.pickupitem.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * Manages the components of the game platform.
