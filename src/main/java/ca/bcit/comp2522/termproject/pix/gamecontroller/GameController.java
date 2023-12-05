@@ -99,8 +99,8 @@ public class GameController {
      * @throws IOException if the image is not found
      * @param stage the current application stage
      */
-    public GameController(final int windowWidth, final int windowHeight) throws IOException {
-    public GameController(final int windowWidth, final int windowHeight, final Stage stage) {
+
+    public GameController(final int windowWidth, final int windowHeight, final Stage stage) throws IOException {
         final double initialPlayerX = 0;
         final double initialPlayerY = 500;
         this.stage = stage;
