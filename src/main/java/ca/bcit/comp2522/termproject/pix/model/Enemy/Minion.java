@@ -31,8 +31,6 @@ public class Minion extends Enemy implements Runnable {
     private Action action;
     private final double leftmostWalkingRange;
     private final double upmostFlyingRange;
-    private final double initialXPosition;
-    private final double initialYPosition;
     private final double rightmostWalkingRange;
     private final double bottommostFlyingRange;
 
@@ -83,8 +81,6 @@ public class Minion extends Enemy implements Runnable {
                   final boolean xWalker) {
         super(x, y, width, height, ObjectType.MINION, name, healthPoint, attackPoint);
         this.action = Action.WALKING;
-        this.initialXPosition = x;
-        this.initialYPosition = y;
         this.upmostFlyingRange = y - movingArea;
         this.bottommostFlyingRange = y + movingArea;
         this.leftmostWalkingRange = x - movingArea + this.getFitWidth() / 2;
@@ -238,7 +234,7 @@ public class Minion extends Enemy implements Runnable {
      * Initializes the flying animation.
      */
     private void initializeFlying() {
-        this.initializeAnimation(upmostFlyingRange, bottommostFlyingRange, initialYPosition,
+        this.initializeAnimation(upmostFlyingRange, bottommostFlyingRange, this.getInitialYPosition(),
                 this.translateYProperty());
     }
 
@@ -246,7 +242,7 @@ public class Minion extends Enemy implements Runnable {
      * Initializes the walking animation.
      */
     private void initializeWalking() {
-        this.initializeAnimation(leftmostWalkingRange, rightmostWalkingRange, initialXPosition,
+        this.initializeAnimation(leftmostWalkingRange, rightmostWalkingRange, this.getInitialXPosition(),
                 this.translateXProperty());
     }
 

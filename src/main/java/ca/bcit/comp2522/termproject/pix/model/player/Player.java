@@ -707,6 +707,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
+     * Reset player's position
+     */
+    public void resetPosition() {
+        this.setTranslateX(this.getInitialXPosition());
+        this.setTranslateY(this.getInitialYPosition());
+    }
+
+    /**
      * Gets the max health point of the Player.
      * @return the max health point of the Player
      */
