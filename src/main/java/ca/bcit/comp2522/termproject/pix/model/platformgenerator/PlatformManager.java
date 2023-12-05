@@ -103,99 +103,102 @@ public class PlatformManager {
     /**
      * Creates the game platform.
      */
-    public void createGamePlatform() {
-        final int movingBlockYPadding = 5;
-        final String[][] allDimension = LevelLayout.getAllLevelsData();
-        for (int i = 0; i < 4; i++) {
-            String[] currentLevelData = allDimension[i];
-            totalBlockArray.add(new ArrayList<>());
-            totalEnemyArray.add(new ArrayList<>());
-            totalPickUpItemArray.add(new ArrayList<>());
-            for (int row = 0; row < leveHeight; row++) {
-                String line = currentLevelData[row];
-                for (int col = 0; col < line.length(); col++) {
-                    final int xPosition = col * BLOCK_WIDTH;
-                    final int yPosition = row * BLOCK_HEIGHT;
-                    final int yPadding = 10;
-                    char categorySymbol = line.charAt(col);
-                    if (categorySymbol == '0') {
-                        PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
-                        StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
-                                BlockType.SOLID_BLOCK, i, imageIndex.name());
-                        totalBlockArray.get(i).add(solidBlock);
-                    } else if (categorySymbol == '1') {
-                        PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
-                        StandardBlock movingBlock = new MovingBlock(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + movingBlockYPadding, i, imageIndex.name());
-                        totalBlockArray.get(i).add(movingBlock);
-                    } else if (categorySymbol == '2') {
-                        StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, BlockType.LADDERS, i, "ladder");
-                        totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == '3') {
-                        StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, i, "rope");
-                        totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == '4') {
-                        StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, BlockType.TESTING_BLOCK, i, "dirt");
-                        totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == 'P') {
-                        HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding);
-                        totalPickUpItemArray.get(i).add(healthPotion);
-                    } else if (categorySymbol == 'E') {
-                        Energy battery = new Energy(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding);
-                        totalPickUpItemArray.get(i).add(battery);
-                    } else if (categorySymbol == 'D') {
-                        Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
-                                yPosition + BLOCK_HEIGHT, i, true, false);
-                        totalEnemyArray.get(i).add(minion);
-                        Thread minionThread = new Thread(minion);
-                        minionThread.setDaemon(true);
-                        minionThread.start();
-                    } else if (categorySymbol == 'B') {
-                        Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
-                                yPosition + BLOCK_HEIGHT, i, false, true);
-                        totalEnemyArray.get(i).add(minion);
-                        Thread minionThread = new Thread(minion);
-                        minionThread.setDaemon(true);
-                        minionThread.start();
-                    } else if (categorySymbol == 'C') {
-                        Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
-                                yPosition + BLOCK_HEIGHT, i, true, true);
-                        totalEnemyArray.get(i).add(minion);
-                        Thread minionThread = new Thread(minion);
-                        minionThread.setDaemon(true);
-                        minionThread.start();
-                    } else if (categorySymbol == 'M') {
-                        WeaponPickup weapon = new WeaponPickup(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding, PickUpItemType.MELEE_WEAPON);
-                        totalPickUpItemArray.get(i).add(weapon);
-                    } else if (categorySymbol == 'R') {
-                        WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, PickUpItemType.RANGE_WEAPON);
-                        totalPickUpItemArray.get(i).add(weapon);
-                    } else if (categorySymbol == 'S') {
-                        SaveEvent saveItem = new SaveEvent(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT);
-                        totalPickUpItemArray.get(i).add(saveItem);
-                    } else if (categorySymbol == 'F') {
-                        BossEvent bossItem = new BossEvent(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding);
-                        totalPickUpItemArray.get(i).add(bossItem);
-                    } else if (categorySymbol == 'A') {
-                        Ammo ammo = new Ammo(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding);
-                        totalPickUpItemArray.get(i).add(ammo);
-                    }
-                }
-            }
+    public void createRegularLevels() {
+        final String[][] allDimension = LevelLayout.getRegLevelsData();
+        for (int level = 0; level < allDimension.length; level++) {
+            this.createGamePlatform(allDimension[level], level);
         }
         blockArray = totalBlockArray.get(levelManager.getCurrentLevel());
         enemyArray = totalEnemyArray.get(levelManager.getCurrentLevel());
         pickUpItemArray = totalPickUpItemArray.get(levelManager.getCurrentLevel());
+    }
+
+    private void createGamePlatform(String[] currentLevelData, int currentLevel) {
+        final int movingBlockYPadding = 5;
+        totalBlockArray.add(new ArrayList<>());
+        totalEnemyArray.add(new ArrayList<>());
+        totalPickUpItemArray.add(new ArrayList<>());
+        for (int row = 0; row < leveHeight; row++) {
+            String line = currentLevelData[row];
+            for (int col = 0; col < line.length(); col++) {
+                final int xPosition = col * BLOCK_WIDTH;
+                final int yPosition = row * BLOCK_HEIGHT;
+                final int yPadding = 10;
+                char categorySymbol = line.charAt(col);
+                if (categorySymbol == '0') {
+                    PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
+                    StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
+                            BlockType.SOLID_BLOCK, currentLevel, imageIndex.name());
+                    totalBlockArray.get(currentLevel).add(solidBlock);
+                } else if (categorySymbol == '1') {
+                    PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
+                    StandardBlock movingBlock = new MovingBlock(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + movingBlockYPadding, currentLevel, imageIndex.name());
+                    totalBlockArray.get(currentLevel).add(movingBlock);
+                } else if (categorySymbol == '2') {
+                    StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, BlockType.LADDERS, currentLevel, "ladder");
+                    totalBlockArray.get(currentLevel).add(decorationBlock);
+                } else if (categorySymbol == '3') {
+                    StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "rope");
+                    totalBlockArray.get(currentLevel).add(decorationBlock);
+                } else if (categorySymbol == '4') {
+                    StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, BlockType.TESTING_BLOCK, currentLevel, "dirt");
+                    totalBlockArray.get(currentLevel).add(decorationBlock);
+                } else if (categorySymbol == 'P') {
+                    HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding);
+                    totalPickUpItemArray.get(currentLevel).add(healthPotion);
+                } else if (categorySymbol == 'E') {
+                    Energy battery = new Energy(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding);
+                    totalPickUpItemArray.get(currentLevel).add(battery);
+                } else if (categorySymbol == 'D') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, true, false);
+                    totalEnemyArray.get(currentLevel).add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
+                } else if (categorySymbol == 'B') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, false, true);
+                    totalEnemyArray.get(currentLevel).add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
+                } else if (categorySymbol == 'C') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, true, true);
+                    totalEnemyArray.get(currentLevel).add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
+                } else if (categorySymbol == 'M') {
+                    WeaponPickup weapon = new WeaponPickup(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding, PickUpItemType.MELEE_WEAPON);
+                    totalPickUpItemArray.get(currentLevel).add(weapon);
+                } else if (categorySymbol == 'R') {
+                    WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, PickUpItemType.RANGE_WEAPON);
+                    totalPickUpItemArray.get(currentLevel).add(weapon);
+                } else if (categorySymbol == 'S') {
+                    SaveEvent saveItem = new SaveEvent(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT);
+                    totalPickUpItemArray.get(currentLevel).add(saveItem);
+                } else if (categorySymbol == 'F') {
+                    BossEvent bossItem = new BossEvent(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding);
+                    totalPickUpItemArray.get(currentLevel).add(bossItem);
+                } else if (categorySymbol == 'A') {
+                    Ammo ammo = new Ammo(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding);
+                    totalPickUpItemArray.get(currentLevel).add(ammo);
+                }
+            }
+        }
     }
 
     // Determines the type of minion.
@@ -221,16 +224,6 @@ public class PlatformManager {
             };
         }
         return minion;
-    }
-
-
-    /**
-     * Gets the current level.
-     *
-     * @return the current level as an int
-     */
-    public int getCurrentLevel() {
-        return levelManager.getCurrentLevel();
     }
 
     /**
@@ -428,5 +421,12 @@ public class PlatformManager {
                 + ", leveHeight="
                 + leveHeight
                 + '}';
+    }
+
+    public void createBossLevel() {
+        this.createGamePlatform(LevelLayout.getBossLevelData(), levelManager.getCurrentLevel());
+        blockArray = totalBlockArray.get(levelManager.getCurrentLevel());
+        enemyArray = totalEnemyArray.get(levelManager.getCurrentLevel());
+        pickUpItemArray = totalPickUpItemArray.get(levelManager.getCurrentLevel());
     }
 }

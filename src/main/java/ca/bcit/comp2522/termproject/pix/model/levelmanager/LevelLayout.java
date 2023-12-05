@@ -24,7 +24,7 @@ public final class LevelLayout {
             "..2.................0.00000000000...............................................................................................................",
             "..2.................0...........................................................................................................................",
             "..2.................0....................1111111111111..........................................................................................",
-            "..2....A..R..E......0....................1111111111111..........................................................................................",
+            "..2......F..........0....................1111111111111..........................................................................................",
             "..2...000000000.....0.......M..R................................................................................................................",
             "..2...000000000.....0....33333333...............................................................................................................",
             "000000000000000333300000..........00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
@@ -98,7 +98,7 @@ public final class LevelLayout {
     };
 
 
-    private static final String[][] LEVEL_DATA = new String[][]{LEVEL1, LEVEL2, LEVEL3, LEVEL4};
+    private static final String[][] REG_LEVEL_DATA = new String[][]{LEVEL1, LEVEL2, LEVEL3};
     // Private constructor since this class should not be instantiated.
     private LevelLayout() { }
 
@@ -110,10 +110,14 @@ public final class LevelLayout {
      * @return the level data as a String[]
      */
     public static String[] getLevelData(final int level) throws IllegalArgumentException {
-        if (0 > level || level > LEVEL_DATA.length) {
+        if (0 > level || level > REG_LEVEL_DATA.length) {
             throw new IllegalArgumentException("Level does not exist!");
         }
-        return LEVEL_DATA[level];
+        return REG_LEVEL_DATA[level];
+    }
+
+    public static String[] getBossLevelData() {
+        return LEVEL4;
     }
 
     /**
@@ -122,7 +126,7 @@ public final class LevelLayout {
      * @return the number of levels as an int
      */
     public static int getNumberOfLevels() {
-        return LEVEL_DATA.length;
+        return REG_LEVEL_DATA.length;
     }
 
     /**
@@ -131,8 +135,8 @@ public final class LevelLayout {
      * @throws IllegalArgumentException if the level does not exist
      * @return the level data as a String[][]
      */
-    public static String[][] getAllLevelsData() throws IllegalArgumentException {
-        return LEVEL_DATA;
+    public static String[][] getRegLevelsData() throws IllegalArgumentException {
+        return REG_LEVEL_DATA;
     }
 
 }
