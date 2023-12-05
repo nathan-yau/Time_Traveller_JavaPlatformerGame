@@ -509,6 +509,16 @@ public class GameController {
                         player.addWeapon(rangeWeapon);
                         uiManager.refreshRangeSlot(true);
                         uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
+                    } else if (item.getSubtype() == PickUpItemType.AMMO) {
+                        Weapon rangeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
+                        if (rangeWeapon != null) {
+                            rangeWeapon.addAmmo(1);
+                            uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
+                        }
+                    } else if (item.getSubtype() == PickUpItemType.SAVE_TRIGGER) {
+                        System.out.println("Trigger Save");
+                    } else if (item.getSubtype() == PickUpItemType.BOSS_TRIGGER) {
+                        System.out.println("Trigger Boss");
                     }
                     if (item.onPickup()) {
                         iterator.remove();
@@ -585,7 +595,6 @@ public class GameController {
         private void rangeWithEnemies(final AttackEffect existingRangeHitBox, final Enemy enemy) {
             if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
                 final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
-                System.out.println("Range damage: " + rangeDamage);
                 rangeCombat(existingRangeHitBox, enemy);
                 if (enemy.takeDamage(rangeDamage) != 0) {
                     enemy.getHurt();
@@ -1054,7 +1063,6 @@ public class GameController {
     private void gameOverCondition() {
         if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT
             || player.getHealthPoint() <= 0) {
-            System.out.println("Game Over");
             this.startGameOverCondition(stage);
         }
     }
