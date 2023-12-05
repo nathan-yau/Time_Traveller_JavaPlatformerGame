@@ -31,12 +31,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.*;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -530,14 +525,22 @@ public class GameController {
                         player.vanishMeleeHitBox();
                     });
                     final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
-                    System.out.println("Melee damage: " + meleeDamage);
-                    if (enemy.takeDamage(meleeDamage) <= 0) {
+                    int enemyHealth = enemy.takeDamage(meleeDamage);
+                    try {
+                        uiManager.addEnemyHealthBar(enemy.getSubtype(), enemy.getHealthPoint());
+                        for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                            uiRoot.getChildren().remove(enemyHealthBar);
+                            uiRoot.getChildren().add(enemyHealthBar);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (enemyHealth <= 0) {
                         enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
                         return true;
                     } else {
                         enemy.getHurt();
                     }
-
                 }
                 return false;
             });
@@ -558,6 +561,14 @@ public class GameController {
                     enemy.getHurt();
                 } else {
                     enemiesToRemove.add(enemy);
+                }
+                try {
+                    uiManager.addEnemyHealthBar(enemy.getSubtype(), enemy.getHealthPoint());
+                    for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                        uiRoot.getChildren().add(enemyHealthBar);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -724,6 +735,10 @@ public class GameController {
                 hitBox = null;
             }
             if (hitBox != null) {
+                for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                    uiRoot.getChildren().remove(enemyHealthBar);
+                }
+                uiManager.clearEnemyHealthBars();
                 gameRoot.getChildren().add(hitBox);
                 enemyInteraction.meleeWithEnemies(hitBox);
                 if (activeBossFight != null) {
@@ -747,6 +762,10 @@ public class GameController {
                     hitBox = null;
                 }
                 if (hitBox != null) {
+                    for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                        uiRoot.getChildren().remove(enemyHealthBar);
+                    }
+                    uiManager.clearEnemyHealthBars();
                     gameRoot.getChildren().add(hitBox);
                     hitBox.startInitialEffect().thenAccept(isDone -> {
                         if (isDone && !rangeTargetHit) {

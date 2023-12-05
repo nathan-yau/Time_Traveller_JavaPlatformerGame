@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class Enemy extends GameObject<EnemyType> implements Combative, Damageable, AnimatedObjects {
     private int healthPoint;
+    private final double maxHealthPoint;
     private final String folderPath;
     private boolean attackEnable;
     private final int attackPoint;
@@ -43,6 +44,7 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
         this.direction = Direction.BACKWARD;
         this.attackEnable = true;
         this.damageEnable = true;
+        this.maxHealthPoint = healthPoint;
         this.healthPoint = healthPoint;
         this.folderPath = String.format("%s/%s", type.name(), name.name());
         this.attackPoint = attackPoint;
@@ -116,6 +118,10 @@ public abstract class Enemy extends GameObject<EnemyType> implements Combative, 
     public int takeDamage(final int point) {
        this.healthPoint -= point;
        return this.healthPoint;
+    }
+
+    public double getHealthPoint() {
+        return healthPoint / maxHealthPoint;
     }
 
     /**

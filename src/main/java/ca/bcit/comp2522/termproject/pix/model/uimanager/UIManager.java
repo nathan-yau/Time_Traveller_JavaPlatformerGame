@@ -1,6 +1,7 @@
 package ca.bcit.comp2522.termproject.pix.model.uimanager;
 
 import ca.bcit.comp2522.termproject.pix.MainApplication;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.EnemyType;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 public class UIManager {
+    private final ArrayList<HBox> enemyHealthBars;
     private final HBox batteryCounter;
     private final VBox meleeSlot;
     private final VBox rangeSlot;
@@ -38,6 +40,7 @@ public class UIManager {
 
     public UIManager(final double playerHP) throws IOException {
        final Insets backpackPadding = new Insets(5, 10, 5, 10);
+       this.enemyHealthBars = new ArrayList<>();
        this.batteryCounter = new HBox();
        this.worldName = new HBox();
        this.playerStatus = new HBox();
@@ -100,6 +103,24 @@ public class UIManager {
         setTextContent(slot, fontSize, text, textTranslateProperty, textTranslateProperty);
     }
 
+    public void addEnemyHealthBar(final EnemyType type, final double healthPoint) throws IOException {
+        HBox enemyHealthBar = new HBox(5);
+        ProgressBar enemyHealth = new ProgressBar(healthPoint);
+        this.initialSetting(enemyHealthBar, new Insets(5, 5, 5, 5), "rgba(0, 0, 0, 0.5)");
+        this.setTextContent(enemyHealthBar, 15, type.name(), 0, 0);
+        enemyHealthBar.getChildren().add(enemyHealth);
+        enemyHealthBar.setTranslateX(250 * enemyHealthBars.size() + 50);
+        enemyHealthBar.setTranslateY(MainApplication.WINDOW_HEIGHT - 50);
+        enemyHealthBars.add(enemyHealthBar);
+    }
+
+    public ArrayList<HBox> getEnemyHealthBars() {
+        return enemyHealthBars;
+    }
+
+    public void clearEnemyHealthBars() {
+        enemyHealthBars.clear();
+    }
 
     public void refreshMeleeSlot(final boolean isSword) throws IOException {
         if (isSword) {
