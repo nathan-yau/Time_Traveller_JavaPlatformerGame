@@ -1,14 +1,17 @@
 package ca.bcit.comp2522.termproject.pix.screens;
 
+import ca.bcit.comp2522.termproject.pix.Command;
 import ca.bcit.comp2522.termproject.pix.screens.screenelements.BodyText;
+import ca.bcit.comp2522.termproject.pix.screens.screenelements.MenuItem;
 import ca.bcit.comp2522.termproject.pix.screens.screenelements.TitleText;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.Stage;
 
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
 /**
@@ -18,7 +21,7 @@ import java.util.Objects;
  * @author Derek Woo
  * @version 2023-12
  */
-public abstract class Screen {
+public class Screen {
     private final Pane root;
     private final int windowWidth;
     private final int windowHeight;
@@ -29,7 +32,7 @@ public abstract class Screen {
      * @param windowWidth the width of the window as an int
      * @param windowHeight the height of the window as an int
      */
-    protected Screen(final int windowWidth, final int windowHeight) {
+    public Screen(final int windowWidth, final int windowHeight) {
         this.root = new Pane();
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
@@ -46,6 +49,33 @@ public abstract class Screen {
         bgImg.setFitHeight(this.windowHeight);
         bgImg.setFitWidth(this.windowWidth);
         root.getChildren().add(bgImg);
+    }
+
+    /**
+     * Add a menu.
+     *
+     * @param menuItems the menu items as a LinkedHashMap
+     * @param alignment the alignment of the menu items as a TextAlignment
+     * @param xOffset the x offset of the menu items as an int
+     * @param yOffset the y offset of the menu items as an int
+     * @param itemTopPadding the top padding of the menu items as an int
+     */
+    public void addMenu(final LinkedHashMap<String, Command> menuItems, final TextAlignment alignment,
+                        final int xOffset, final int yOffset, final int itemTopPadding) {
+        final int menuBoxOffset = -5;
+        VBox menuBox = new VBox(menuBoxOffset);
+
+        menuBox.setTranslateX(xOffset);
+        menuBox.setTranslateY(yOffset);
+
+        menuItems.forEach((key, value) -> {
+            MenuItem item;
+            item = new MenuItem(key, alignment);
+            item.setOnMouseClicked(event -> value.execute());
+            item.setPadding(new javafx.geometry.Insets(itemTopPadding, 0, 0, 0));
+            menuBox.getChildren().addAll(item);
+        });
+        getRoot().getChildren().add(menuBox);
     }
 
     /**
@@ -86,33 +116,6 @@ public abstract class Screen {
         text.setTranslateY(yOffset);
 
         getRoot().getChildren().add(text);
-    }
-
-    /**
-     * Gets the width of the window.
-     *
-     * @return the width of the window as an int
-     */
-    protected int getWindowWidth() {
-        return windowWidth;
-    }
-
-    /**
-     * Gets the height of the window.
-     *
-     * @return the height of the window as an int
-     */
-    protected int getWindowHeight() {
-        return windowHeight;
-    }
-
-    /**
-     * Gets the stage.
-     *
-     * @return the stage as a Stage
-     */
-    public Stage getStage() {
-        return (Stage) getRoot().getScene().getWindow();
     }
 
     /**
