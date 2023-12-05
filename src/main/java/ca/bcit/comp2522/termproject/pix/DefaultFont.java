@@ -30,7 +30,7 @@ public final class DefaultFont {
                 System.out.println("Error closing font stream.");
             }
         } else {
-            DEFAULT_BODY_FONT = Font.font("Arial", bodyFontSize);
+            DEFAULT_BODY_FONT = Font.font("Verdana", bodyFontSize);
         }
 
         fontStream = DefaultFont.class.getResourceAsStream("BungeeSpice-Regular.ttf");
@@ -42,7 +42,7 @@ public final class DefaultFont {
                 System.out.println("Error closing font stream.");
             }
         } else {
-            DEFAULT_TITLE_FONT = Font.font("Arial", titleFontSize);
+            DEFAULT_TITLE_FONT = Font.font("Verdana", titleFontSize);
         }
     }
 
