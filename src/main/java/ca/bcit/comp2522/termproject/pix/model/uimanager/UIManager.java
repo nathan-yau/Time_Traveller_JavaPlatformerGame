@@ -20,6 +20,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+/**
+ * Represents a UI manager.
+ *
+ * @author Nathan Yau
+ * @author Derek Woo
+ * @version 2023-11
+ */
 public class UIManager {
     private final ArrayList<HBox> enemyHealthBars;
     private final HBox batteryCounter;
@@ -38,14 +45,22 @@ public class UIManager {
     private final Label healthLabel;
 
 
+    /**
+     * Constructs an UIManager.
+     *
+     * @param playerHP the player's health point as a double
+     * @throws IOException if the image path is invalid
+     */
     public UIManager(final double playerHP) throws IOException {
-       final Insets backpackPadding = new Insets(5, 10, 5, 10);
+       final Insets backpackOuterPadding = new Insets(5, 10, 5, 10);
+       final int slotPadding = 5;
+       final int backpackInnerPadding = 20;
        this.enemyHealthBars = new ArrayList<>();
        this.batteryCounter = new HBox();
        this.worldName = new HBox();
        this.playerStatus = new HBox();
-       this.backpack = new HBox(20);
-       this.meleeSlot = new VBox(5);
+       this.backpack = new HBox(backpackInnerPadding);
+       this.meleeSlot = new VBox(slotPadding);
        this.rangeSlot = new VBox();
        this.ammoSlot = new VBox();
        this.potionSlot = new VBox();
@@ -62,18 +77,26 @@ public class UIManager {
        this.initialHealthBar();
        this.refreshHealthBar(playerHP, playerHP);
        this.initialSetting(playerStatus);
-       this.initialSetting(backpack, backpackPadding, "rgba(0, 0, 0, 0.5)");
+       this.initialSetting(backpack, backpackOuterPadding, "rgba(0, 0, 0, 0.5)");
        this.initializeSlots();
        this.initializeBackPack();
        this.refreshPlayerStatus();
     }
 
+    /* Set up the initial setting of a Pane.
+     * @param the Pane to set up
+     */
     private void initialSetting(final Pane section) {
         final Insets padding = new Insets(5, 40, 5, 10);
         final String colorCode = "rgba(0, 0, 0, 0.5)";
         this.initialSetting(section, padding, colorCode);
     }
 
+    /* Set up the initial setting of a Pane.
+     * @param the Pane to set up
+     * @param the padding of the Pane
+     * @param the color code of the Pane
+     */
     private void initialSetting(final Pane section, final Insets padding, final String colorCode) {
         final int borderRadius = 10;
         section.setPadding(padding);
@@ -103,25 +126,59 @@ public class UIManager {
         setTextContent(slot, fontSize, text, textTranslateProperty, textTranslateProperty);
     }
 
+    /**
+     * Adds an enemy health bar.
+     *
+     * @param type the enemy type as an EnemyType
+     * @param healthPoint the enemy's health point as a double
+     * @throws IOException if the image path is invalid
+     */
     public void addEnemyHealthBar(final EnemyType type, final double healthPoint) throws IOException {
-        HBox enemyHealthBar = new HBox(5);
+        final int padding = 5;
+        final int fontSize = 15;
+        final int lengthOfHealthBar = 250;
+        final int startPointOffset = 50;
+        final double inDamageHealthPoint = 0.5;
+        HBox enemyHealthBar = new HBox(padding);
         ProgressBar enemyHealth = new ProgressBar(healthPoint);
-        this.initialSetting(enemyHealthBar, new Insets(5, 5, 5, 5), "rgba(0, 0, 0, 0.5)");
-        this.setTextContent(enemyHealthBar, 15, type.name(), 0, 0);
+        this.initialSetting(enemyHealthBar, new Insets(padding, padding, padding, padding), "rgba(0, 0, 0, 0.5)");
+        this.setTextContent(enemyHealthBar, fontSize, type.name(), 0, 0);
         enemyHealthBar.getChildren().add(enemyHealth);
-        enemyHealthBar.setTranslateX(250 * enemyHealthBars.size() + 50);
-        enemyHealthBar.setTranslateY(MainApplication.WINDOW_HEIGHT - 50);
-        enemyHealthBars.add(enemyHealthBar);
+        enemyHealthBar.setTranslateX(lengthOfHealthBar * enemyHealthBars.size() + startPointOffset);
+        enemyHealthBar.setTranslateY(MainApplication.WINDOW_HEIGHT - startPointOffset);
+        if (healthPoint > inDamageHealthPoint) {
+            enemyHealth.setStyle("-fx-accent: green;");
+        } else {
+            enemyHealth.setStyle("-fx-accent: red;");
+        }
+        if (healthPoint > 0) {
+            enemyHealthBars.add(enemyHealthBar);
+        }
+
     }
 
+    /**
+     * Removes an enemy health bar.
+     *
+     * @return an arraylist of enemy health bar as an HBox;
+     */
     public ArrayList<HBox> getEnemyHealthBars() {
         return enemyHealthBars;
     }
 
+    /**
+     * Clears all enemy health bars.
+     */
     public void clearEnemyHealthBars() {
         enemyHealthBars.clear();
     }
 
+    /**
+     * Refreshes the melee slot.
+     *
+     * @param isSword whether the melee weapon is a sword as a boolean
+     * @throws IOException if the image path is invalid
+     */
     public void refreshMeleeSlot(final boolean isSword) throws IOException {
         if (isSword) {
             refreshBackpackSlot(meleeSlot, meleeIcon, "ui/sword.png", "Sword");
@@ -130,6 +187,12 @@ public class UIManager {
         }
     }
 
+    /**
+     * Refreshes the range slot.
+     *
+     * @param isBow whether the range weapon is a bow as a boolean
+     * @throws IOException if the image path is invalid
+     */
     public void refreshRangeSlot(final boolean isBow) throws IOException {
         if (isBow) {
             refreshBackpackSlot(rangeSlot, rangeIcon, "ui/bow.png", "Bow");
@@ -138,6 +201,12 @@ public class UIManager {
         }
     }
 
+    /**
+     * Refreshes the ammo slot.
+     *
+     * @param ammoCount the ammo count as an int
+     * @throws IOException if the image path is invalid
+     */
     public void refreshAmmoSlot(final int ammoCount) throws IOException {
         if (ammoCount <= 0) {
             refreshBackpackSlot(ammoSlot, ammoIcon, "ui/backpack.png", "Empty");
@@ -147,6 +216,12 @@ public class UIManager {
         }
     }
 
+    /**
+     * Refreshes the potion slot.
+     *
+     * @param potionCount the potion count as an int
+     * @throws IOException if the image path is invalid
+     */
     public void refreshPotionSlot(final int potionCount) throws IOException {
         if (potionCount <= 0) {
             refreshBackpackSlot(potionSlot, potionIcon, "ui/backpack.png", "Empty");
@@ -168,6 +243,7 @@ public class UIManager {
         refreshPotionSlot(0);
     }
 
+    /* Initializes the backpack. */
     private void initializeBackPack() {
         final double translateY = MainApplication.WINDOW_HEIGHT - 100;
         final double translateX = MainApplication.WINDOW_WIDTH - 350;
@@ -179,40 +255,72 @@ public class UIManager {
         backpack.setTranslateY(translateY);
     }
 
-    public final void refreshBatteryCounter(int batteryCount) throws IOException {
+    /**
+     * Refreshes the battery counter.
+     *
+     * @param batteryCount the battery count as an int
+     * @throws IOException if the image path is invalid
+     */
+    public final void refreshBatteryCounter(final int batteryCount) throws IOException {
         final double translateY = 20;
         final double translateX = MainApplication.WINDOW_WIDTH - 200;
+        final int fontSize = 24;
+        final int textTranslateY = 18;
+        final int textTranslateX = 10;
         batteryCounter.getChildren().clear();
         setPictureContent(batteryCounter, "ui/battery.png");
-        setTextContent(batteryCounter, 24, String.format("x %s", batteryCount),
-                18, 10);
+        setTextContent(batteryCounter, fontSize, String.format("x %s", batteryCount),
+                textTranslateY, textTranslateX);
         batteryCounter.setTranslateX(translateX);
         batteryCounter.setTranslateY(translateY);
     }
 
+    /**
+     * Refreshes the player status.
+     *
+     * @throws IOException if the image path is invalid
+     */
     public final void refreshPlayerStatus() throws IOException {
         final double translateY = 80;
         final double translateX = 50;
+        final int fontSize = 18;
+        final int textTranslateY = 0;
+        final int textTranslateX = 10;
         playerStatus.getChildren().clear();
-        setTextContent(playerStatus, 18, "HP",0, 10);
+        setTextContent(playerStatus, fontSize, "HP", textTranslateY, textTranslateX);
         playerStatus.getChildren().add(healthLabel);
         playerStatus.getChildren().add(healthBar);
         playerStatus.setTranslateX(translateX);
         playerStatus.setTranslateY(translateY);
     }
 
-    public final void refreshWorldName(int level) throws IOException {
+    /**
+     * Refreshes the world name.
+     *
+     * @param level the level as an int
+     * @throws IOException if the image path is invalid
+     */
+    public final void refreshWorldName(final int level) throws IOException {
         final double translateY = 20;
         final double translateX = 50;
+        final int fontSize = 18;
+        final int textTranslateY = 12;
+        final int textTranslateX = 10;
         String[] world = {"In the Past", "Present Day", "In the Future", "Boss Dimension"};
         worldName.getChildren().clear();
         setPictureContent(worldName, "ui/world.png");
-        setTextContent(worldName, 18, String.format("Timeline - %s", world[level]),12, 10);
+        setTextContent(worldName, fontSize, String.format("Timeline - %s", world[level]),
+                textTranslateY, textTranslateX);
         worldName.setTranslateX(translateX);
         worldName.setTranslateY(translateY);
     }
 
-    private Font setDefaultFont(int fontSize) throws IOException {
+    /* Sets the default font.
+     * @param the font size
+     * @return the font
+     * @throws IOException if the font path is invalid
+     */
+    private Font setDefaultFont(final int fontSize) throws IOException {
         Font font = Font.font("Verdana", FontWeight.BOLD, fontSize);
         InputStream fontStream = getClass().getResourceAsStream("BungeeSpice-Regular.ttf");
 
@@ -224,6 +332,14 @@ public class UIManager {
         return font;
     }
 
+    /* Sets the text content of a Pane.
+     * @param the Pane to set the text content
+     * @param the font size
+     * @param the text to set
+     * @param the font translate Y property
+     * @param the font translate X property
+     * @throws IOException if the font path is invalid
+     */
     private void setTextContent(final Pane box, final int fontSize, final String text,
                                 final double fontTranslateY, final double fontTranslateX) throws IOException {
         Text description = new Text(text);
@@ -235,31 +351,47 @@ public class UIManager {
         box.getChildren().add(description);
     }
 
+    /* Sets the picture content of a Pane.
+     * @param the Pane to set the picture content
+     * @param the image path
+     * @throws IOException if the image path is invalid
+     */
     private void setPictureContent(final Pane box, final String imagePath) {
         ImageView imageView = new ImageView(new Image(String.valueOf(MainApplication.class.getResource(imagePath))));
         box.getChildren().add(imageView);
     }
-
-
+    /* Initializes the health bar. */
     private void initialHealthBar() throws IOException {
-        healthBar.setMaxWidth(240);
-        healthBar.setPrefWidth(240);
-        healthBar.setMinWidth(100);
-        healthBar.setPrefHeight(20);
-        healthBar.setTranslateX(30);
-        healthLabel.setFont(this.setDefaultFont(13));
+        final int width = 240;
+        final int height = 20;
+        final int fontSize = 13;
+        final int barXPosition = 30;
+        final int labelXPosition = 20;
+        final int labelYPosition = 3;
+        healthBar.setPrefWidth(width);
+        healthBar.setPrefHeight(height);
+        healthBar.setTranslateX(barXPosition);
+        healthLabel.setFont(this.setDefaultFont(fontSize));
         healthLabel.setStyle("-fx-text-fill: white;");
-        healthLabel.setTranslateX(20);
-        healthLabel.setTranslateY(3);
-    };
+        healthLabel.setTranslateX(labelXPosition);
+        healthLabel.setTranslateY(labelYPosition);
+    }
 
-    public void refreshHealthBar(final double currentHP, final double maxHP){
+    /**
+     * Refreshes the health bar.
+     *
+     * @param currentHP the current health point as a double
+     * @param maxHP the max health point as a double
+     */
+    public void refreshHealthBar(final double currentHP, final double maxHP) {
         final double progress = currentHP / maxHP;
         final String color;
+        final double inWarningHealthPoint = 0.5;
+        final double inDangerHealthPoint = 0.25;
         healthBar.setProgress(progress);
-        if (progress > 0.5) {
+        if (progress > inWarningHealthPoint) {
             color = "-fx-accent: lightgreen;";
-        } else if (progress > 0.25) {
+        } else if (progress > inDangerHealthPoint) {
             color = "-fx-accent: yellow;";
         } else {
             color = "-fx-accent: red;";
@@ -268,19 +400,37 @@ public class UIManager {
         healthLabel.setText(String.format("%.0f / %.0f", currentHP, maxHP));
     }
 
+    /**
+     * Gets the melee slot.
+     *
+     * @return the melee slot as a VBox
+     */
     public HBox getWorldName() {
         return worldName;
     }
-
-
+    /**
+     * Gets the melee slot.
+     *
+     * @return the melee slot as a VBox
+     */
     public HBox getBatteryCounter() {
         return batteryCounter;
     }
 
+    /**
+     * Gets the melee slot.
+     *
+     * @return the melee slot as a VBox
+     */
     public HBox getPlayerStatus() {
         return playerStatus;
     }
 
+    /**
+     * Gets the melee slot.
+     *
+     * @return the melee slot as a VBox
+     */
     public HBox getBackpack() {
         return backpack;
     }
