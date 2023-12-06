@@ -2,6 +2,7 @@ package ca.bcit.comp2522.termproject.pix;
 
 import ca.bcit.comp2522.termproject.pix.gamecontroller.GameController;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import ca.bcit.comp2522.termproject.pix.screens.Screen;
 import javafx.application.Application;
@@ -54,13 +55,15 @@ public class MainApplication extends Application {
      * @param currentLevel the current level of the game as an int
      * @param player the player of the game as a Player
      * @param loadedBlocks the blocks of the game as an ArrayList
+     * @param loadedItems the pickup items of the game as an ArrayList
      * @throws IOException if the game cannot be started
      */
     public void startGame(final int currentLevel, final Player player,
                           final ArrayList<ArrayList<StandardBlock>> loadedBlocks,
+                          final ArrayList<ArrayList<PickUpItem>> loadedItems,
                           final Stage stage) throws IOException {
         GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, currentLevel, player,
-                loadedBlocks, stage);
+                loadedBlocks, loadedItems, stage);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
         stage.setScene(scene);
@@ -82,7 +85,8 @@ public class MainApplication extends Application {
             int loadedCurrentLevel = (int) ois.readObject();
             Player loadedPlayer = (Player) ois.readObject();
             ArrayList<ArrayList<StandardBlock>> loadedBlocks = (ArrayList<ArrayList<StandardBlock>>) ois.readObject();
-            this.startGame(loadedCurrentLevel, loadedPlayer, loadedBlocks, stage);
+            ArrayList<ArrayList<PickUpItem>> loadedItems = (ArrayList<ArrayList<PickUpItem>>) ois.readObject();
+            this.startGame(loadedCurrentLevel, loadedPlayer, loadedBlocks, loadedItems, stage);
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Loading error. Starting a new game.");
             GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
