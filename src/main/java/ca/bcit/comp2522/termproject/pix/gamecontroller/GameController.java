@@ -559,7 +559,7 @@ public class GameController {
                             uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
                         }
                     } else if (item.getSubtype() == PickUpItemType.SAVE_TRIGGER) {
-                        saveGameState("gameState.sav");
+                        saveGameState();
                     } else if (item.getSubtype() == PickUpItemType.BOSS_TRIGGER) {
                         System.out.println("Trigger Boss");
                     }
@@ -1203,13 +1203,11 @@ public class GameController {
                 "gameOverBg.gif");
     }
 
-    /**
+    /*
      * Saves the game state.
-     *
-     * @param filename the filename to save the game state to as a String
      */
-    public void saveGameState(final String filename) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+    private void saveGameState() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("gameState.sav"))) {
             oos.writeObject(this.platform.getCurrentLevel());
             oos.writeObject(this.player);
             oos.writeObject(this.platform.getTotalBlockArray());
