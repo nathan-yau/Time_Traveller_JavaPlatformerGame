@@ -859,7 +859,7 @@ public class GameController {
             final int endDuration = 2;
 
             if (activeBossFight == null || activeBossFight.bossLevel != bossLevels[0]) {
-                Enemy hal = new Hal(windowWidth / 2, windowHeight);
+                Enemy hal = new Hal(windowWidth / 2, windowHeight - 130);
                 activeBossFight = new BossFight(bossLevels[0], hal);
             }
             activeBossFight.startBossFight(numberOfProjectiles,
@@ -909,6 +909,7 @@ public class GameController {
 
             if (!gameRoot.getChildren().contains(activeBoss)) {
                 gameRoot.getChildren().add(activeBoss);
+                player.toFront();
             }
 
             if (this.projectileGenerator == null) {
@@ -918,7 +919,6 @@ public class GameController {
 
             if (this.projectileTimeline == null) {
                 this.projectileTimeline = createProjectileTimeline(startDelay, laserDuration, totalDuration);
-                System.out.println("In");
                 this.projectileTimeline.setCycleCount(Timeline.INDEFINITE);
                 this.projectileTimeline.play();
             }
@@ -941,6 +941,8 @@ public class GameController {
                                 gameRoot.getChildren().add(projectile);
                             }
                         }
+                        activeBoss.setDamageEnable(false);
+                        activeBoss.setVisible(false);
                         setBackground("background/attack.gif");
                     }),
 
@@ -956,6 +958,8 @@ public class GameController {
                             gameRoot.getChildren().remove(laser);
                             iterator.remove();
                         }
+                        activeBoss.setDamageEnable(true);
+                        activeBoss.setVisible(true);
                         setBackground("background/error.gif");
                     }),
                     new KeyFrame(Duration.seconds(laserDuration + projectileDamageDelay + startDelay + endDelay))
