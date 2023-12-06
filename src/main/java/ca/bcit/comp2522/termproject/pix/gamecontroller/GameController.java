@@ -47,11 +47,10 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.io.ObjectOutputStream;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -64,6 +63,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GameController {
     private static final int X_CAMERA_THRESHOLD = 300;
     private static final int X_CAMERA_ADJUSTMENT = 300;
+    private static final double INITIAL_PLAYER_X = 0;
+    private static final double INITIAL_PLAYER_Y = 500;
     private static ChangeListener<? super Number> playerXListener;
     private final Stage stage;
     private final int windowWidth;
@@ -96,48 +97,83 @@ public class GameController {
      *
      * @param windowWidth the width of the window as an int
      * @param windowHeight the height of the window as an int
-     * @throws IOException if the image is not found
+     * @param currentLevel the current level stage
+     * @param player the player loaded from save
      * @param stage the current application stage
+     * @throws IOException if the image is not found
      */
-
-    public GameController(final int windowWidth, final int windowHeight, final Stage stage) throws IOException {
-        final double initialPlayerX = 0;
-        final double initialPlayerY = 500;
+    public GameController(final int windowWidth, final int windowHeight, final int currentLevel,
+                          final Player player, final Stage stage) throws IOException {
+        this.player = player;
         this.stage = stage;
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
-        this.levelManager = new LevelManager();
+        this.levelManager = new LevelManager(currentLevel);
         this.platform = new PlatformManager(levelManager);
         this.keyboardChecker = new HashMap<>();
-        this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
-        this.uiManager = new UIManager(player.getMaxHealthPoints());
         this.cachedBlockArray = new ArrayList<>();
         this.collisionDetector = new CollisionDetector();
         this.blockInteraction = new BlockInteraction();
         this.itemInteraction = new ItemInteraction();
         this.enemyInteraction = new EnemyInteraction();
-        this.lastCacheXPosition = initialPlayerX;
-        this.lastCacheYPosition = initialPlayerY;
+        this.lastCacheXPosition = INITIAL_PLAYER_X;
+        this.lastCacheYPosition = INITIAL_PLAYER_Y;
         this.rangeTargetHit = false;
-        this.playerX = player.translateXProperty();
+        this.playerX = this.player.translateXProperty();
         this.setBackground(this.getLevelBackground());
         this.platform.createGamePlatform();
         this.setUpPlatform();
-        this.setUpCamera();
         this.setCachedBlockArray();
         this.endGameConditionReached = false;
-        gameRoot.getChildren().add(player);
+        gameRoot.getChildren().add(this.player);
+        this.uiManager = new UIManager(this.player.getMaxHealthPoints());
         this.uiSetUp();
+        this.refreshUi();
+        this.player.refreshPlayerImage();
+        this.setUpCamera();
+        playerXListener.changed(this.playerX, 0, this.player.getCenterX());
     }
+
+    /**
+     * Constructs a GameController object with default values.
+     * Set up the initial platform and player.
+     *
+     * @param windowWidth the width of the window as an int
+     * @param windowHeight the height of the window as an int
+     * @param stage the current application stage
+     * @throws IOException if the image is not found
+     */
+    public GameController(final int windowWidth, final int windowHeight, final Stage stage) throws IOException {
+        this(windowWidth, windowHeight, 0, new Player(INITIAL_PLAYER_X,
+                INITIAL_PLAYER_Y, "Player/idle.png"), stage);
+    }
+
     /* Set up the initial ui layout. */
     private void uiSetUp() {
         uiRoot.getChildren().add(uiManager.getBatteryCounter());
         uiRoot.getChildren().add(uiManager.getWorldName());
         uiRoot.getChildren().add(uiManager.getPlayerStatus());
         uiRoot.getChildren().add(uiManager.getBackpack());
+    }
+
+    /*
+     * Refresh the UI with the current player state.
+     */
+    private void refreshUi() throws IOException {
+        uiManager.refreshPotionSlot(player.getHealthPotionCounter());
+        uiManager.refreshBatteryCounter(player.getEnergyCounter());
+        uiManager.refreshWorldName(levelManager.getCurrentLevel());
+        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
+        uiManager.refreshPlayerStatus();
+        uiManager.refreshMeleeSlot(player.getWeapon(WeaponType.MELEE_WEAPON) != null);
+        uiManager.refreshRangeSlot(player.getWeapon(WeaponType.RANGE_WEAPON) != null);
+        if (player.getWeapon(WeaponType.RANGE_WEAPON) != null) {
+            uiManager.refreshAmmoSlot(Objects.requireNonNull(
+                    player.getWeapon(WeaponType.RANGE_WEAPON)).getAmmoCount());
+        }
     }
 
     /**
@@ -156,8 +192,6 @@ public class GameController {
             gameRoot.getChildren().add(enemy);
         }
     }
-
-
 
     /**
      * Sets up the camera.
@@ -1160,6 +1194,20 @@ public class GameController {
                 "gameOverBg.gif");
     }
 
+    /**
+     * Saves the game state.
+     *
+     * @param filename the filename to save the game state to as a String
+     */
+    public void saveGameState(final String filename) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(this.platform.getCurrentLevel());
+            oos.writeObject(this.player);
+            System.out.println("Game state saved successfully.");
+        } catch (IOException e) {
+            System.out.println("Error saving game state.");
+        }
+    }
 
     /**
      * Gets the root of the application.

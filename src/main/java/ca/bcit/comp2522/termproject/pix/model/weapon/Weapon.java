@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.weapon;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Random;
  * @author Derek Woo
  * @version 2023-11
  */
-public abstract class Weapon {
+public abstract class Weapon implements Serializable {
     /** Random generator. */
     protected static final Random RANDOM_GENERATOR = new Random();
     private final WeaponType weaponType;

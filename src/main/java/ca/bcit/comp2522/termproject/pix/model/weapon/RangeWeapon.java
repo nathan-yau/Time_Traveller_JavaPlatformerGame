@@ -1,5 +1,7 @@
 package ca.bcit.comp2522.termproject.pix.model.weapon;
 
+import java.io.Serializable;
+
 /**
  * Represents a range weapon.
  *
@@ -7,7 +9,7 @@ package ca.bcit.comp2522.termproject.pix.model.weapon;
  * @author Derek Woo
  * @version 2023-11
  */
-public class RangeWeapon extends Weapon {
+public class RangeWeapon extends Weapon implements Serializable {
     private static final double RANGE_HIT_RATE = 0.4;
     private static final int MIN_AMMO_COUNT = 3;
     private static final int MAX_AMMO_COUNT = 11;

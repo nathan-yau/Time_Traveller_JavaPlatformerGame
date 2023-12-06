@@ -20,6 +20,10 @@ import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -29,7 +33,10 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023
  */
-public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
+public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable, Serializable {
+    @Serial
+    private static final long serialVersionUID = -7081347089777343847L;
+
     private static final int MAX_HEALTH_POINTS = 20;
     private static final double WALK_SPEED = 5;
     private static final double RUN_SPEED = 10;
@@ -45,18 +52,20 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private String currentImagePath;
     private Action action;
     private Direction direction;
-    private Point2D velocity;
+    private transient Point2D velocity;
     private int healthPotionCounter;
     private int energyCounter;
-    private Timeline meleeAnimation;
-    private Timeline punchAnimation;
-    private Timeline rangeAnimation;
-    private Timeline walkAnimation;
-    private Timeline jumpAnimation;
-    private Timeline climbAnimation;
+    private transient Timeline meleeAnimation;
+    private transient Timeline punchAnimation;
+    private transient Timeline rangeAnimation;
+    private transient Timeline walkAnimation;
+    private transient Timeline jumpAnimation;
+    private transient Timeline climbAnimation;
     private final Weapon[] weaponArray = new Weapon[2];
-    private Timeline hurtAnimation;
+    private transient Timeline hurtAnimation;
     private Direction climbDirection;
+    private double currentXLocation;
+    private double currentYLocation;
 
     /**
      * Constructs a Player object.
@@ -77,6 +86,26 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.rangeHitBox = null;
         this.climbDirection = Direction.FORWARD;
         this.currentImagePath = String.format("player/%s", direction.name());
+        this.initializeAnimations();
+        this.healthPoint = MAX_HEALTH_POINTS;
+        this.speed = WALK_SPEED;
+        this.currentXLocation = x;
+    }
+
+    @Serial
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.velocity = new Point2D(0, 0);
+        this.currentImagePath = "Player/idle.png";
+        this.setTranslateX(this.currentXLocation);
+        this.setTranslateY(this.currentYLocation);
+        this.initializeAnimations();
+    }
+
+    /*
+     * Initializes the animations.
+     */
+    private void initializeAnimations() {
         this.initializeMeleeAttackingAnimation();
         this.initializeRangeAttackingAnimation();
         this.initializeWalkingAnimation();
@@ -84,8 +113,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.initializeHurtingAnimation();
         this.initializePunchAttackingAnimation();
         this.initializeClimbingAnimation();
-        this.healthPoint = MAX_HEALTH_POINTS;
-        this.speed = WALK_SPEED;
+    }
+
+    /*
+     * Updates the current location of the Player.
+     */
+    private void updateCurrentLocation() {
+        this.currentXLocation = this.getTranslateX();
+        this.currentYLocation = this.getTranslateY();
     }
 
     /**
@@ -270,6 +305,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         }
         if (climbEnable) {
             this.setTranslateY(this.getTranslateY() + climbPerFrame);
+            this.updateCurrentLocation();
             this.direction = this.climbDirection;
             turnOffGravity = true;
             attackEnable = false;
@@ -304,6 +340,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     public void offsetGravity() {
         final double offset = 0.8;
         this.setTranslateY(this.getTranslateY() - offset);
+        this.updateCurrentLocation();
         jumpEnable = true;
     }
 
@@ -327,6 +364,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         if (movingDown) {
             if (!turnOffGravity) {
                 this.setTranslateY(this.getTranslateY() + fallingPixel);
+                this.updateCurrentLocation();
             }
         } else {
             this.currentImagePath = String.format("player/%s", direction.name());
@@ -334,6 +372,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             climbAnimation.stop();
             jumpAnimation.play();
             this.setTranslateY(this.getTranslateY() - jumpingPixel);
+            this.updateCurrentLocation();
             this.action = Action.JUMPING;
         }
     }
@@ -347,9 +386,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         if (movingRight) {
             this.direction = Direction.FORWARD;
             this.setTranslateX(this.getTranslateX() + 1);
+            this.updateCurrentLocation();
         } else {
             this.direction = Direction.BACKWARD;
             this.setTranslateX(this.getTranslateX() - 1);
+            this.updateCurrentLocation();
         }
         jumpAnimation.stop();
         if (!(meleeAnimation.getStatus() == Animation.Status.RUNNING
@@ -365,6 +406,13 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     private void updatePlayerImage(final String imageUrl) {
         this.setImage(new Image(String.valueOf(MainApplication.class.getResource(imageUrl))));
+    }
+
+    /**
+     * Updates the Player image.
+     */
+    public void refreshPlayerImage() {
+        this.setImage(new Image(String.valueOf(MainApplication.class.getResource("Player/idle.png"))));
     }
 
     /**
