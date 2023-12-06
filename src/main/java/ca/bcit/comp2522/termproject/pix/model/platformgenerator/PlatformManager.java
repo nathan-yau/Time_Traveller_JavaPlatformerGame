@@ -13,7 +13,14 @@ import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelLayout;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.*;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.Energy;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.WeaponPickup;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.SaveEvent;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.BossEvent;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.Ammo;
 
 
 import java.util.ArrayList;
@@ -39,6 +46,7 @@ public class PlatformManager {
     private final ArrayList<ArrayList<StandardBlock>> totalBlockArray;
     private final ArrayList<ArrayList<Enemy>> totalEnemyArray;
     private final ArrayList<ArrayList<PickUpItem>> totalPickUpItemArray;
+    private final boolean loadedBlocks;
     // The array of blocks that make up the game platform.
     private ArrayList<StandardBlock> blockArray;
 
@@ -55,14 +63,20 @@ public class PlatformManager {
     private final LevelManager levelManager;
 
     // The height of the current level.
-    private final int leveHeight;
+    private final int levelHeight;
 
     /**
      * Constructs a PlatformManager.
      * @param levelController the current level manager
+     * @param loadedBlocks the previously-loaded blocks as an ArrayList (can be empty)
      */
-    public PlatformManager(final LevelManager levelController) {
-        this.totalBlockArray = new ArrayList<>();
+    public PlatformManager(final LevelManager levelController, final ArrayList<ArrayList<StandardBlock>> loadedBlocks) {
+        this.totalBlockArray = loadedBlocks;
+        if (loadedBlocks.isEmpty()) {
+            this.loadedBlocks = false;
+        } else {
+            this.loadedBlocks = true;
+        }
         this.totalEnemyArray = new ArrayList<>();
         this.totalPickUpItemArray = new ArrayList<>();
         this.blockArray = new ArrayList<>();
@@ -70,7 +84,7 @@ public class PlatformManager {
         this.enemyArray = new ArrayList<>();
         this.levelManager = levelController;
         this.levelWidth = levelManager.getCurrentLevelWidth();
-        this.leveHeight = levelManager.getCurrentLevelHeight();
+        this.levelHeight = levelManager.getCurrentLevelHeight();
     }
 
     /**
@@ -80,6 +94,15 @@ public class PlatformManager {
      */
     public ArrayList<StandardBlock> getBlockArray() {
         return this.blockArray;
+    }
+
+    /**
+     * Gets the array of blocks that make up the game platform on all levels.
+     *
+     * @return the list of blocks as an ArrayList
+     */
+    public ArrayList<ArrayList<StandardBlock>> getTotalBlockArray() {
+        return this.totalBlockArray;
     }
 
     /**
@@ -105,38 +128,41 @@ public class PlatformManager {
      */
     public void createGamePlatform() {
         final int movingBlockYPadding = 5;
+        final int totalNumberOfLevels = 4;
         final String[][] allDimension = LevelLayout.getAllLevelsData();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < totalNumberOfLevels; i++) {
             String[] currentLevelData = allDimension[i];
             totalBlockArray.add(new ArrayList<>());
             totalEnemyArray.add(new ArrayList<>());
             totalPickUpItemArray.add(new ArrayList<>());
-            for (int row = 0; row < leveHeight; row++) {
+            for (int row = 0; row < levelHeight; row++) {
                 String line = currentLevelData[row];
                 for (int col = 0; col < line.length(); col++) {
                     final int xPosition = col * BLOCK_WIDTH;
                     final int yPosition = row * BLOCK_HEIGHT;
                     final int yPadding = 10;
                     char categorySymbol = line.charAt(col);
-                    if (categorySymbol == '0') {
-                        PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
+                    if (categorySymbol == '0' && !loadedBlocks) {
+                        PlatformPosition imageIndex = getImageForPlatformBlock(
+                                row, col, currentLevelData, categorySymbol);
                         StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
                                 BlockType.SOLID_BLOCK, i, imageIndex.name());
                         totalBlockArray.get(i).add(solidBlock);
-                    } else if (categorySymbol == '1') {
-                        PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
+                    } else if (categorySymbol == '1' && !loadedBlocks) {
+                        PlatformPosition imageIndex = getImageForPlatformBlock(
+                                row, col, currentLevelData, categorySymbol);
                         StandardBlock movingBlock = new MovingBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT + movingBlockYPadding, i, imageIndex.name());
                         totalBlockArray.get(i).add(movingBlock);
-                    } else if (categorySymbol == '2') {
+                    } else if (categorySymbol == '2' && !loadedBlocks) {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.LADDERS, i, "ladder");
                         totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == '3') {
+                    } else if (categorySymbol == '3' && !loadedBlocks) {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, i, "rope");
                         totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == '4') {
+                    } else if (categorySymbol == '4' && !loadedBlocks) {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.TESTING_BLOCK, i, "dirt");
                         totalBlockArray.get(i).add(decorationBlock);
@@ -193,9 +219,6 @@ public class PlatformManager {
                 }
             }
         }
-        blockArray = totalBlockArray.get(levelManager.getCurrentLevel());
-        enemyArray = totalEnemyArray.get(levelManager.getCurrentLevel());
-        pickUpItemArray = totalPickUpItemArray.get(levelManager.getCurrentLevel());
     }
 
     // Determines the type of minion.
@@ -361,7 +384,7 @@ public class PlatformManager {
      *
      * @param level the level to set as an int
      */
-    public void setNextLevelArrays(final int level) {
+    public void setLevelArrays(final int level) {
         blockArray = totalBlockArray.get(level);
         enemyArray = totalEnemyArray.get(level);
         pickUpItemArray = totalPickUpItemArray.get(level);
@@ -387,7 +410,7 @@ public class PlatformManager {
         if (levelWidth != that.levelWidth) {
             return false;
         }
-        if (leveHeight != that.leveHeight) {
+        if (levelHeight != that.levelHeight) {
             return false;
         }
         if (!blockArray.equals(that.blockArray)) {
@@ -407,7 +430,7 @@ public class PlatformManager {
         int result = blockArray.hashCode();
         result = prime * result + levelManager.hashCode();
         result = prime * result + levelWidth;
-        result = prime * result + leveHeight;
+        result = prime * result + levelHeight;
         return result;
     }
 
@@ -426,7 +449,7 @@ public class PlatformManager {
                 + ", levelWidth="
                 + levelWidth
                 + ", leveHeight="
-                + leveHeight
+                + levelHeight
                 + '}';
     }
 }
