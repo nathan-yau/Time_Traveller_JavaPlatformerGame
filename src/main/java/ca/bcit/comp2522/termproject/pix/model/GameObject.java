@@ -6,6 +6,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -17,8 +18,11 @@ import java.io.Serializable;
  * @param <T> the type of the object
  */
 public abstract class GameObject<T extends GameType> extends ImageView implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -8362378599272637297L;
     // The name of the object.
     private final T objectSubtype;
+    private final String objectImageUrl;
 
     // The type of the object.
     private final ObjectType objectType;
@@ -56,6 +60,7 @@ public abstract class GameObject<T extends GameType> extends ImageView implement
         this.setTranslateY(y);
         this.objectSubtype = subtype;
         this.objectType = type;
+        this.objectImageUrl = String.valueOf(MainApplication.class.getResource(url));
     }
 
     /**
@@ -151,5 +156,12 @@ public abstract class GameObject<T extends GameType> extends ImageView implement
      */
     public final T getSubtype() {
         return this.objectSubtype;
+    }
+
+    /**
+     * Reloads the image of the game object.
+     */
+    public void reloadImage() {
+        this.setImage(new Image(objectImageUrl));
     }
 }
