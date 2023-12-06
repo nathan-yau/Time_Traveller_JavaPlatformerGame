@@ -534,7 +534,6 @@ public class GameController {
                     } else if (item.getSubtype() == PickUpItemType.ENERGY) {
                         player.incrementEnergyCounter();
                         uiManager.refreshBatteryCounter(player.getEnergyCounter());
-                        saveGameState("gameState.sav");
                     } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
                         Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
                         player.addWeapon(meleeWeapon);
