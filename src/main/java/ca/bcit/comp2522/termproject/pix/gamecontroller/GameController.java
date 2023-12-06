@@ -89,6 +89,7 @@ public class GameController {
     private final UIManager uiManager;
     private boolean switching = false;
     private boolean endGameConditionReached;
+    private boolean gameLoadedFromSave;
 
     /**
      * Constructs a GameController object with default values.
@@ -139,6 +140,7 @@ public class GameController {
         this.player.refreshPlayerImage();
         this.setUpCamera();
         playerXListener.changed(this.playerX, 0, this.player.getCenterX());
+        this.gameLoadedFromSave = true;
     }
 
     /**
@@ -153,6 +155,7 @@ public class GameController {
     public GameController(final int windowWidth, final int windowHeight, final Stage stage) throws IOException {
         this(windowWidth, windowHeight, 0, new Player(INITIAL_PLAYER_X, INITIAL_PLAYER_Y,
                 "Player/idle.png"), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), stage);
+        this.gameLoadedFromSave = false;
     }
 
     /* Set up the initial ui layout. */
@@ -1164,9 +1167,9 @@ public class GameController {
             final int bodyXOffset = (this.windowWidth / 2) - (bodyWidth / 2);
             final int bodyYOffset = (this.windowHeight / 2) - 20;
 
-            final int menuWidth = 110;
+            final int menuWidth = 50;
             final int menuBoxXOffset = (this.windowWidth / 2) - (menuWidth / 2);
-            final int menuBoxYOffset = (this.windowHeight / 2) + 70;
+            final int menuBoxYOffset = (this.windowHeight / 2) + 90;
             final int menuBoxItemTopPadding = 20;
 
             this.endGameConditionReached = true;
@@ -1174,6 +1177,13 @@ public class GameController {
             Scene scene = new Scene(gameScreen.getRoot(), this.windowWidth, this.windowHeight);
 
             final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
+            menuItems.put("New Game", () -> {
+                try {
+                    MainApplication.startGame(stage);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
             menuItems.put("Quit", Platform::exit);
 
             currentStage.setScene(scene);
