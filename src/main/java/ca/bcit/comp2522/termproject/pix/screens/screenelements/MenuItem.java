@@ -26,15 +26,15 @@ public class MenuItem extends Pane {
      * @param alignment the alignment of the menu item as a TextAlignment
      */
     public MenuItem(final String name, final TextAlignment alignment)  {
-        final int textXOffset = 5;
-        final int textYOffset = 20;
+        final double textCenterXOffsetMultiplier = 0.9;
         final int shadowRadius = 10;
         final int hoverShadowRadius = 25;
         Font font = DefaultFont.getDefaultBodyFont();
 
         Text text = new Text(name);
-        text.setTranslateX(textXOffset);
-        text.setTranslateY(textYOffset);
+        if (alignment == TextAlignment.CENTER) {
+            text.setTranslateX(-(text.getLayoutBounds().getWidth() * textCenterXOffsetMultiplier));
+        }
         text.setFont(font);
         text.setFill(Color.WHITE);
         text.setTextAlignment(alignment);
