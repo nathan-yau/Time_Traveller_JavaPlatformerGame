@@ -88,7 +88,6 @@ public class GameController {
     private final LevelManager levelManager;
     private final UIManager uiManager;
     private boolean switching = false;
-
     private boolean endGameConditionReached;
 
     /**
@@ -99,11 +98,12 @@ public class GameController {
      * @param windowHeight the height of the window as an int
      * @param currentLevel the current level stage
      * @param player the player loaded from save
+     * @param gameBlocks previously-loaded game blocks to as an Arraylist
      * @param stage the current application stage
      * @throws IOException if the image is not found
      */
-    public GameController(final int windowWidth, final int windowHeight, final int currentLevel,
-                          final Player player, final Stage stage) throws IOException {
+    public GameController(final int windowWidth, final int windowHeight, final int currentLevel, final Player player,
+                          final ArrayList<ArrayList<StandardBlock>> gameBlocks, final Stage stage) throws IOException {
         this.player = player;
         this.stage = stage;
         this.windowWidth = windowWidth;
@@ -112,7 +112,7 @@ public class GameController {
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
         this.levelManager = new LevelManager(currentLevel);
-        this.platform = new PlatformManager(levelManager);
+        this.platform = new PlatformManager(levelManager, gameBlocks);
         this.keyboardChecker = new HashMap<>();
         this.cachedBlockArray = new ArrayList<>();
         this.collisionDetector = new CollisionDetector();
@@ -148,7 +148,7 @@ public class GameController {
      */
     public GameController(final int windowWidth, final int windowHeight, final Stage stage) throws IOException {
         this(windowWidth, windowHeight, 0, new Player(INITIAL_PLAYER_X,
-                INITIAL_PLAYER_Y, "Player/idle.png"), stage);
+                INITIAL_PLAYER_Y, "Player/idle.png"), new ArrayList<>(), stage);
     }
 
     /* Set up the initial ui layout. */
@@ -180,8 +180,11 @@ public class GameController {
      * Sets up the platform using the PlatformManager.
      */
     private void setUpPlatform() {
+        this.platform.setLevelArrays(levelManager.getCurrentLevel());
+
         for (StandardBlock block: platform.getBlockArray()) {
             gameRoot.getChildren().add(block);
+            block.reloadImage();
         }
 
         for (PickUpItem item: platform.getItemArray()) {
@@ -283,7 +286,7 @@ public class GameController {
     private void switchLevel(final int dimension) {
         gameRoot.getChildren().clear();
         cachedBlockArray.clear();
-        platform.setNextLevelArrays(dimension);
+        platform.setLevelArrays(dimension);
         this.setUpPlatform();
         setCachedBlockArray();
         TeleportEffect teleportEffect = player.teleport();
@@ -550,7 +553,7 @@ public class GameController {
                             uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
                         }
                     } else if (item.getSubtype() == PickUpItemType.SAVE_TRIGGER) {
-                        System.out.println("Trigger Save");
+                        saveGameState("gameState.sav");
                     } else if (item.getSubtype() == PickUpItemType.BOSS_TRIGGER) {
                         System.out.println("Trigger Boss");
                     }
@@ -1203,8 +1206,10 @@ public class GameController {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
             oos.writeObject(this.platform.getCurrentLevel());
             oos.writeObject(this.player);
+            oos.writeObject(platform.getTotalBlockArray());
             System.out.println("Game state saved successfully.");
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Error saving game state.");
         }
     }
