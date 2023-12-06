@@ -212,7 +212,9 @@ public class GameController {
         playerXListener = (obs, old, newValue) -> {
             int offset = newValue.intValue();
 
-            if (offset > X_CAMERA_THRESHOLD && offset < platform.getTotalLevelWidth() - X_CAMERA_THRESHOLD) {
+            if (activeBossFight != null) {
+                gameRoot.setLayoutX(-offset);
+            } else if (offset > X_CAMERA_THRESHOLD && offset < platform.getTotalLevelWidth() - X_CAMERA_THRESHOLD) {
                 gameRoot.setLayoutX(-(offset - X_CAMERA_ADJUSTMENT));
             }
         };
@@ -890,22 +892,24 @@ public class GameController {
     private void checkForBossPresence() {
         final int[] bossLevels = {3};
         if (platform.getCurrentLevel() == bossLevels[0]) {
-            final int numberOfProjectiles = 10;
-            final int projectileWidth = 50;
-            final int startDelay = 2;
-            final int laserDuration = 3;
-            final int endDuration = 2;
-
             if (activeBossFight == null || activeBossFight.bossLevel != bossLevels[0]) {
-                Enemy hal = new Hal(windowWidth / 2, windowHeight);
+                final int numberOfProjectiles = 10;
+                final int projectileWidth = 50;
+                final int startDelay = 2;
+                final int laserDuration = 3;
+                final int endDuration = 2;
+
+                Enemy hal = new Hal(windowHeight);
                 activeBossFight = new BossFight(bossLevels[0], hal);
+
+                activeBossFight.startBossFight(numberOfProjectiles,
+                        projectileWidth, startDelay, laserDuration, endDuration);
             }
-            activeBossFight.startBossFight(numberOfProjectiles,
-                    projectileWidth, startDelay, laserDuration, endDuration);
         } else {
             if (activeBossFight != null) {
                 activeBossFight.endBossFight();
                 activeBossFight = null;
+                setUpCamera();
             }
         }
     }
@@ -920,6 +924,7 @@ public class GameController {
         private final Enemy activeBoss;
         private BossProjectileGenerator projectileGenerator;
         private Timeline projectileTimeline;
+        private boolean bossFightStarted;
 
         /**
          * Constructs a BossFight object.
@@ -943,21 +948,25 @@ public class GameController {
          */
         public void startBossFight(final int numberOfProjectiles, final int projectileWidth,
                                    final int startDelay, final int laserDuration, final int totalDuration) {
-            disableCamera();
+            if (!bossFightStarted) {
+                bossFightStarted = true;
+                player.teleportToLocation(INITIAL_PLAYER_X, INITIAL_PLAYER_Y);
+                disableCamera();
 
-            if (!gameRoot.getChildren().contains(activeBoss)) {
-                gameRoot.getChildren().add(activeBoss);
-            }
+                if (!gameRoot.getChildren().contains(activeBoss)) {
+                    gameRoot.getChildren().add(activeBoss);
+                }
 
-            if (this.projectileGenerator == null) {
-                this.projectileGenerator = new BossProjectileGenerator(numberOfProjectiles, windowWidth,
-                        windowHeight, projectileWidth);
-            }
+                if (this.projectileGenerator == null) {
+                    this.projectileGenerator = new BossProjectileGenerator(numberOfProjectiles, windowWidth,
+                            windowHeight, projectileWidth);
+                }
 
-            if (this.projectileTimeline == null) {
-                this.projectileTimeline = createProjectileTimeline(startDelay, laserDuration, totalDuration);
-                this.projectileTimeline.setCycleCount(Timeline.INDEFINITE);
-                this.projectileTimeline.play();
+                if (this.projectileTimeline == null) {
+                    this.projectileTimeline = createProjectileTimeline(startDelay, laserDuration, totalDuration);
+                    this.projectileTimeline.setCycleCount(Timeline.INDEFINITE);
+                    this.projectileTimeline.play();
+                }
             }
         }
 
@@ -1092,7 +1101,11 @@ public class GameController {
                         && collisionDetector.calculateCollisionPercentage(player, projectile)
                         > itemCollisionPercentage) {
                     if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
-                        player.getHurt();
+                        if (player.takeDamage(activeBoss.getAttackDamage()) <= 0) {
+                            System.out.println("Player died");
+                        } else {
+                            player.getHurt();
+                        }
                         uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         iterator.remove();
                         gameRoot.getChildren().remove(projectile);
