@@ -578,7 +578,7 @@ public class GameController {
     // Handle interactions with pickup items.
     private final class EnemyInteraction {
         final double hitBoxCollisionPercentage = 50;
-        ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
+        final ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
 
         /**
          * Constructs an EnemyInteraction object.
