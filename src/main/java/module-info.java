@@ -10,4 +10,5 @@ module ca.bcit.comp2522.termproject.pix {
     exports ca.bcit.comp2522.termproject.pix.model.weapon;
     exports ca.bcit.comp2522.termproject.pix.model.AttackEffect;
     exports ca.bcit.comp2522.termproject.pix.model.block;
+    exports ca.bcit.comp2522.termproject.pix.model.pickupitem;
 }
