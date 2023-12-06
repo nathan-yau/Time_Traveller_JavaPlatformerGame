@@ -10,6 +10,10 @@ import javafx.animation.Timeline;
 import javafx.animation.KeyValue;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -19,8 +23,12 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public class StandardBlock extends GameObject<BlockType> implements AnimatedObjects {
-    private SequentialTransition fallingAnimation;
+public class StandardBlock extends GameObject<BlockType> implements AnimatedObjects, Serializable {
+    private final int x;
+    private final int y;
+    private final int w;
+    private final int h;
+    private transient SequentialTransition fallingAnimation;
     /**
      * Constructs a StandardBlock.
      *
@@ -36,6 +44,10 @@ public class StandardBlock extends GameObject<BlockType> implements AnimatedObje
                          final String imagePath, final String imageName) {
         super(x, y, w, h, ObjectType.BLOCK, blockType, String.format("%s/%s.png",
                 imagePath, imageName));
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
         this.initializeFailing();
     }
     /**
@@ -53,6 +65,19 @@ public class StandardBlock extends GameObject<BlockType> implements AnimatedObje
                          final int currentLevel, final String imageName) {
         this(x, y, w, h, blockType, String.format("%d/%s",
                 currentLevel, blockType.name()), imageName);
+    }
+
+    /*
+     * Loads and sets up an existing StandardBlock.
+     */
+    @Serial
+    private void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
+        in.defaultReadObject();
+        this.setTranslateX(this.x);
+        this.setTranslateY(this.y);
+        this.setFitWidth(this.w);
+        this.setFitHeight(this.h);
+        this.initializeFailing();
     }
 
     /*
