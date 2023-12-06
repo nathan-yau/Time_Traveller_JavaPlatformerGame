@@ -402,13 +402,10 @@ public class UIManager {
         healthLabel.setTranslateY(labelYPosition);
     }
 
-    private void initialBossHealthBar() throws IOException {
+    private void initialBossHealthBar(){
         final int width = 500;
         final int height = 20;
-        final int fontSize = 13;
         final int barXPosition = 30;
-        final int labelXPosition = 20;
-        final int labelYPosition = 3;
         bossHealthBar.setPrefWidth(width);
         bossHealthBar.setPrefHeight(height);
         bossHealthBar.setTranslateX(barXPosition);

@@ -859,7 +859,7 @@ public class GameController {
             final int endDuration = 2;
 
             if (activeBossFight == null || activeBossFight.bossLevel != bossLevels[0]) {
-                Enemy hal = new Hal(windowWidth / 2, windowHeight - 130);
+                Enemy hal = new Hal(windowHeight - 130);
                 activeBossFight = new BossFight(bossLevels[0], hal);
             }
             activeBossFight.startBossFight(numberOfProjectiles,

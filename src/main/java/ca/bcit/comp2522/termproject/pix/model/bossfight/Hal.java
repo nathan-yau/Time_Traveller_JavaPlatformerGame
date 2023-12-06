@@ -23,7 +23,7 @@ public class Hal extends Boss {
      * @param x the x coordinate of Hal as an int
      * @param y the y coordinate of Hal as an int
      */
-    public Hal(final int x, final int y) {
+    public Hal(final int y) {
         super(INITIAL_HEALTH_POINTS, X_OFFSET - (WIDTH / 2), y + Y_OFFSET, WIDTH, HEIGHT,
                 EnemyType.HAL, ATTACK_POINT);
         this.setVisible(false);
