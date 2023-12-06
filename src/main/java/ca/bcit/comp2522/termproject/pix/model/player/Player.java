@@ -92,6 +92,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.currentXLocation = x;
     }
 
+    /*
+     * Loads and sets up an existing player.
+     */
     @Serial
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
