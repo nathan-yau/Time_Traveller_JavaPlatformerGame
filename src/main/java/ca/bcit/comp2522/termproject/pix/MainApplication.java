@@ -1,6 +1,7 @@
 package ca.bcit.comp2522.termproject.pix;
 
 import ca.bcit.comp2522.termproject.pix.gamecontroller.GameController;
+import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
@@ -56,14 +57,16 @@ public class MainApplication extends Application {
      * @param player the player of the game as a Player
      * @param loadedBlocks the blocks of the game as an ArrayList
      * @param loadedItems the pickup items of the game as an ArrayList
+     * @param loadedEnemies the enemies of the game as an ArrayList
      * @throws IOException if the game cannot be started
      */
     public void startGame(final int currentLevel, final Player player,
                           final ArrayList<ArrayList<StandardBlock>> loadedBlocks,
                           final ArrayList<ArrayList<PickUpItem>> loadedItems,
+                          final ArrayList<ArrayList<Enemy>> loadedEnemies,
                           final Stage stage) throws IOException {
         GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, currentLevel, player,
-                loadedBlocks, loadedItems, stage);
+                loadedBlocks, loadedItems, loadedEnemies, stage);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
         stage.setScene(scene);
@@ -86,7 +89,8 @@ public class MainApplication extends Application {
             Player loadedPlayer = (Player) ois.readObject();
             ArrayList<ArrayList<StandardBlock>> loadedBlocks = (ArrayList<ArrayList<StandardBlock>>) ois.readObject();
             ArrayList<ArrayList<PickUpItem>> loadedItems = (ArrayList<ArrayList<PickUpItem>>) ois.readObject();
-            this.startGame(loadedCurrentLevel, loadedPlayer, loadedBlocks, loadedItems, stage);
+            ArrayList<ArrayList<Enemy>> loadedEnemies = (ArrayList<ArrayList<Enemy>>) ois.readObject();
+            this.startGame(loadedCurrentLevel, loadedPlayer, loadedBlocks, loadedItems, loadedEnemies, stage);
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Loading error. Starting a new game.");
             GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
