@@ -7,6 +7,7 @@ import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 
+import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -16,7 +17,8 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public abstract class Enemy extends GameObject<EnemyType> implements Combative, Damageable, AnimatedObjects {
+public abstract class Enemy extends GameObject<EnemyType> implements Combative, Damageable,
+        AnimatedObjects, Serializable {
     private int healthPoint;
     private final double maxHealthPoint;
     private final String folderPath;
