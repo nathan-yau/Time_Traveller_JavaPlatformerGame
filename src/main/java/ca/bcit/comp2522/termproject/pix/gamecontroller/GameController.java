@@ -767,7 +767,7 @@ public class GameController {
         }
     }
     /* Listen to attack signals */
-    private void meleeAttackKeyListener() {
+    private void meleeAttackKeyListener() throws IOException {
         // Listen to melee attack signal
         if (isPressed(KeyCode.O)) {
             AttackEffect hitBox;
@@ -849,7 +849,7 @@ public class GameController {
     /*
      * Checks if this level is a boss level.
      */
-    private void checkForBossPresence() {
+    private void checkForBossPresence() throws IOException {
         final int[] bossLevels = {3};
         if (levelManager.getCurrentLevel() == bossLevels[0]) {
             final int numberOfProjectiles = 10;
@@ -904,12 +904,15 @@ public class GameController {
          * @param totalDuration the total duration of the boss attack
          */
         public void startBossFight(final int numberOfProjectiles, final int projectileWidth,
-                                   final int startDelay, final int laserDuration, final int totalDuration) {
+                                   final int startDelay, final int laserDuration, final int totalDuration) throws IOException {
             disableCamera();
 
             if (!gameRoot.getChildren().contains(activeBoss)) {
                 gameRoot.getChildren().add(activeBoss);
                 player.toFront();
+                uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                uiManager.refreshBossStatus();
+                uiRoot.getChildren().add(uiManager.getBossStatus());
             }
 
             if (this.projectileGenerator == null) {
@@ -988,7 +991,7 @@ public class GameController {
          * Interacts with the boss with melee weapons.
          * @param hitBox the melee attack hit box
          */
-        private void meleeWithBoss(final AttackEffect hitBox) {
+        private void meleeWithBoss(final AttackEffect hitBox) throws IOException {
             if (activeBoss.getDamageEnable()) {
                 AtomicBoolean found = new AtomicBoolean(false);
                 hitBox.startInitialEffect().thenAccept(isDone -> {
@@ -1014,6 +1017,8 @@ public class GameController {
                     } else {
                         activeBoss.getHurt();
                     }
+                    uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                    uiManager.refreshBossStatus();
                 }
             }
         }
@@ -1022,7 +1027,7 @@ public class GameController {
          * Interacts with the boss with range weapons.
          * @param existingRangeHitBox the existing range hit box
          */
-        private void rangeWithBoss(final AttackEffect existingRangeHitBox) {
+        private void rangeWithBoss(final AttackEffect existingRangeHitBox) throws IOException {
             if (activeBoss.getDamageEnable()) {
                 if (collisionDetector.objectIntersect(existingRangeHitBox, activeBoss) & activeBoss.getDamageEnable()) {
                     final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
@@ -1033,6 +1038,8 @@ public class GameController {
                         this.endBossFight();
                         startVictoryCondition(stage);
                     }
+                    uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                    uiManager.refreshBossStatus();
                 }
             }
         }
@@ -1040,7 +1047,7 @@ public class GameController {
         /*
          * Interacts with the boss.
          */
-        private void interactWithBoss() {
+        private void interactWithBoss() throws IOException {
             AttackEffect existingRangeHitBox = player.getRangeHitBox();
             if (existingRangeHitBox != null) {
                 this.rangeWithBoss(existingRangeHitBox);
