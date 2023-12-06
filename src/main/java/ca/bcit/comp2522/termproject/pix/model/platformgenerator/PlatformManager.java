@@ -46,9 +46,6 @@ public class PlatformManager {
     private final ArrayList<ArrayList<StandardBlock>> totalBlockArray;
     private final ArrayList<ArrayList<Enemy>> totalEnemyArray;
     private final ArrayList<ArrayList<PickUpItem>> totalPickUpItemArray;
-    private final boolean isLoadedBlocks;
-    private final boolean isLoadedItems;
-    private final boolean isLoadedEnemies;
     // The array of blocks that make up the game platform.
     private ArrayList<StandardBlock> blockArray;
 
@@ -78,13 +75,10 @@ public class PlatformManager {
                            final ArrayList<ArrayList<Enemy>> loadedEnemies) {
         this.totalBlockArray = loadedBlocks;
         this.blockArray = new ArrayList<>();
-        this.isLoadedBlocks = !loadedBlocks.isEmpty();
         this.totalPickUpItemArray = loadedItems;
         this.pickUpItemArray = new ArrayList<>();
-        this.isLoadedItems = !loadedItems.isEmpty();
         this.enemyArray = new ArrayList<>();
         this.totalEnemyArray = loadedEnemies;
-        this.isLoadedEnemies = !loadedEnemies.isEmpty();
         this.levelManager = levelController;
         this.levelWidth = levelManager.getCurrentLevelWidth();
         this.levelHeight = levelManager.getCurrentLevelHeight();
