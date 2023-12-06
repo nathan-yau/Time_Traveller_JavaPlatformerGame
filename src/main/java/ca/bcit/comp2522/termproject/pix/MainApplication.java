@@ -1,6 +1,7 @@
 package ca.bcit.comp2522.termproject.pix;
 
 import ca.bcit.comp2522.termproject.pix.gamecontroller.GameController;
+import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import ca.bcit.comp2522.termproject.pix.screens.Screen;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -9,8 +10,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.LinkedHashMap;
 
 /**
@@ -43,6 +46,49 @@ public class MainApplication extends Application {
     }
 
     /**
+     * Starts the Game.
+     *
+     * @param stage the stage to run the game in as a Stage
+     * @param currentLevel the current level of the game as an int
+     * @param player the player of the game as a Player
+     * @throws IOException if the game cannot be started
+     */
+    public void startGame(final int currentLevel, final Player player, final Stage stage) throws IOException {
+        GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, currentLevel,
+                player, stage);
+        Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        stage.setScene(scene);
+        gameApp.insertKeyboardListeners();
+
+        System.out.println("Game loaded successfully.");
+        gameApp.startGameLoop();
+    }
+
+    /**
+     * Loads the Game.
+     *
+     * @param stage the stage to run the game in as a Stage
+     * @throws IOException if the game cannot be started
+     */
+    public void loadGame(final Stage stage) throws IOException {
+        try {
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream("gameState.sav"));
+            int loadedCurrentLevel = (int) ois.readObject();
+            Player loadedPlayer = (Player) ois.readObject();
+            this.startGame(loadedCurrentLevel, loadedPlayer, stage);
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("No saved data found. Starting a new game.");
+            GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
+            Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
+
+            stage.setScene(scene);
+            gameApp.insertKeyboardListeners();
+            gameApp.startGameLoop();
+        }
+    }
+
+    /**
      * Creates the menu screen.
      *
      * @param stage the stage to run the menu screen in as a Stage
@@ -65,7 +111,13 @@ public class MainApplication extends Application {
                 throw new RuntimeException(e);
             }
         });
-        menuItems.put("Load", () -> System.out.println("Load"));
+        menuItems.put("Load", () -> {
+            try {
+                loadGame(stage);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
         menuItems.put("Quit", Platform::exit);
 
         Screen menuScreen = new Screen(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -73,9 +125,7 @@ public class MainApplication extends Application {
         menuScreen.addBackground("menuBg.gif");
         menuScreen.addTitle("Lowkey Time Travellers", Color.WHITE, TextAlignment.LEFT,
                 maxMenuTitleWidth, titleXOffset, titleYOffset);
-        menuScreen.addMenu(menuItems, TextAlignment.LEFT, menuBoxXOffset,
-                menuBoxYOffset, menuBoxItemTopPadding);
-
+        menuScreen.addMenu(menuItems, TextAlignment.LEFT, menuBoxXOffset, menuBoxYOffset, menuBoxItemTopPadding);
         return menuScreen;
     }
 
