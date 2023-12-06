@@ -6,6 +6,8 @@ import javafx.geometry.Bounds;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import java.io.Serializable;
+
 /**
  * Represents an object in the game that has coordinates.
  *
@@ -14,7 +16,7 @@ import javafx.scene.image.ImageView;
  * @version 2023-11
  * @param <T> the type of the object
  */
-public abstract class GameObject<T extends GameType> extends ImageView {
+public abstract class GameObject<T extends GameType> extends ImageView implements Serializable {
     // The name of the object.
     private final T objectSubtype;
 
