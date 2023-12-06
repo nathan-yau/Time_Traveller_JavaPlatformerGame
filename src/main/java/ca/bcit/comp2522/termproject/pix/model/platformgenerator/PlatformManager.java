@@ -46,8 +46,9 @@ public class PlatformManager {
     private final ArrayList<ArrayList<StandardBlock>> totalBlockArray;
     private final ArrayList<ArrayList<Enemy>> totalEnemyArray;
     private final ArrayList<ArrayList<PickUpItem>> totalPickUpItemArray;
-    private final boolean loadedBlocks;
-    private final boolean loadedItems;
+    private final boolean isLoadedBlocks;
+    private final boolean isLoadedItems;
+    private final boolean isLoadedEnemies;
     // The array of blocks that make up the game platform.
     private ArrayList<StandardBlock> blockArray;
 
@@ -69,19 +70,21 @@ public class PlatformManager {
     /**
      * Constructs a PlatformManager.
      * @param levelController the current level manager
-     * @param loadedBlocks the previously-loaded blocks as an ArrayList (can be empty)
-     * @param loadedItems the previously-loaded pickup items as an ArrayList (can be empty)
+     * @param isLoadedBlocks the previously-loaded blocks as an ArrayList (can be empty)
+     * @param isLoadedItems the previously-loaded pickup items as an ArrayList (can be empty)
      */
     public PlatformManager(final LevelManager levelController, final ArrayList<ArrayList<StandardBlock>> loadedBlocks,
-                           final ArrayList<ArrayList<PickUpItem>> loadedItems) {
+                           final ArrayList<ArrayList<PickUpItem>> loadedItems,
+                           final ArrayList<ArrayList<Enemy>> loadedEnemies) {
         this.totalBlockArray = loadedBlocks;
         this.blockArray = new ArrayList<>();
-        this.loadedBlocks = !loadedBlocks.isEmpty();
+        this.isLoadedBlocks = !loadedBlocks.isEmpty();
         this.totalPickUpItemArray = loadedItems;
         this.pickUpItemArray = new ArrayList<>();
-        this.loadedItems = !loadedItems.isEmpty();
-        this.totalEnemyArray = new ArrayList<>();
+        this.isLoadedItems = !loadedItems.isEmpty();
         this.enemyArray = new ArrayList<>();
+        this.totalEnemyArray = loadedEnemies;
+        this.isLoadedEnemies = !loadedEnemies.isEmpty();
         this.levelManager = levelController;
         this.levelWidth = levelManager.getCurrentLevelWidth();
         this.levelHeight = levelManager.getCurrentLevelHeight();
@@ -133,6 +136,15 @@ public class PlatformManager {
     }
 
     /**
+     * Gets the array of enemies on all levels.
+     *
+     * @return the list of enemies as an ArrayList
+     */
+    public ArrayList<ArrayList<Enemy>> getTotalEnemyArray() {
+        return this.totalEnemyArray;
+    }
+
+    /**
      * Creates the game platform.
      */
     public void createGamePlatform() {
@@ -151,76 +163,76 @@ public class PlatformManager {
                     final int yPosition = row * BLOCK_HEIGHT;
                     final int yPadding = 10;
                     char categorySymbol = line.charAt(col);
-                    if (categorySymbol == '0' && !loadedBlocks) {
+                    if (categorySymbol == '0' && !isLoadedBlocks) {
                         PlatformPosition imageIndex = getImageForPlatformBlock(
                                 row, col, currentLevelData, categorySymbol);
                         StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
                                 BlockType.SOLID_BLOCK, i, imageIndex.name());
                         totalBlockArray.get(i).add(solidBlock);
-                    } else if (categorySymbol == '1' && !loadedBlocks) {
+                    } else if (categorySymbol == '1' && !isLoadedBlocks) {
                         PlatformPosition imageIndex = getImageForPlatformBlock(
                                 row, col, currentLevelData, categorySymbol);
                         StandardBlock movingBlock = new MovingBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT + movingBlockYPadding, i, imageIndex.name());
                         totalBlockArray.get(i).add(movingBlock);
-                    } else if (categorySymbol == '2' && !loadedBlocks) {
+                    } else if (categorySymbol == '2' && !isLoadedBlocks) {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.LADDERS, i, "ladder");
                         totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == '3' && !loadedBlocks) {
+                    } else if (categorySymbol == '3' && !isLoadedBlocks) {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, i, "rope");
                         totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == '4' && !loadedBlocks) {
+                    } else if (categorySymbol == '4' && !isLoadedBlocks) {
                         StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, BlockType.TESTING_BLOCK, i, "dirt");
                         totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == 'P' && !loadedItems) {
+                    } else if (categorySymbol == 'P' && !isLoadedItems) {
                         HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
                                 BLOCK_HEIGHT + yPadding);
                         totalPickUpItemArray.get(i).add(healthPotion);
-                    } else if (categorySymbol == 'E' && !loadedItems) {
+                    } else if (categorySymbol == 'E' && !isLoadedItems) {
                         Energy battery = new Energy(xPosition, yPosition - yPadding, BLOCK_WIDTH,
                                 BLOCK_HEIGHT + yPadding);
                         totalPickUpItemArray.get(i).add(battery);
-                    } else if (categorySymbol == 'D') {
+                    } else if (categorySymbol == 'D' && !isLoadedEnemies) {
                         Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                                 yPosition + BLOCK_HEIGHT, i, true, false);
                         totalEnemyArray.get(i).add(minion);
                         Thread minionThread = new Thread(minion);
                         minionThread.setDaemon(true);
                         minionThread.start();
-                    } else if (categorySymbol == 'B') {
+                    } else if (categorySymbol == 'B' && !isLoadedEnemies) {
                         Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                                 yPosition + BLOCK_HEIGHT, i, false, true);
                         totalEnemyArray.get(i).add(minion);
                         Thread minionThread = new Thread(minion);
                         minionThread.setDaemon(true);
                         minionThread.start();
-                    } else if (categorySymbol == 'C') {
+                    } else if (categorySymbol == 'C' && !isLoadedEnemies) {
                         Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
                                 yPosition + BLOCK_HEIGHT, i, true, true);
                         totalEnemyArray.get(i).add(minion);
                         Thread minionThread = new Thread(minion);
                         minionThread.setDaemon(true);
                         minionThread.start();
-                    } else if (categorySymbol == 'M' && !loadedItems) {
+                    } else if (categorySymbol == 'M' && !isLoadedItems) {
                         WeaponPickup weapon = new WeaponPickup(xPosition, yPosition - yPadding, BLOCK_WIDTH,
                                 BLOCK_HEIGHT + yPadding, PickUpItemType.MELEE_WEAPON);
                         totalPickUpItemArray.get(i).add(weapon);
-                    } else if (categorySymbol == 'R' && !loadedItems) {
+                    } else if (categorySymbol == 'R' && !isLoadedItems) {
                         WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT, PickUpItemType.RANGE_WEAPON);
                         totalPickUpItemArray.get(i).add(weapon);
-                    } else if (categorySymbol == 'S' && !loadedItems) {
+                    } else if (categorySymbol == 'S' && !isLoadedItems) {
                         SaveEvent saveItem = new SaveEvent(xPosition, yPosition, BLOCK_WIDTH,
                                 BLOCK_HEIGHT);
                         totalPickUpItemArray.get(i).add(saveItem);
-                    } else if (categorySymbol == 'F' && !loadedItems) {
+                    } else if (categorySymbol == 'F' && !isLoadedItems) {
                         BossEvent bossItem = new BossEvent(xPosition, yPosition - yPadding, BLOCK_WIDTH,
                                 BLOCK_HEIGHT + yPadding);
                         totalPickUpItemArray.get(i).add(bossItem);
-                    } else if (categorySymbol == 'A' && !loadedItems) {
+                    } else if (categorySymbol == 'A' && !isLoadedItems) {
                         Ammo ammo = new Ammo(xPosition, yPosition - yPadding, BLOCK_WIDTH,
                                 BLOCK_HEIGHT + yPadding);
                         totalPickUpItemArray.get(i).add(ammo);
