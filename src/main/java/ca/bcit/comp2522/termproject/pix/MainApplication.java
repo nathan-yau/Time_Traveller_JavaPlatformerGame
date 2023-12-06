@@ -34,13 +34,13 @@ public class MainApplication extends Application {
     /** Height of the window. */
     public static final int WINDOW_HEIGHT = 720;
 
-    /**
+    /*
      * Starts the Game.
      *
      * @param stage the stage to run the game in as a Stage
      * @throws IOException if the game cannot be started
      */
-    public void startGame(final Stage stage) throws IOException {
+    private void startGame(final Stage stage) throws IOException {
         GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -49,7 +49,7 @@ public class MainApplication extends Application {
         gameApp.startGameLoop();
     }
 
-    /**
+    /*
      * Starts the Game.
      *
      * @param stage the stage to run the game in as a Stage
@@ -60,7 +60,7 @@ public class MainApplication extends Application {
      * @param loadedEnemies the enemies of the game as an ArrayList
      * @throws IOException if the game cannot be started
      */
-    public void startGame(final int currentLevel, final Player player,
+    private void startGame(final int currentLevel, final Player player,
                           final ArrayList<ArrayList<StandardBlock>> loadedBlocks,
                           final ArrayList<ArrayList<PickUpItem>> loadedItems,
                           final ArrayList<ArrayList<Enemy>> loadedEnemies,
@@ -76,13 +76,13 @@ public class MainApplication extends Application {
         gameApp.startGameLoop();
     }
 
-    /**
+    /*
      * Loads the Game.
      *
      * @param stage the stage to run the game in as a Stage
      * @throws IOException if the game cannot be started
      */
-    public void loadGame(final Stage stage) throws IOException {
+    private void loadGame(final Stage stage) throws IOException {
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream("gameState.sav"));
             int loadedCurrentLevel = (int) ois.readObject();
