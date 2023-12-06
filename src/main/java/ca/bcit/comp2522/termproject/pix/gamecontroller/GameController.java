@@ -89,7 +89,6 @@ public class GameController {
     private final UIManager uiManager;
     private boolean switching = false;
     private boolean endGameConditionReached;
-    private boolean gameLoadedFromSave;
 
     /**
      * Constructs a GameController object with default values.
@@ -129,7 +128,9 @@ public class GameController {
         this.rangeTargetHit = false;
         this.playerX = this.player.translateXProperty();
         this.setBackground(this.getLevelBackground());
-        this.platform.createGamePlatform();
+        if (gameBlocks.isEmpty() || gameItems.isEmpty() || gameEnemies.isEmpty()) {
+            this.platform.createGamePlatform();
+        }
         this.setUpPlatform();
         this.setCachedBlockArray();
         this.endGameConditionReached = false;
@@ -140,7 +141,6 @@ public class GameController {
         this.player.refreshPlayerImage();
         this.setUpCamera();
         playerXListener.changed(this.playerX, 0, this.player.getCenterX());
-        this.gameLoadedFromSave = true;
     }
 
     /**
@@ -155,7 +155,6 @@ public class GameController {
     public GameController(final int windowWidth, final int windowHeight, final Stage stage) throws IOException {
         this(windowWidth, windowHeight, 0, new Player(INITIAL_PLAYER_X, INITIAL_PLAYER_Y,
                 "Player/idle.png"), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), stage);
-        this.gameLoadedFromSave = false;
     }
 
     /* Set up the initial ui layout. */
