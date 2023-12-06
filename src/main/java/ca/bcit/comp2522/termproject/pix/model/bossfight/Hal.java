@@ -16,15 +16,25 @@ public class Hal extends Boss {
     private static final int WIDTH = 180;
     private static final int HEIGHT = 180;
     private static final int ATTACK_POINT = 15;
+    private static final int ATTACK_DAMAGE = 3;
 
     /**
      * Constructs a Hal boss.
      *
-     * @param x the x coordinate of Hal as an int
      * @param y the y coordinate of Hal as an int
      */
-    public Hal(final int x, final int y) {
+    public Hal(final int y) {
         super(INITIAL_HEALTH_POINTS, X_OFFSET - (WIDTH / 2), y + Y_OFFSET, WIDTH, HEIGHT,
                 EnemyType.HAL, ATTACK_POINT);
+    }
+
+    /**
+     * Gets the attack damage to Hal.
+     *
+     * @return an int representing the attack damage to Hal
+     */
+    @Override
+    public int getAttackDamage() {
+        return ATTACK_DAMAGE;
     }
 }
