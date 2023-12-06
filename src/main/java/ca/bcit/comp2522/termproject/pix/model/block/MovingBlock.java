@@ -41,6 +41,7 @@ public class MovingBlock extends StandardBlock implements Serializable {
     public MovingBlock(final int x, final int y, final int w, final int h,
                        final int currentLevel, final String imageName) {
         super(x, y, w, h, BlockType.MOVING_BLOCK, currentLevel, imageName);
+        this.initializeMoving();
     }
 
     /*
