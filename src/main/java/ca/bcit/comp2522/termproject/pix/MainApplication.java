@@ -40,7 +40,7 @@ public class MainApplication extends Application {
      * @param stage the stage to run the game in as a Stage
      * @throws IOException if the game cannot be started
      */
-    private void startGame(final Stage stage) throws IOException {
+    public static void startGame(final Stage stage) throws IOException {
         GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -113,8 +113,8 @@ public class MainApplication extends Application {
         final int titleXOffset = 75;
         final int titleYOffset = 410;
 
-        final int menuBoxXOffset = 75;
-        final int menuBoxYOffset = 505;
+        final int menuBoxXOffset = 80;
+        final int menuBoxYOffset = 525;
         final int menuBoxItemTopPadding = 20;
 
         final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
