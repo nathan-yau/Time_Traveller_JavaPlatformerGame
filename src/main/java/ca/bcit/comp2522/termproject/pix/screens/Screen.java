@@ -4,7 +4,6 @@ import ca.bcit.comp2522.termproject.pix.Command;
 import ca.bcit.comp2522.termproject.pix.screens.screenelements.BodyText;
 import ca.bcit.comp2522.termproject.pix.screens.screenelements.MenuItem;
 import ca.bcit.comp2522.termproject.pix.screens.screenelements.TitleText;
-import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
