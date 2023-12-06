@@ -48,12 +48,8 @@ public abstract class PickUpItem extends GameObject<PickUpItemType> implements S
     @Serial
     private void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
         in.defaultReadObject();
-        this.setTranslateX(this.x);
-        this.setTranslateY(this.y);
-        this.setFitWidth(this.w);
-        this.setFitHeight(this.h);
+        this.restoreGameObject(this.x, this.y, this.w, this.h);
     }
-
 
     /**
      * Disappear the pickup item.
