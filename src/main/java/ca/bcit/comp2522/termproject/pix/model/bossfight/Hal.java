@@ -20,7 +20,6 @@ public class Hal extends Boss {
     /**
      * Constructs a Hal boss.
      *
-     * @param x the x coordinate of Hal as an int
      * @param y the y coordinate of Hal as an int
      */
     public Hal(final int y) {
