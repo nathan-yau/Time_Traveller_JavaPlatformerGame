@@ -64,6 +64,21 @@ public abstract class GameObject<T extends GameType> extends ImageView implement
     }
 
     /**
+     * Restores the game object to its saved dimensions and coordinates.
+     *
+     * @param x the x-coordinate of the game object as a double
+     * @param y the y-coordinate of the game object as a double
+     * @param w the width of the game object as a double
+     * @param h the height of the game object as a double
+     */
+    public void restoreGameObject(final double x, final double y, final double w, final double h) {
+        this.setTranslateX(x);
+        this.setTranslateY(y);
+        this.setFitWidth(w);
+        this.setFitHeight(h);
+    }
+
+    /**
      * Gets the type of the game object.
      *
      * @return the subtype of the game object as an ObjectType
