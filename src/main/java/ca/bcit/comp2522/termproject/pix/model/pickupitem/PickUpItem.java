@@ -5,6 +5,11 @@ import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import javafx.animation.PauseTransition;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * Represents an item that can be picked up.
  *
@@ -12,7 +17,11 @@ import javafx.util.Duration;
  * @author Derek Woo
  * @version 2023-11
  */
-public abstract class PickUpItem extends GameObject<PickUpItemType> {
+public abstract class PickUpItem extends GameObject<PickUpItemType> implements Serializable {
+    private final int x;
+    private final int y;
+    private final int w;
+    private final int h;
 
     /**
      * Constructs a PickUpItem.
@@ -27,7 +36,24 @@ public abstract class PickUpItem extends GameObject<PickUpItemType> {
                       final PickUpItemType pickUpItemType) {
         super(x, y, w, h, ObjectType.ITEM, pickUpItemType,
                 String.format("item/%s.png",  pickUpItemType.name()));
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
     }
+
+    /*
+     * Loads and sets up an existing Pick Up Item.
+     */
+    @Serial
+    private void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
+        in.defaultReadObject();
+        this.setTranslateX(this.x);
+        this.setTranslateY(this.y);
+        this.setFitWidth(this.w);
+        this.setFitHeight(this.h);
+    }
+
 
     /**
      * Disappear the pickup item.
