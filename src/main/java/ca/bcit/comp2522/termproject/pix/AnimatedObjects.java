@@ -1,7 +1,6 @@
 package ca.bcit.comp2522.termproject.pix;
 
 import javafx.animation.ParallelTransition;
-import javafx.animation.PauseTransition;
 import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
 
