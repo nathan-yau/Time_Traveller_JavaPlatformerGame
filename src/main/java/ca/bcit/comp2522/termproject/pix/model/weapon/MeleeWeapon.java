@@ -1,5 +1,7 @@
 package ca.bcit.comp2522.termproject.pix.model.weapon;
 
+import java.io.Serializable;
+
 /**
  * Represents a melee weapon.
  *
@@ -7,7 +9,7 @@ package ca.bcit.comp2522.termproject.pix.model.weapon;
  * @author Derek Woo
  * @version 2023-11
  */
-public class MeleeWeapon extends Weapon {
+public class MeleeWeapon extends Weapon implements Serializable {
     private static final double MELEE_HIT_RATE = 0.8;
     /**
      * Constructs a Melee Weapon.
