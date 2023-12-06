@@ -823,7 +823,7 @@ public class GameController {
 
     /* Listen to switch platform signals */
     private void switchPlatformKeyListener() throws IOException {
-        if (isPressed(KeyCode.L)) {
+        if (isPressed(KeyCode.L) & activeBossFight == null) {
             if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.nextLevel();
                 this.switchLevel(levelManager.getCurrentLevel(), false);
@@ -834,7 +834,7 @@ public class GameController {
             }
         }
 
-        if (isPressed(KeyCode.K)) {
+        if (isPressed(KeyCode.K) & activeBossFight == null) {
             if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.previousLevel();
                 this.switchLevel(levelManager.getCurrentLevel(), false);
@@ -918,6 +918,7 @@ public class GameController {
 
             if (this.projectileTimeline == null) {
                 this.projectileTimeline = createProjectileTimeline(startDelay, laserDuration, totalDuration);
+                System.out.println("In");
                 this.projectileTimeline.setCycleCount(Timeline.INDEFINITE);
                 this.projectileTimeline.play();
             }
@@ -940,6 +941,7 @@ public class GameController {
                                 gameRoot.getChildren().add(projectile);
                             }
                         }
+                        setBackground("background/attack.gif");
                     }),
 
                     new KeyFrame(Duration.seconds(projectileDamageDelay + startDelay), event -> {
@@ -954,6 +956,7 @@ public class GameController {
                             gameRoot.getChildren().remove(laser);
                             iterator.remove();
                         }
+                        setBackground("background/error.gif");
                     }),
                     new KeyFrame(Duration.seconds(laserDuration + projectileDamageDelay + startDelay + endDelay))
             );
@@ -1054,6 +1057,7 @@ public class GameController {
                         && collisionDetector.calculateCollisionPercentage(player, projectile)
                         > itemCollisionPercentage) {
                     if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
+                        player.takeDamage(1);
                         player.getHurt();
                         uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         iterator.remove();
