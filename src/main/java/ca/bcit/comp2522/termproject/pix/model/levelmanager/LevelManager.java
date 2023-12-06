@@ -17,14 +17,6 @@ public class LevelManager {
     private String[] currentLevelLayout;
 
     /**
-     * Constructs a LevelManager.
-     */
-    public LevelManager() {
-        this.currentLevel = 0;
-        this.currentLevelLayout = LevelLayout.getLevelData(this.currentLevel);
-    }
-
-    /**
      * Constructs a LevelManager with a specific current level.
      */
     public LevelManager(int currentLevel) {
