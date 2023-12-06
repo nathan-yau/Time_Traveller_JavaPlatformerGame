@@ -73,10 +73,7 @@ public class StandardBlock extends GameObject<BlockType> implements AnimatedObje
     @Serial
     private void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
         in.defaultReadObject();
-        this.setTranslateX(this.x);
-        this.setTranslateY(this.y);
-        this.setFitWidth(this.w);
-        this.setFitHeight(this.h);
+        this.restoreGameObject(this.x, this.y, this.w, this.h);
         this.initializeFailing();
     }
 
