@@ -34,9 +34,6 @@ import java.util.concurrent.CompletableFuture;
  * @version 2023
  */
 public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable, Serializable {
-    @Serial
-    private static final long serialVersionUID = -7081347089777343847L;
-
     private static final int MAX_HEALTH_POINTS = 20;
     private static final double WALK_SPEED = 5;
     private static final double RUN_SPEED = 10;
@@ -100,8 +97,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         in.defaultReadObject();
         this.velocity = new Point2D(0, 0);
         this.currentImagePath = "Player/idle.png";
-        this.setTranslateX(this.currentXLocation);
-        this.setTranslateY(this.currentYLocation);
+        this.restoreGameObject(this.currentXLocation, this.currentYLocation, this.getFitWidth(), this.getFitHeight());
         this.initializeAnimations();
     }
 
