@@ -1,6 +1,7 @@
 package ca.bcit.comp2522.termproject.pix;
 
 import ca.bcit.comp2522.termproject.pix.gamecontroller.GameController;
+import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import ca.bcit.comp2522.termproject.pix.screens.Screen;
 import javafx.application.Application;
@@ -14,6 +15,7 @@ import javafx.stage.Stage;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 /**
@@ -51,11 +53,14 @@ public class MainApplication extends Application {
      * @param stage the stage to run the game in as a Stage
      * @param currentLevel the current level of the game as an int
      * @param player the player of the game as a Player
+     * @param loadedBlocks the blocks of the game as an ArrayList
      * @throws IOException if the game cannot be started
      */
-    public void startGame(final int currentLevel, final Player player, final Stage stage) throws IOException {
-        GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, currentLevel,
-                player, stage);
+    public void startGame(final int currentLevel, final Player player,
+                          final ArrayList<ArrayList<StandardBlock>> loadedBlocks,
+                          final Stage stage) throws IOException {
+        GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, currentLevel, player,
+                loadedBlocks, stage);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
         stage.setScene(scene);
@@ -76,9 +81,10 @@ public class MainApplication extends Application {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream("gameState.sav"));
             int loadedCurrentLevel = (int) ois.readObject();
             Player loadedPlayer = (Player) ois.readObject();
-            this.startGame(loadedCurrentLevel, loadedPlayer, stage);
+            ArrayList<ArrayList<StandardBlock>> loadedBlocks = (ArrayList<ArrayList<StandardBlock>>) ois.readObject();
+            this.startGame(loadedCurrentLevel, loadedPlayer, loadedBlocks, stage);
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("No saved data found. Starting a new game.");
+            System.err.println("Loading error. Starting a new game.");
             GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
             Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
