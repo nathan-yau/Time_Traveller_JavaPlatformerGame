@@ -99,11 +99,13 @@ public class GameController {
      * @param currentLevel the current level stage
      * @param player the player loaded from save
      * @param gameBlocks previously-loaded game blocks to as an Arraylist
+     * @param gameItems previously-loaded game pickup items as an Arraylist
      * @param stage the current application stage
      * @throws IOException if the image is not found
      */
     public GameController(final int windowWidth, final int windowHeight, final int currentLevel, final Player player,
-                          final ArrayList<ArrayList<StandardBlock>> gameBlocks, final Stage stage) throws IOException {
+                          final ArrayList<ArrayList<StandardBlock>> gameBlocks,
+                          final ArrayList<ArrayList<PickUpItem>> gameItems, final Stage stage) throws IOException {
         this.player = player;
         this.stage = stage;
         this.windowWidth = windowWidth;
@@ -112,7 +114,7 @@ public class GameController {
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
         this.levelManager = new LevelManager(currentLevel);
-        this.platform = new PlatformManager(levelManager, gameBlocks);
+        this.platform = new PlatformManager(levelManager, gameBlocks, gameItems);
         this.keyboardChecker = new HashMap<>();
         this.cachedBlockArray = new ArrayList<>();
         this.collisionDetector = new CollisionDetector();
@@ -148,7 +150,7 @@ public class GameController {
      */
     public GameController(final int windowWidth, final int windowHeight, final Stage stage) throws IOException {
         this(windowWidth, windowHeight, 0, new Player(INITIAL_PLAYER_X,
-                INITIAL_PLAYER_Y, "Player/idle.png"), new ArrayList<>(), stage);
+                INITIAL_PLAYER_Y, "Player/idle.png"), new ArrayList<>(), new ArrayList<>(), stage);
     }
 
     /* Set up the initial ui layout. */
@@ -189,6 +191,7 @@ public class GameController {
 
         for (PickUpItem item: platform.getItemArray()) {
             gameRoot.getChildren().add(item);
+            item.reloadImage();
         }
 
         for (Enemy enemy: platform.getEnemyArray()) {
@@ -1207,6 +1210,7 @@ public class GameController {
             oos.writeObject(this.platform.getCurrentLevel());
             oos.writeObject(this.player);
             oos.writeObject(platform.getTotalBlockArray());
+            oos.writeObject(platform.getTotalItemArray());
             System.out.println("Game state saved successfully.");
         } catch (IOException e) {
             e.printStackTrace();
