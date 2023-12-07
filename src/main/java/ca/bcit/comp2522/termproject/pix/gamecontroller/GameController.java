@@ -50,10 +50,7 @@ import javafx.util.Duration;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -1246,7 +1243,7 @@ public class GameController {
      */
     private void saveGameState() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("gameState.sav"))) {
-            oos.writeObject(this.platform.getCurrentLevel());
+            oos.writeObject(this.levelManager.getCurrentLevel());
             oos.writeObject(this.player);
             oos.writeObject(this.platform.getTotalBlockArray());
             oos.writeObject(this.platform.getTotalItemArray());

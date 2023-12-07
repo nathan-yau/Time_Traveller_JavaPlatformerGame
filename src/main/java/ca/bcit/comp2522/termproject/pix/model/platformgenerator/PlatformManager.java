@@ -242,6 +242,17 @@ public class PlatformManager {
         pickUpItemArray = totalPickUpItemArray.get(levelManager.getCurrentLevel());
     }
 
+    /**
+     * Sets the next level arrays.
+     *
+     * @param level the level to set as an int
+     */
+    public void setLevelArrays(final int level) {
+        blockArray = totalBlockArray.get(level);
+        enemyArray = totalEnemyArray.get(level);
+        pickUpItemArray = totalPickUpItemArray.get(level);
+    }
+
     // Determines the type of minion.
     private Minion determineMinionType(final int xAxis, final int yAxis,
                                        final int currentLevel, final boolean xWalker, final boolean airWalker) {
