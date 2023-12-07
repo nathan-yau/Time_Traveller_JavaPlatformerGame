@@ -376,7 +376,7 @@ public class GameController {
             return distance <= yTolerance;
         }
 
-        /**
+        /*
          * Checks if the two objects are on the same x-axis.
          * @param firstGameObject the first game object
          * @param secondGameObject the second game object
@@ -389,12 +389,34 @@ public class GameController {
             boolean firstObjectInside = secondGameObject.getMinX() <= firstGameObject.getMinX()
                     && secondGameObject.getMaxX() >= firstGameObject.getMaxX();
             // Check if the first object is on the left edge of the second object
-            boolean firstObjectOnLeft = secondGameObject.getMinX() >= firstGameObject.getMinX()
-                    && firstGameObject.getMaxX() >= secondGameObject.getMinX() + edgeOffset;
+            boolean firstObjectOnLeft = objectOnLeft(firstGameObject, secondGameObject);
             // Check if the first object is on the right edge of the second object
-            boolean firstObjectOnRight = firstGameObject.getMaxX() >= secondGameObject.getMaxX()
-                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
+            boolean firstObjectOnRight = objectOnRight(firstGameObject, secondGameObject);
             return firstObjectInside || firstObjectOnLeft || firstObjectOnRight;
+        }
+
+        /* Checks if the first object is on the left edge of the second object.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the first object is on the left edge of the second object, false otherwise
+         */
+        private boolean objectOnLeft(final GameObject<? extends GameType> firstGameObject,
+                                     final GameObject<? extends GameType> secondGameObject) {
+            final int edgeOffset = 10;
+            return secondGameObject.getMinX() >= firstGameObject.getMinX()
+                    && firstGameObject.getMaxX() >= secondGameObject.getMinX() + edgeOffset;
+        }
+
+        /* Checks if the first object is on the right edge of the second object.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the first object is on the right edge of the second object, false otherwise
+         */
+        private boolean objectOnRight(final GameObject<? extends GameType> firstGameObject,
+                                     final GameObject<? extends GameType> secondGameObject) {
+            final int edgeOffset = 10;
+            return firstGameObject.getMaxX() >= secondGameObject.getMaxX()
+                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
         }
 
         /**
@@ -459,6 +481,7 @@ public class GameController {
             final double vectorY = player.getVelocityY();
             final boolean movingDown = vectorY > 0;
             boolean onLadder = false;
+            player.resetKnockBack();
             for (int i = 0; i < Math.abs(vectorY); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
@@ -475,6 +498,11 @@ public class GameController {
                                 interactWithDisappearingBlocks(block);
                             }
                             return;
+                        }
+                        if (collisionDetector.objectOnLeft(player, block)) {
+                            player.disableForwardKnockBack();
+                        } else if (collisionDetector.objectOnRight(player, block)) {
+                            player.disableBackwardKnockBack();
                         }
                     }
                 }
@@ -682,6 +710,8 @@ public class GameController {
                         } else {
                             player.getHurt();
                         }
+                        player.knockBack(!(player.getBoundsInParent().getCenterX()
+                                < enemy.getBoundsInParent().getCenterX()));
                         uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         return;
                 }
@@ -1127,6 +1157,8 @@ public class GameController {
                         } else {
                             player.getHurt();
                         }
+                        player.knockBack(!(player.getBoundsInParent().getCenterX()
+                                < projectile.getBoundsInParent().getCenterX()));
                         uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
                         iterator.remove();
                         gameRoot.getChildren().remove(projectile);

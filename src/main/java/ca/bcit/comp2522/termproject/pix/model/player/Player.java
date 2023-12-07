@@ -42,6 +42,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private boolean attackEnable;
     private boolean damageEnable;
     private boolean climbEnable;
+    private boolean backwardKnockBack;
+    private boolean forwardKnockBack;
     private boolean turnOffGravity;
     private AttackEffect meleeHitBox;
     private AttackEffect rangeHitBox;
@@ -79,6 +81,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.attackEnable = true;
         this.damageEnable = true;
         this.climbEnable = false;
+        this.backwardKnockBack = true;
+        this.forwardKnockBack = true;
         this.meleeHitBox = null;
         this.rangeHitBox = null;
         this.climbDirection = Direction.FORWARD;
@@ -453,6 +457,47 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.attackEnable = true;
         }
 
+    }
+
+    /**
+     * Knocks back the Player.
+     * @param moveRight true if moving right, false if moving left
+     */
+    public void knockBack(final boolean moveRight) {
+        final int knockBackDuration = 20;
+        final int knockBackDistance;
+        if (moveRight && forwardKnockBack || !moveRight && backwardKnockBack) {
+            if (moveRight) {
+                knockBackDistance = 1;
+            } else {
+                knockBackDistance = -1;
+            }
+            for (int i = 0; i <= knockBackDuration; i++) {
+                this.setTranslateX(this.getTranslateX() + knockBackDistance);
+            }
+        }
+    }
+
+    /**
+     * Resets the knock back.
+     */
+    public void resetKnockBack() {
+        this.forwardKnockBack = true;
+        this.backwardKnockBack = true;
+    }
+
+    /**
+     * Set forward knock back to false.
+     */
+    public void disableForwardKnockBack() {
+        this.forwardKnockBack = false;
+    }
+
+    /**
+     * Set backward knock back to false.
+     */
+    public void disableBackwardKnockBack() {
+        this.backwardKnockBack = false;
     }
 
     /**
