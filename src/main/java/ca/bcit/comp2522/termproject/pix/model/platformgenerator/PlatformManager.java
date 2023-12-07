@@ -69,6 +69,7 @@ public class PlatformManager {
      * @param levelController the current level manager
      * @param loadedBlocks the previously-loaded blocks as an ArrayList (can be empty)
      * @param loadedItems the previously-loaded pickup items as an ArrayList (can be empty)
+     * @param loadedEnemies the previously-loaded enemies as an ArrayList (can be empty)
      */
     public PlatformManager(final LevelManager levelController, final ArrayList<ArrayList<StandardBlock>> loadedBlocks,
                            final ArrayList<ArrayList<PickUpItem>> loadedItems,
@@ -151,7 +152,7 @@ public class PlatformManager {
         pickUpItemArray = totalPickUpItemArray.get(levelManager.getCurrentLevel());
     }
 
-    private void createGamePlatform(String[] currentLevelData, int currentLevel) {
+    private void createGamePlatform(final String[] currentLevelData, final int currentLevel) {
         final int movingBlockYPadding = 5;
         totalBlockArray.add(new ArrayList<>());
         totalEnemyArray.add(new ArrayList<>());
@@ -475,6 +476,9 @@ public class PlatformManager {
                 + '}';
     }
 
+    /**
+     * Creates the boss level.
+     */
     public void createBossLevel() {
         this.createGamePlatform(LevelLayout.getBossLevelData(), levelManager.getCurrentLevel());
         blockArray = totalBlockArray.get(levelManager.getCurrentLevel());

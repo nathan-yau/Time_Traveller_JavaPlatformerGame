@@ -50,7 +50,11 @@ import javafx.util.Duration;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -290,6 +294,7 @@ public class GameController {
     /**
      * Switches the level.
      * @param dimension the dimension to switch to
+     * @param resetPlayerPosition whether to reset the player position
      */
     private void switchLevel(final int dimension, final boolean resetPlayerPosition) {
         gameRoot.getChildren().clear();
@@ -903,9 +908,10 @@ public class GameController {
             final int startDelay = 2;
             final int laserDuration = 3;
             final int endDuration = 2;
+            final int heightOffset = 130;
 
             if (activeBossFight == null || activeBossFight.bossLevel != bossLevels[0]) {
-                Enemy hal = new Hal(windowHeight - 130);
+                Enemy hal = new Hal(windowHeight - heightOffset);
                 activeBossFight = new BossFight(bossLevels[0], hal);
             }
             activeBossFight.startBossFight(numberOfProjectiles,
@@ -948,9 +954,11 @@ public class GameController {
          * @param startDelay the delay before the boss attack
          * @param laserDuration the duration of the laser
          * @param totalDuration the total duration of the boss attack
+         * @throws IOException if the image is not found
          */
         public void startBossFight(final int numberOfProjectiles, final int projectileWidth,
-                                   final int startDelay, final int laserDuration, final int totalDuration) throws IOException {
+                                   final int startDelay, final int laserDuration, final int totalDuration)
+                throws IOException {
             disableCamera();
 
             if (!gameRoot.getChildren().contains(activeBoss)) {
