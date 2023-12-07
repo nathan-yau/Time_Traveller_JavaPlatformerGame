@@ -32,6 +32,7 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
@@ -71,6 +72,7 @@ public class GameController {
     private static final double INITIAL_PLAYER_Y = 500;
     private static ChangeListener<? super Number> playerXListener;
     private final Stage stage;
+    private AnimationTimer gameLoopTimer;
     private final int windowWidth;
     private final int windowHeight;
     private final Pane appRoot;
@@ -705,15 +707,8 @@ public class GameController {
                             enemy.setDirection(Direction.BACKWARD);
                         }
                         enemy.meleeAttack();
-                        if (player.takeDamage(enemy.getAttackDamage()) <= 0) {
-                            System.out.println("Player died");
-                        } else {
-                            player.getHurt();
-                        }
-                        player.knockBack(!(player.getBoundsInParent().getCenterX()
-                                < enemy.getBoundsInParent().getCenterX()));
-                        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
-                        return;
+                    meleeCombat(enemy, enemy.getBoundsInParent());
+                    return;
                 }
                 if (existingRangeHitBox != null) {
                     this.rangeWithEnemies(existingRangeHitBox, enemy);
@@ -734,6 +729,18 @@ public class GameController {
                 return false;
             });
         }
+    }
+
+    // Handle melee combat
+    private void meleeCombat(Enemy enemy, Bounds boundsInParent) {
+        if (player.takeDamage(enemy.getAttackDamage()) <= 0) {
+            System.out.println("Player died");
+        } else {
+            player.getHurt();
+        }
+        player.knockBack(!(player.getBoundsInParent().getCenterX()
+                < boundsInParent.getCenterX()));
+        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
     }
 
     // Handle ranged combat hit box and collision detection
@@ -1152,14 +1159,7 @@ public class GameController {
                         && collisionDetector.calculateCollisionPercentage(player, projectile)
                         > itemCollisionPercentage) {
                     if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
-                        if (player.takeDamage(activeBoss.getAttackDamage()) <= 0) {
-                            System.out.println("Player died");
-                        } else {
-                            player.getHurt();
-                        }
-                        player.knockBack(!(player.getBoundsInParent().getCenterX()
-                                < projectile.getBoundsInParent().getCenterX()));
-                        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
+                        meleeCombat(activeBoss, projectile.getBoundsInParent());
                         iterator.remove();
                         gameRoot.getChildren().remove(projectile);
                     }
@@ -1182,7 +1182,7 @@ public class GameController {
      * Starts the game loop.
      */
     public void startGameLoop() {
-        AnimationTimer timer = new AnimationTimer() {
+        gameLoopTimer = new AnimationTimer() {
             @Override
             public void handle(final long l) {
                 try {
@@ -1203,7 +1203,7 @@ public class GameController {
                 }
             }
         };
-        timer.start();
+        gameLoopTimer.start();
     }
 
     // Get the background image for the level
@@ -1244,6 +1244,7 @@ public class GameController {
             final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
             menuItems.put("New Game", () -> {
                 try {
+                    gameLoopTimer.stop();
                     MainApplication.startGame(stage);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
