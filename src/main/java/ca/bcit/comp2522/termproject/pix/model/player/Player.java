@@ -45,8 +45,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private boolean backwardKnockBack;
     private boolean forwardKnockBack;
     private boolean turnOffGravity;
-    private AttackEffect meleeHitBox;
-    private AttackEffect rangeHitBox;
+    private transient AttackEffect meleeHitBox;
+    private transient AttackEffect rangeHitBox;
     private double speed;
     private String currentImagePath;
     private Action action;
