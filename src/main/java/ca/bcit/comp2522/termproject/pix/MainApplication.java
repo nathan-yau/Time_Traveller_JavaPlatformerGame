@@ -34,7 +34,7 @@ public class MainApplication extends Application {
     /** Height of the window. */
     public static final int WINDOW_HEIGHT = 720;
 
-    /*
+    /**
      * Starts the Game.
      *
      * @param stage the stage to run the game in as a Stage
