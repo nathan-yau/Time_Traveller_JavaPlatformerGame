@@ -40,9 +40,11 @@ public class UIManager {
     private final VBox potionIcon;
     private final HBox worldName;
     private final HBox playerStatus;
+    private final HBox bossStatus;
     private final HBox backpack;
     private final ProgressBar healthBar;
     private final Label healthLabel;
+    private final ProgressBar bossHealthBar;
 
 
     /**
@@ -59,6 +61,7 @@ public class UIManager {
        this.batteryCounter = new HBox();
        this.worldName = new HBox();
        this.playerStatus = new HBox();
+       this.bossStatus = new HBox();
        this.backpack = new HBox(backpackInnerPadding);
        this.meleeSlot = new VBox(slotPadding);
        this.rangeSlot = new VBox();
@@ -70,6 +73,7 @@ public class UIManager {
        this.potionIcon = new VBox();
        this.healthBar = new ProgressBar();
        this.healthLabel = new Label();
+       this.bossHealthBar = new ProgressBar();
        this.initialSetting(batteryCounter);
        this.refreshBatteryCounter(0);
        this.initialSetting(worldName);
@@ -77,10 +81,13 @@ public class UIManager {
        this.initialHealthBar();
        this.refreshHealthBar(playerHP, playerHP);
        this.initialSetting(playerStatus);
+       this.initialBossHealthBar();
+       this.initialSetting(bossStatus);
        this.initialSetting(backpack, backpackOuterPadding, "rgba(0, 0, 0, 0.5)");
        this.initializeSlots();
        this.initializeBackPack();
        this.refreshPlayerStatus();
+
     }
 
     /* Set up the initial setting of a Pane.
@@ -295,6 +302,24 @@ public class UIManager {
     }
 
     /**
+     * Refreshes the player status.
+     *
+     * @throws IOException if the image path is invalid
+     */
+    public final void refreshBossStatus() throws IOException {
+        final double translateY = MainApplication.WINDOW_HEIGHT - 50;
+        final double translateX = 50;
+        final int fontSize = 18;
+        final int textTranslateY = 0;
+        final int textTranslateX = 10;
+        bossStatus.getChildren().clear();
+        setTextContent(bossStatus, fontSize, "HAL", textTranslateY, textTranslateX);
+        bossStatus.getChildren().add(bossHealthBar);
+        bossStatus.setTranslateX(translateX);
+        bossStatus.setTranslateY(translateY);
+    }
+
+    /**
      * Refreshes the world name.
      *
      * @param level the level as an int
@@ -377,6 +402,30 @@ public class UIManager {
         healthLabel.setTranslateY(labelYPosition);
     }
 
+    private void initialBossHealthBar(){
+        final int width = 500;
+        final int height = 20;
+        final int barXPosition = 30;
+        bossHealthBar.setPrefWidth(width);
+        bossHealthBar.setPrefHeight(height);
+        bossHealthBar.setTranslateX(barXPosition);
+    }
+
+    public void refreshBossHealthBar(final double progress) {
+        final String color;
+        final double inWarningHealthPoint = 0.5;
+        final double inDangerHealthPoint = 0.25;
+        bossHealthBar.setProgress(progress);
+        if (progress > inWarningHealthPoint) {
+            color = "-fx-accent: lightgreen;";
+        } else if (progress > inDangerHealthPoint) {
+            color = "-fx-accent: yellow;";
+        } else {
+            color = "-fx-accent: red;";
+        }
+        bossHealthBar.setStyle(color);
+    }
+
     /**
      * Refreshes the health bar.
      *
@@ -433,5 +482,9 @@ public class UIManager {
      */
     public HBox getBackpack() {
         return backpack;
+    }
+
+    public HBox getBossStatus() {
+        return bossStatus;
     }
 }

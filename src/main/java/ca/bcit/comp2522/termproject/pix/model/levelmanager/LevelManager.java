@@ -67,6 +67,11 @@ public class LevelManager {
         this.currentLevelLayout = LevelLayout.getLevelData(this.currentLevel);
     }
 
+    public void enterBossLevel() {
+        this.currentLevel = 3;
+        this.currentLevelLayout = LevelLayout.getBossLevelData();
+    }
+
     /**
      * Checks if this LevelManager is equal to another object.
      *

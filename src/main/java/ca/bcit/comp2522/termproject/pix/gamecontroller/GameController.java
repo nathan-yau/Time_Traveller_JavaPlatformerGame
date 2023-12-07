@@ -50,7 +50,10 @@ import javafx.util.Duration;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -129,7 +132,7 @@ public class GameController {
         this.playerX = this.player.translateXProperty();
         this.setBackground(this.getLevelBackground());
         if (gameBlocks.isEmpty() || gameItems.isEmpty() || gameEnemies.isEmpty()) {
-            this.platform.createGamePlatform();
+            this.platform.createRegularLevels();
         }
         this.setUpPlatform();
         this.setCachedBlockArray();
@@ -212,9 +215,7 @@ public class GameController {
         playerXListener = (obs, old, newValue) -> {
             int offset = newValue.intValue();
 
-            if (activeBossFight != null) {
-                gameRoot.setLayoutX(-offset);
-            } else if (offset > X_CAMERA_THRESHOLD && offset < platform.getTotalLevelWidth() - X_CAMERA_THRESHOLD) {
+            if (offset > X_CAMERA_THRESHOLD && offset < platform.getTotalLevelWidth() - X_CAMERA_THRESHOLD) {
                 gameRoot.setLayoutX(-(offset - X_CAMERA_ADJUSTMENT));
             }
         };
@@ -293,12 +294,16 @@ public class GameController {
      * Switches the level.
      * @param dimension the dimension to switch to
      */
-    private void switchLevel(final int dimension) {
+    private void switchLevel(final int dimension, final boolean resetPlayerPosition) {
         gameRoot.getChildren().clear();
         cachedBlockArray.clear();
-        platform.setLevelArrays(dimension);
+        platform.setNextLevelArrays(dimension);
         this.setUpPlatform();
         setCachedBlockArray();
+        if (resetPlayerPosition) {
+            player.resetPosition();
+            gameRoot.setLayoutX(0);
+        }
         TeleportEffect teleportEffect = player.teleport();
         gameRoot.getChildren().add(player);
         gameRoot.getChildren().add(teleportEffect);
@@ -548,11 +553,11 @@ public class GameController {
                         player.incrementEnergyCounter();
                         uiManager.refreshBatteryCounter(player.getEnergyCounter());
                     } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
-                        Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
+                        Weapon meleeWeapon = new MeleeWeapon(levelManager.getCurrentLevel());
                         player.addWeapon(meleeWeapon);
                         uiManager.refreshMeleeSlot(true);
                     } else if (item.getSubtype() == PickUpItemType.RANGE_WEAPON) {
-                        Weapon rangeWeapon = new RangeWeapon(platform.getCurrentLevel());
+                        Weapon rangeWeapon = new RangeWeapon(levelManager.getCurrentLevel());
                         player.addWeapon(rangeWeapon);
                         uiManager.refreshRangeSlot(true);
                         uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
@@ -565,7 +570,11 @@ public class GameController {
                     } else if (item.getSubtype() == PickUpItemType.SAVE_TRIGGER) {
                         saveGameState();
                     } else if (item.getSubtype() == PickUpItemType.BOSS_TRIGGER) {
-                        System.out.println("Trigger Boss");
+                        levelManager.enterBossLevel();
+                        platform.createBossLevel();
+                        switchLevel(levelManager.getCurrentLevel(), true);
+                        uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                        switching = true;
                     }
                     if (item.onPickup()) {
                         iterator.remove();
@@ -807,7 +816,7 @@ public class GameController {
         }
     }
     /* Listen to attack signals */
-    private void meleeAttackKeyListener() {
+    private void meleeAttackKeyListener() throws IOException {
         // Listen to melee attack signal
         if (isPressed(KeyCode.O)) {
             AttackEffect hitBox;
@@ -863,10 +872,10 @@ public class GameController {
 
     /* Listen to switch platform signals */
     private void switchPlatformKeyListener() throws IOException {
-        if (isPressed(KeyCode.L)) {
+        if (isPressed(KeyCode.L) & activeBossFight == null) {
             if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.nextLevel();
-                this.switchLevel(levelManager.getCurrentLevel());
+                this.switchLevel(levelManager.getCurrentLevel(), false);
                 uiManager.refreshWorldName(levelManager.getCurrentLevel());
                 player.decrementEnergyCounter();
                 uiManager.refreshBatteryCounter(player.getEnergyCounter());
@@ -874,10 +883,10 @@ public class GameController {
             }
         }
 
-        if (isPressed(KeyCode.K)) {
+        if (isPressed(KeyCode.K) & activeBossFight == null) {
             if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.previousLevel();
-                this.switchLevel(levelManager.getCurrentLevel());
+                this.switchLevel(levelManager.getCurrentLevel(), false);
                 uiManager.refreshWorldName(levelManager.getCurrentLevel());
                 player.decrementEnergyCounter();
                 uiManager.refreshBatteryCounter(player.getEnergyCounter());
@@ -889,27 +898,25 @@ public class GameController {
     /*
      * Checks if this level is a boss level.
      */
-    private void checkForBossPresence() {
+    private void checkForBossPresence() throws IOException {
         final int[] bossLevels = {3};
-        if (platform.getCurrentLevel() == bossLevels[0]) {
+        if (levelManager.getCurrentLevel() == bossLevels[0]) {
+            final int numberOfProjectiles = 10;
+            final int projectileWidth = 50;
+            final int startDelay = 2;
+            final int laserDuration = 3;
+            final int endDuration = 2;
+
             if (activeBossFight == null || activeBossFight.bossLevel != bossLevels[0]) {
-                final int numberOfProjectiles = 10;
-                final int projectileWidth = 50;
-                final int startDelay = 2;
-                final int laserDuration = 3;
-                final int endDuration = 2;
-
-                Enemy hal = new Hal(windowHeight);
+                Enemy hal = new Hal(windowHeight - 130);
                 activeBossFight = new BossFight(bossLevels[0], hal);
-
-                activeBossFight.startBossFight(numberOfProjectiles,
-                        projectileWidth, startDelay, laserDuration, endDuration);
             }
+            activeBossFight.startBossFight(numberOfProjectiles,
+                    projectileWidth, startDelay, laserDuration, endDuration);
         } else {
             if (activeBossFight != null) {
                 activeBossFight.endBossFight();
                 activeBossFight = null;
-                setUpCamera();
             }
         }
     }
@@ -924,7 +931,6 @@ public class GameController {
         private final Enemy activeBoss;
         private BossProjectileGenerator projectileGenerator;
         private Timeline projectileTimeline;
-        private boolean bossFightStarted;
 
         /**
          * Constructs a BossFight object.
@@ -947,26 +953,26 @@ public class GameController {
          * @param totalDuration the total duration of the boss attack
          */
         public void startBossFight(final int numberOfProjectiles, final int projectileWidth,
-                                   final int startDelay, final int laserDuration, final int totalDuration) {
-            if (!bossFightStarted) {
-                bossFightStarted = true;
-                player.teleportToLocation(INITIAL_PLAYER_X, INITIAL_PLAYER_Y);
-                disableCamera();
+                                   final int startDelay, final int laserDuration, final int totalDuration) throws IOException {
+            disableCamera();
 
-                if (!gameRoot.getChildren().contains(activeBoss)) {
-                    gameRoot.getChildren().add(activeBoss);
-                }
+            if (!gameRoot.getChildren().contains(activeBoss)) {
+                gameRoot.getChildren().add(activeBoss);
+                player.toFront();
+                uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                uiManager.refreshBossStatus();
+                uiRoot.getChildren().add(uiManager.getBossStatus());
+            }
 
-                if (this.projectileGenerator == null) {
-                    this.projectileGenerator = new BossProjectileGenerator(numberOfProjectiles, windowWidth,
-                            windowHeight, projectileWidth);
-                }
+            if (this.projectileGenerator == null) {
+                this.projectileGenerator = new BossProjectileGenerator(numberOfProjectiles, windowWidth,
+                        windowHeight, projectileWidth);
+            }
 
-                if (this.projectileTimeline == null) {
-                    this.projectileTimeline = createProjectileTimeline(startDelay, laserDuration, totalDuration);
-                    this.projectileTimeline.setCycleCount(Timeline.INDEFINITE);
-                    this.projectileTimeline.play();
-                }
+            if (this.projectileTimeline == null) {
+                this.projectileTimeline = createProjectileTimeline(startDelay, laserDuration, totalDuration);
+                this.projectileTimeline.setCycleCount(Timeline.INDEFINITE);
+                this.projectileTimeline.play();
             }
         }
 
@@ -987,6 +993,9 @@ public class GameController {
                                 gameRoot.getChildren().add(projectile);
                             }
                         }
+                        activeBoss.setDamageEnable(false);
+                        activeBoss.setVisible(false);
+                        setBackground("background/attack.gif");
                     }),
 
                     new KeyFrame(Duration.seconds(projectileDamageDelay + startDelay), event -> {
@@ -1001,6 +1010,9 @@ public class GameController {
                             gameRoot.getChildren().remove(laser);
                             iterator.remove();
                         }
+                        activeBoss.setDamageEnable(true);
+                        activeBoss.setVisible(true);
+                        setBackground("background/error.gif");
                     }),
                     new KeyFrame(Duration.seconds(laserDuration + projectileDamageDelay + startDelay + endDelay))
             );
@@ -1028,7 +1040,7 @@ public class GameController {
          * Interacts with the boss with melee weapons.
          * @param hitBox the melee attack hit box
          */
-        private void meleeWithBoss(final AttackEffect hitBox) {
+        private void meleeWithBoss(final AttackEffect hitBox) throws IOException {
             if (activeBoss.getDamageEnable()) {
                 AtomicBoolean found = new AtomicBoolean(false);
                 hitBox.startInitialEffect().thenAccept(isDone -> {
@@ -1054,6 +1066,8 @@ public class GameController {
                     } else {
                         activeBoss.getHurt();
                     }
+                    uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                    uiManager.refreshBossStatus();
                 }
             }
         }
@@ -1062,7 +1076,7 @@ public class GameController {
          * Interacts with the boss with range weapons.
          * @param existingRangeHitBox the existing range hit box
          */
-        private void rangeWithBoss(final AttackEffect existingRangeHitBox) {
+        private void rangeWithBoss(final AttackEffect existingRangeHitBox) throws IOException {
             if (activeBoss.getDamageEnable()) {
                 if (collisionDetector.objectIntersect(existingRangeHitBox, activeBoss) & activeBoss.getDamageEnable()) {
                     final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
@@ -1073,6 +1087,8 @@ public class GameController {
                         this.endBossFight();
                         startVictoryCondition(stage);
                     }
+                    uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                    uiManager.refreshBossStatus();
                 }
             }
         }
@@ -1080,7 +1096,7 @@ public class GameController {
         /*
          * Interacts with the boss.
          */
-        private void interactWithBoss() {
+        private void interactWithBoss() throws IOException {
             AttackEffect existingRangeHitBox = player.getRangeHitBox();
             if (existingRangeHitBox != null) {
                 this.rangeWithBoss(existingRangeHitBox);
