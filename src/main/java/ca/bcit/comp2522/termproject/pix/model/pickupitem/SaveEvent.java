@@ -1,14 +1,21 @@
 package ca.bcit.comp2522.termproject.pix.model.pickupitem;
+
+/**
+ * Represents a SaveEvent.
+ *
+ * @author Nathan Yau
+ * @author Derek Woo
+ * @version 2023-11
+ */
 public class SaveEvent extends PickUpItem {
     /**
-     * Constructs a PickUpItem.
-     *
-     * @param x              the x coordinate of the PickUpItem as an int
-     * @param y              the y coordinate of the PickUpItem as an int
-     * @param w              the width of the PickUpItem as an int
-     * @param h              the height of the PickUpItem as an int
+     * Constructs a SaveEvent.
+     * @param x the x coordinate of the SaveEvent
+     * @param y the y coordinate of the SaveEvent
+     * @param w the width of the SaveEvent
+     * @param h the height of the SaveEvent
      */
-    public SaveEvent(int x, int y, int w, int h) {
+    public SaveEvent(final int x, final int y, final int w, final int h) {
         super(x, y, w, h, PickUpItemType.SAVE_TRIGGER);
     }
 }
