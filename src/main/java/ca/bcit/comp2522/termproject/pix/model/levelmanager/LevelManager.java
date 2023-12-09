@@ -10,7 +10,8 @@ import java.util.Arrays;
  * @version 2023-11
  */
 public class LevelManager {
-    // The current game level.
+    // The current game level.4
+    private static final int BOSS_LEVEL = 3;
     private int currentLevel;
 
     // The current level layout.
@@ -18,8 +19,9 @@ public class LevelManager {
 
     /**
      * Constructs a LevelManager with a specific current level.
+     * @param currentLevel the current level
      */
-    public LevelManager(int currentLevel) {
+    public LevelManager(final int currentLevel) {
         this.currentLevel = currentLevel;
         this.currentLevelLayout = LevelLayout.getLevelData(this.currentLevel);
     }
@@ -67,8 +69,12 @@ public class LevelManager {
         this.currentLevelLayout = LevelLayout.getLevelData(this.currentLevel);
     }
 
+    /**
+     * Sets the current level to boss level.
+     *
+     */
     public void enterBossLevel() {
-        this.currentLevel = 3;
+        this.currentLevel = BOSS_LEVEL;
         this.currentLevelLayout = LevelLayout.getBossLevelData();
     }
 
