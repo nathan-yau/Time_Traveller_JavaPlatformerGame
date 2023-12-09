@@ -543,7 +543,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Increments the player's energy counter by one.
      */
     public void incrementEnergyCounter() {
-        this.energyCounter += 3;
+        final int energyPerPickUp = 3;
+        this.energyCounter += energyPerPickUp;
     }
 
     /**
