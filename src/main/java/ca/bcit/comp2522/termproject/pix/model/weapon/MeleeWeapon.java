@@ -36,8 +36,13 @@ public class MeleeWeapon extends Weapon implements Serializable {
         return 0;
     }
 
+    /**
+     * Adds ammo to the weapon.
+     *
+     * @param newAmmo the amount of ammo to add as an int
+     */
     @Override
-    public void addAmmo(int newAmmo) { }
+    public void addAmmo(final int newAmmo) { }
 
     /**
      * Gets the string representation of this MeleeWeapon.
