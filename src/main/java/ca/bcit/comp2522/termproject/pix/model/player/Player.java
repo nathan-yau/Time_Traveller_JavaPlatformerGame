@@ -730,9 +730,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             this.healthPotionCounter--;
             this.healthPoint++;
             PauseTransition delay = new PauseTransition(Duration.seconds(1));
-            delay.setOnFinished(event -> {
-                healthPotionEnable = true;
-            });
+            delay.setOnFinished(event -> healthPotionEnable = true);
             delay.play();
         }
     }
