@@ -91,8 +91,6 @@ public class MainApplication extends Application {
 
         stage.setScene(scene);
         gameApp.insertKeyboardListeners();
-
-        System.out.println("Game loaded successfully.");
         gameApp.startGameLoop();
     }
 
@@ -112,7 +110,6 @@ public class MainApplication extends Application {
             ArrayList<ArrayList<Enemy>> loadedEnemies = (ArrayList<ArrayList<Enemy>>) ois.readObject();
             this.startGame(loadedCurrentLevel, loadedPlayer, loadedBlocks, loadedItems, loadedEnemies, stage);
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Loading error. Starting a new game.");
             GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
             Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
