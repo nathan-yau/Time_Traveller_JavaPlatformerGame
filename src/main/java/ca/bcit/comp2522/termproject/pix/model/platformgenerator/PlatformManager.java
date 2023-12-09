@@ -13,16 +13,18 @@ import ca.bcit.comp2522.termproject.pix.model.block.MovingBlock;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelLayout;
 import ca.bcit.comp2522.termproject.pix.model.levelmanager.LevelManager;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.GoldCoin;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.Energy;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.HealthPotion;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
-import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.WeaponPickup;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.SaveEvent;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.BossEvent;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
+import ca.bcit.comp2522.termproject.pix.model.pickupitem.Ammo;
 
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * Manages the components of the game platform.
@@ -60,22 +62,27 @@ public class PlatformManager {
     private final LevelManager levelManager;
 
     // The height of the current level.
-    private final int leveHeight;
+    private final int levelHeight;
 
     /**
      * Constructs a PlatformManager.
      * @param levelController the current level manager
+     * @param loadedBlocks the previously-loaded blocks as an ArrayList (can be empty)
+     * @param loadedItems the previously-loaded pickup items as an ArrayList (can be empty)
+     * @param loadedEnemies the previously-loaded enemies as an ArrayList (can be empty)
      */
-    public PlatformManager(final LevelManager levelController) {
-        this.totalBlockArray = new ArrayList<>();
-        this.totalEnemyArray = new ArrayList<>();
-        this.totalPickUpItemArray = new ArrayList<>();
+    public PlatformManager(final LevelManager levelController, final ArrayList<ArrayList<StandardBlock>> loadedBlocks,
+                           final ArrayList<ArrayList<PickUpItem>> loadedItems,
+                           final ArrayList<ArrayList<Enemy>> loadedEnemies) {
+        this.totalBlockArray = loadedBlocks;
         this.blockArray = new ArrayList<>();
+        this.totalPickUpItemArray = loadedItems;
         this.pickUpItemArray = new ArrayList<>();
         this.enemyArray = new ArrayList<>();
+        this.totalEnemyArray = loadedEnemies;
         this.levelManager = levelController;
         this.levelWidth = levelManager.getCurrentLevelWidth();
-        this.leveHeight = levelManager.getCurrentLevelHeight();
+        this.levelHeight = levelManager.getCurrentLevelHeight();
     }
 
     /**
@@ -88,12 +95,30 @@ public class PlatformManager {
     }
 
     /**
+     * Gets the array of blocks that make up the game platform on all levels.
+     *
+     * @return the list of blocks as an ArrayList
+     */
+    public ArrayList<ArrayList<StandardBlock>> getTotalBlockArray() {
+        return this.totalBlockArray;
+    }
+
+    /**
      * Gets the array of pickup items on the game platform.
      *
      * @return the list of pickup items as an ArrayList
      */
     public ArrayList<PickUpItem> getItemArray() {
         return this.pickUpItemArray;
+    }
+
+    /**
+     * Gets the array of pickup items on all levels.
+     *
+     * @return the list of pickup items as an ArrayList
+     */
+    public ArrayList<ArrayList<PickUpItem>> getTotalItemArray() {
+        return this.totalPickUpItemArray;
     }
 
     /**
@@ -106,94 +131,123 @@ public class PlatformManager {
     }
 
     /**
+     * Gets the array of enemies on all levels.
+     *
+     * @return the list of enemies as an ArrayList
+     */
+    public ArrayList<ArrayList<Enemy>> getTotalEnemyArray() {
+        return this.totalEnemyArray;
+    }
+
+    /**
      * Creates the game platform.
      */
-    public void createGamePlatform() {
+    public void createRegularLevels() {
+        final String[][] allDimension = LevelLayout.getRegLevelsData();
+        for (int level = 0; level < allDimension.length; level++) {
+            this.createGamePlatform(allDimension[level], level);
+        }
+        blockArray = totalBlockArray.get(levelManager.getCurrentLevel());
+        enemyArray = totalEnemyArray.get(levelManager.getCurrentLevel());
+        pickUpItemArray = totalPickUpItemArray.get(levelManager.getCurrentLevel());
+    }
+
+    private void createGamePlatform(final String[] currentLevelData, final int currentLevel) {
         final int movingBlockYPadding = 5;
-        final String[][] allDimension = LevelLayout.getAllLevelsData();
-        for (int i = 0; i < 4; i++) {
-            String[] currentLevelData = allDimension[i];
-            totalBlockArray.add(new ArrayList<>());
-            totalEnemyArray.add(new ArrayList<>());
-            totalPickUpItemArray.add(new ArrayList<>());
-            for (int row = 0; row < leveHeight; row++) {
-                String line = currentLevelData[row];
-                for (int col = 0; col < line.length(); col++) {
-                    int xPosition = col * BLOCK_WIDTH;
-                    int yPosition = row * BLOCK_HEIGHT;
-                    char categorySymbol = line.charAt(col);
-                    if (categorySymbol == '0') {
-                        PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
-                        StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
-                                BlockType.SOLID_BLOCK, i, imageIndex.name());
-                        totalBlockArray.get(i).add(solidBlock);
-                    } else if (categorySymbol == '1') {
-                        PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
-                        StandardBlock movingBlock = new MovingBlock(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + movingBlockYPadding, i, imageIndex.name());
-                        totalBlockArray.get(i).add(movingBlock);
-                    } else if (categorySymbol == '2') {
-                        StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, BlockType.LADDERS, i, "ladder");
-                        totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == '3') {
-                        StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, i, "rope");
-                        totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == '4') {
-                        StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, BlockType.TESTING_BLOCK, i, "dirt");
-                        totalBlockArray.get(i).add(decorationBlock);
-                    } else if (categorySymbol == 'B') {
-                        StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
-                                BlockType.BOSS_FIGHT_BLOCK, "Boss/BossFight/TRIGGER", "bossFight");
-                        blockArray.add(solidBlock);
-                    } else if (categorySymbol == 'P') {
-                        final int yPadding = 10;
-                        HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding, i, "healthPotion");
-                        totalPickUpItemArray.get(i).add(healthPotion);
-                    } else if (categorySymbol == 'C') {
-                        GoldCoin goldCoin = new GoldCoin(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, i, "goldCoin");
-                        totalPickUpItemArray.get(i).add(goldCoin);
-                    } else if (categorySymbol == 'W') {
-                        Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
-                                yPosition + BLOCK_HEIGHT, i, true, false);
-                        totalEnemyArray.get(i).add(minion);
-                        Thread minionThread = new Thread(minion);
-                        minionThread.setDaemon(true);
-                        minionThread.start();
-                    } else if (categorySymbol == 'F') {
-                        Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
-                                yPosition + BLOCK_HEIGHT, i, false, true);
-                        totalEnemyArray.get(i).add(minion);
-                        Thread minionThread = new Thread(minion);
-                        minionThread.setDaemon(true);
-                        minionThread.start();
-                    } else if (categorySymbol == 'S') {
-                        Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
-                                yPosition + BLOCK_HEIGHT, i, true, true);
-                        totalEnemyArray.get(i).add(minion);
-                        Thread minionThread = new Thread(minion);
-                        minionThread.setDaemon(true);
-                        minionThread.start();
-                    } else if (categorySymbol == 'M') {
-                        final int yPadding = 10;
-                        WeaponPickup weapon = new WeaponPickup(xPosition, yPosition - yPadding, BLOCK_WIDTH,
-                                BLOCK_HEIGHT + yPadding, PickUpItemType.MELEE_WEAPON, i, "melee");
-                        totalPickUpItemArray.get(i).add(weapon);
-                    } else if (categorySymbol == 'R') {
-                        WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
-                                BLOCK_HEIGHT, PickUpItemType.RANGE_WEAPON, i, "range");
-                        totalPickUpItemArray.get(i).add(weapon);
-                    }
+        totalBlockArray.add(new ArrayList<>());
+        totalEnemyArray.add(new ArrayList<>());
+        totalPickUpItemArray.add(new ArrayList<>());
+        for (int row = 0; row < levelHeight; row++) {
+            String line = currentLevelData[row];
+            for (int col = 0; col < line.length(); col++) {
+                final int xPosition = col * BLOCK_WIDTH;
+                final int yPosition = row * BLOCK_HEIGHT;
+                final int yPadding = 10;
+                char categorySymbol = line.charAt(col);
+                if (categorySymbol == '0') {
+                    PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
+                    StandardBlock solidBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH, BLOCK_HEIGHT,
+                            BlockType.SOLID_BLOCK, currentLevel, imageIndex.name());
+                    totalBlockArray.get(currentLevel).add(solidBlock);
+                } else if (categorySymbol == '1') {
+                    PlatformPosition imageIndex = getImageForPlatformBlock(row, col, currentLevelData, categorySymbol);
+                    StandardBlock movingBlock = new MovingBlock(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + movingBlockYPadding, currentLevel, imageIndex.name());
+                    totalBlockArray.get(currentLevel).add(movingBlock);
+                } else if (categorySymbol == '2') {
+                    StandardBlock ladderBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, BlockType.LADDERS, currentLevel, "ladder");
+                    totalBlockArray.get(currentLevel).add(ladderBlock);
+                } else if (categorySymbol == '3') {
+                    StandardBlock disappearingBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "rope");
+                    totalBlockArray.get(currentLevel).add(disappearingBlock);
+                } else if (categorySymbol == 'P') {
+                    HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding);
+                    totalPickUpItemArray.get(currentLevel).add(healthPotion);
+                } else if (categorySymbol == 'E') {
+                    Energy battery = new Energy(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding);
+                    totalPickUpItemArray.get(currentLevel).add(battery);
+                } else if (categorySymbol == 'D') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, true, false);
+                    totalEnemyArray.get(currentLevel).add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
+                } else if (categorySymbol == 'B') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, false, true);
+                    totalEnemyArray.get(currentLevel).add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
+                } else if (categorySymbol == 'C') {
+                    Minion minion = determineMinionType(xPosition + BLOCK_WIDTH,
+                            yPosition + BLOCK_HEIGHT, currentLevel, true, true);
+                    totalEnemyArray.get(currentLevel).add(minion);
+                    Thread minionThread = new Thread(minion);
+                    minionThread.setDaemon(true);
+                    minionThread.start();
+                } else if (categorySymbol == 'M') {
+                    WeaponPickup weapon = new WeaponPickup(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding, PickUpItemType.MELEE_WEAPON);
+                    totalPickUpItemArray.get(currentLevel).add(weapon);
+                } else if (categorySymbol == 'R') {
+                    WeaponPickup weapon = new WeaponPickup(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT, PickUpItemType.RANGE_WEAPON);
+                    totalPickUpItemArray.get(currentLevel).add(weapon);
+                } else if (categorySymbol == 'S') {
+                    SaveEvent saveItem = new SaveEvent(xPosition, yPosition, BLOCK_WIDTH,
+                            BLOCK_HEIGHT);
+                    totalPickUpItemArray.get(currentLevel).add(saveItem);
+                } else if (categorySymbol == 'F') {
+                    BossEvent bossItem = new BossEvent(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding);
+                    totalPickUpItemArray.get(currentLevel).add(bossItem);
+                } else if (categorySymbol == 'A') {
+                    Ammo ammo = new Ammo(xPosition, yPosition - yPadding, BLOCK_WIDTH,
+                            BLOCK_HEIGHT + yPadding);
+                    totalPickUpItemArray.get(currentLevel).add(ammo);
                 }
             }
         }
         blockArray = totalBlockArray.get(levelManager.getCurrentLevel());
         enemyArray = totalEnemyArray.get(levelManager.getCurrentLevel());
         pickUpItemArray = totalPickUpItemArray.get(levelManager.getCurrentLevel());
+    }
+
+    /**
+     * Sets the next level arrays.
+     *
+     * @param level the level to set as an int
+     */
+    public void setLevelArrays(final int level) {
+        blockArray = totalBlockArray.get(level);
+        enemyArray = totalEnemyArray.get(level);
+        pickUpItemArray = totalPickUpItemArray.get(level);
     }
 
     // Determines the type of minion.
@@ -205,39 +259,20 @@ public class PlatformManager {
         Minion minion;
         if (airWalker) {
             minion = switch (currentLevel) {
-                case 0 -> new Wraith(xAxis, yAxis, true);
-                case 1 -> new Spector(xAxis, yAxis, true);
-                case 2 -> new SpaceShip(xAxis, yAxis, true);
+                case 0 -> new Wraith(xAxis, yAxis, xWalker);
+                case 1 -> new Spector(xAxis, yAxis, xWalker);
+                case 2 -> new SpaceShip(xAxis, yAxis, xWalker);
                 default -> throw new IllegalArgumentException("Invalid level");
             };
         } else {
             minion = switch (currentLevel) {
-                case 0 -> new Minotaur(xAxis, yAxis, xWalker);
-                case 1 -> new Knight(xAxis, yAxis, xWalker);
-                case 2 -> new Robot(xAxis, yAxis, xWalker);
+                case 0 -> new Minotaur(xAxis, yAxis, true);
+                case 1 -> new Knight(xAxis, yAxis, true);
+                case 2 -> new Robot(xAxis, yAxis, true);
                 default -> throw new IllegalArgumentException("Invalid level");
             };
         }
         return minion;
-    }
-
-
-    /**
-     * Gets the current level.
-     *
-     * @return the current level as an int
-     */
-    public int getCurrentLevel() {
-        return levelManager.getCurrentLevel();
-    }
-
-    /**
-     * Gets the height of the current level.
-     *
-     * @return the height of the current level as an int
-     */
-    public int getTotalLevelHeight() {
-        return leveHeight * BLOCK_HEIGHT;
     }
 
     /**
@@ -279,6 +314,7 @@ public class PlatformManager {
             return PlatformPosition.BLOCK;
         }
 
+
         if (!positions[0][0] & !positions[1][0]
                 & !positions[0][2] & !positions[1][2] & middleColFilled) {
             return PlatformPosition.WALL;
@@ -299,6 +335,23 @@ public class PlatformManager {
         if (!positions[0][2] && positions[1][2] & positions[0][1]) {
             return PlatformPosition.DIRT_LEFT_CORNER;
         }
+
+        if (rightColFilled & middleColFilled & !positions[1][0] & !positions[2][0]) {
+            return PlatformPosition.LEFT_EDGE;
+        }
+
+        if (rightColFilled & middleColFilled & !positions[2][0]) {
+            return PlatformPosition.DIRT_TURN_LEFT_CORNER;
+        }
+
+        if (leftColFilled & middleColFilled & !positions[1][2] & !positions[2][2]) {
+            return PlatformPosition.RIGHT_EDGE;
+        }
+
+        if (leftColFilled & middleColFilled & !positions[2][2]) {
+            return PlatformPosition.DIRT_TURN_UP_CORNER;
+        }
+
         if (topRowFilled) {
             if (bottomRowFilled) {
                 return PlatformPosition.DIRT;
@@ -364,25 +417,6 @@ public class PlatformManager {
     }
 
     /**
-     * Clears all the arrays.
-     */
-    public void clearAllArray() {
-        Iterator<StandardBlock> blockIterator = blockArray.iterator();
-        while (blockIterator.hasNext()) {
-            StandardBlock block = blockIterator.next();
-            block.terminateAnimation();
-            blockIterator.remove();
-        }
-        Iterator<Enemy> iterator = enemyArray.iterator();
-        while (iterator.hasNext()) {
-            Enemy enemy = iterator.next();
-            enemy.terminateAnimation();
-            iterator.remove();
-        }
-        pickUpItemArray.clear();
-    }
-
-    /**
      * Sets the next level arrays.
      *
      * @param level the level to set as an int
@@ -413,7 +447,7 @@ public class PlatformManager {
         if (levelWidth != that.levelWidth) {
             return false;
         }
-        if (leveHeight != that.leveHeight) {
+        if (levelHeight != that.levelHeight) {
             return false;
         }
         if (!blockArray.equals(that.blockArray)) {
@@ -433,7 +467,7 @@ public class PlatformManager {
         int result = blockArray.hashCode();
         result = prime * result + levelManager.hashCode();
         result = prime * result + levelWidth;
-        result = prime * result + leveHeight;
+        result = prime * result + levelHeight;
         return result;
     }
 
@@ -452,7 +486,17 @@ public class PlatformManager {
                 + ", levelWidth="
                 + levelWidth
                 + ", leveHeight="
-                + leveHeight
+                + levelHeight
                 + '}';
+    }
+
+    /**
+     * Creates the boss level.
+     */
+    public void createBossLevel() {
+        this.createGamePlatform(LevelLayout.getBossLevelData(), levelManager.getCurrentLevel());
+        blockArray = totalBlockArray.get(levelManager.getCurrentLevel());
+        enemyArray = totalEnemyArray.get(levelManager.getCurrentLevel());
+        pickUpItemArray = totalPickUpItemArray.get(levelManager.getCurrentLevel());
     }
 }

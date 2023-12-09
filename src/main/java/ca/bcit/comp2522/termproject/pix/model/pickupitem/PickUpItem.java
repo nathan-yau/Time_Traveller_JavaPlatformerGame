@@ -5,6 +5,11 @@ import ca.bcit.comp2522.termproject.pix.model.ObjectType;
 import javafx.animation.PauseTransition;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * Represents an item that can be picked up.
  *
@@ -12,9 +17,11 @@ import javafx.util.Duration;
  * @author Derek Woo
  * @version 2023-11
  */
-public abstract class PickUpItem extends GameObject<PickUpItemType> {
-    // The type of item pickup.
-    private final PickUpItemType pickUpItemType;
+public abstract class PickUpItem extends GameObject<PickUpItemType> implements Serializable {
+    private final int x;
+    private final int y;
+    private final int w;
+    private final int h;
 
     /**
      * Constructs a PickUpItem.
@@ -23,16 +30,25 @@ public abstract class PickUpItem extends GameObject<PickUpItemType> {
      * @param y the y coordinate of the PickUpItem as an int
      * @param w the width of the PickUpItem as an int
      * @param h the height of the PickUpItem as an int
-     * @param itemType the type of the PickUpItem as an ObjectType
      * @param pickUpItemType the name of the PickUpItem as a PickUpItemType
-     * @param currentLevel the current level of the PickUpItem as an int
-     * @param imageName the name of the image file of the PickUpItem as a String
      */
-    public PickUpItem(final int x, final int y, final int w, final int h, final ObjectType itemType,
-                      final PickUpItemType pickUpItemType, final int currentLevel, final String imageName) {
-        super(x, y, w, h, itemType, pickUpItemType,
-                String.format("%d/%s/%s.png", currentLevel, pickUpItemType.name(), imageName));
-        this.pickUpItemType = pickUpItemType;
+    public PickUpItem(final int x, final int y, final int w, final int h,
+                      final PickUpItemType pickUpItemType) {
+        super(x, y, w, h, ObjectType.ITEM, pickUpItemType,
+                String.format("item/%s.png",  pickUpItemType.name()));
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+    }
+
+    /*
+     * Loads and sets up an existing Pick Up Item.
+     */
+    @Serial
+    private void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
+        in.defaultReadObject();
+        this.restoreGameObject(this.x, this.y, this.w, this.h);
     }
 
     /**
@@ -53,14 +69,5 @@ public abstract class PickUpItem extends GameObject<PickUpItemType> {
     public boolean onPickup() {
         this.disappearItem();
         return true;
-    }
-
-    /**
-     * Gets the type of the item.
-     *
-     * @return the type of the item as a PickUpItemType
-     */
-    public PickUpItemType getItemType() {
-        return this.pickUpItemType;
     }
 }

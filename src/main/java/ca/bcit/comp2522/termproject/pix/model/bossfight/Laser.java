@@ -18,6 +18,6 @@ public class Laser extends BossWeapon {
      * @param height the height of the Laser as an int
      */
     public Laser(final int x, final int y, final int width, final int height) {
-        super(x, y, width, height, BossWeaponType.PROJECTILE, "redLaser");
+        super(x, y, width, height, BossWeaponType.PROJECTILE, "redLaser.gif");
     }
 }

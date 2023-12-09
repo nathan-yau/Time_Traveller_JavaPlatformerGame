@@ -18,6 +18,10 @@ import javafx.beans.property.DoubleProperty;
 import javafx.scene.image.Image;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -27,15 +31,12 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023-11
  */
-public class Minion extends Enemy implements Runnable {
+public class Minion extends Enemy implements Runnable, Serializable {
     private Action action;
     private final double leftmostWalkingRange;
     private final double upmostFlyingRange;
-    private final double initialXPosition;
-    private final double initialYPosition;
     private final double rightmostWalkingRange;
     private final double bottommostFlyingRange;
-
     private final int movingDuration;
     private final int movingFrame;
     private final int hurtingDuration;
@@ -45,15 +46,18 @@ public class Minion extends Enemy implements Runnable {
     private final int dyingDuration;
     private final int dyingFrame;
     private final boolean xWalker;
-
-    private SequentialTransition movingAction;
-    private Timeline attackingAnimation;
-    private Timeline flyingAnimation;
-    private Timeline hurtingAnimation;
-    private String imagePath;
-    private ParallelTransition currentAnimation;
-    private Direction facingDirection;
-    private Timeline walkingAnimation;
+    private transient SequentialTransition movingAction;
+    private transient Timeline attackingAnimation;
+    private transient Timeline flyingAnimation;
+    private transient Timeline hurtingAnimation;
+    private transient String imagePath;
+    private transient ParallelTransition currentAnimation;
+    private transient Direction facingDirection;
+    private transient Timeline walkingAnimation;
+    private final double x;
+    private final double y;
+    private final double w;
+    private final double h;
 
     /**
      * Constructs a Minion.
@@ -82,9 +86,11 @@ public class Minion extends Enemy implements Runnable {
                   final int dyingDuration, final int dyingFrame, final int healthPoint, final int attackPoint,
                   final boolean xWalker) {
         super(x, y, width, height, ObjectType.MINION, name, healthPoint, attackPoint);
+        this.x = x;
+        this.y = y;
+        this.w = width;
+        this.h = height;
         this.action = Action.WALKING;
-        this.initialXPosition = x;
-        this.initialYPosition = y;
         this.upmostFlyingRange = y - movingArea;
         this.bottommostFlyingRange = y + movingArea;
         this.leftmostWalkingRange = x - movingArea + this.getFitWidth() / 2;
@@ -100,8 +106,20 @@ public class Minion extends Enemy implements Runnable {
         this.xWalker = xWalker;
         this.facingDirection = Direction.BACKWARD;
         this.imagePath = String.format("%s/%s", this.getFolderPath(), this.getDirection().name());
-
     }
+
+    /*
+     * Loads and sets up an existing Minion.
+     */
+    @Serial
+    private void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
+        in.defaultReadObject();
+        this.facingDirection = Direction.BACKWARD;
+        this.imagePath = String.format("%s/BACKWARD", this.getFolderPath());
+        this.restoreGameObject(this.x, this.y, this.w, this.h);
+        this.run();
+    }
+
     /*
      * Starts the movement of the minion.
      */
@@ -238,7 +256,7 @@ public class Minion extends Enemy implements Runnable {
      * Initializes the flying animation.
      */
     private void initializeFlying() {
-        this.initializeAnimation(upmostFlyingRange, bottommostFlyingRange, initialYPosition,
+        this.initializeAnimation(upmostFlyingRange, bottommostFlyingRange, this.getInitialYPosition(),
                 this.translateYProperty());
     }
 
@@ -246,7 +264,7 @@ public class Minion extends Enemy implements Runnable {
      * Initializes the walking animation.
      */
     private void initializeWalking() {
-        this.initializeAnimation(leftmostWalkingRange, rightmostWalkingRange, initialXPosition,
+        this.initializeAnimation(leftmostWalkingRange, rightmostWalkingRange, this.getInitialXPosition(),
                 this.translateXProperty());
     }
 
@@ -353,16 +371,6 @@ public class Minion extends Enemy implements Runnable {
     @Override
     public AttackEffect rangeAttack() {
         return null;
-    }
-
-    /**
-     * Gets the attack damage point by the enemy.
-     *
-     * @return the attack damage point by the enemy as an int
-     */
-    @Override
-    public int getAttackDamage() {
-        return 1;
     }
 
     /**

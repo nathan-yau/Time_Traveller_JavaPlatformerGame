@@ -10,5 +10,5 @@ import ca.bcit.comp2522.termproject.pix.GameType;
  * @version 2023-11
  */
 public enum EnemyType implements GameType {
-    MINOTAUR, WRAITH, GOLEM, SPECTOR, ALIEN, KNIGHT, ROBOT, SPACESHIP, HAL
+    MINOTAUR, WRAITH, SPECTOR, KNIGHT, ROBOT, SPACESHIP, HAL
 }

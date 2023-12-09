@@ -1,5 +1,7 @@
 package ca.bcit.comp2522.termproject.pix.model.weapon;
 
+import java.io.Serializable;
+
 /**
  * Represents a range weapon.
  *
@@ -7,7 +9,7 @@ package ca.bcit.comp2522.termproject.pix.model.weapon;
  * @author Derek Woo
  * @version 2023-11
  */
-public class RangeWeapon extends Weapon {
+public class RangeWeapon extends Weapon implements Serializable {
     private static final double RANGE_HIT_RATE = 0.4;
     private static final int MIN_AMMO_COUNT = 3;
     private static final int MAX_AMMO_COUNT = 11;
@@ -19,7 +21,7 @@ public class RangeWeapon extends Weapon {
      * @param currentLevel the current game level as an int
      */
     public RangeWeapon(final int currentLevel) {
-        super(WeaponType.RANGE_WEAPON, RANDOM_GENERATOR.nextInt(1, currentLevel + 1), RANGE_HIT_RATE);
+        super(WeaponType.RANGE_WEAPON, RANDOM_GENERATOR.nextInt(1, currentLevel + 2), RANGE_HIT_RATE);
         this.ammoCount = RANDOM_GENERATOR.nextInt(MIN_AMMO_COUNT, MAX_AMMO_COUNT);
     }
 
@@ -33,12 +35,21 @@ public class RangeWeapon extends Weapon {
     }
 
     /**
+     * Adds ammo to the weapon.
+     *
+     * @param newAmmo the amount of ammo to add as an int
+     */
+    @Override
+    public void addAmmo(final int newAmmo) {
+        this.ammoCount += newAmmo;
+    }
+
+    /**
      * What happens when a range weapon is used.
      */
     @Override
     public void useWeapon() {
         this.decrementAmmoCount();
-        System.out.println("Range weapon used.\nAmmo left: " + this.ammoCount);
         if (this.ammoCount == 0) {
             this.setWeaponIsAvailable(false);
         }

@@ -9,7 +9,7 @@ package ca.bcit.comp2522.termproject.pix.model.Enemy;
  */
 public class Knight extends Minion {
     private static final int HEALTH_POINT = 2;
-    private static final int ATTACK_POINT = 1;
+    private static final int ATTACK_POINT = 2;
     private static final int HEIGHTS = 75;
     private static final int WIDTHS = 75;
     private static final int MOVING_RANGE = 100;

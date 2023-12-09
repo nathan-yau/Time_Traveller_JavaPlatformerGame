@@ -24,7 +24,7 @@ public class BossWeapon extends GameObject<BossWeaponType> {
      */
     public BossWeapon(final int x, final int y, final int width, final int height, final BossWeaponType bossWeaponType,
                          final String imageName) {
-        super(x, y, width, height, ObjectType.BOSS_WEAPON, bossWeaponType, String.format("Boss/BossFight/%s/%s.png",
+        super(x, y, width, height, ObjectType.BOSS_WEAPON, bossWeaponType, String.format("Boss/BossFight/%s/%s",
                 bossWeaponType.name(), imageName));
     }
 }

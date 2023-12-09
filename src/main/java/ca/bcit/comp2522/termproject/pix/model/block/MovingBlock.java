@@ -7,6 +7,11 @@ import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * A block that moves up and down.
  *
@@ -14,14 +19,14 @@ import javafx.util.Duration;
  * @author Derek Woo
  * @version 2023-11
  */
-public class MovingBlock extends StandardBlock {
+public class MovingBlock extends StandardBlock implements Serializable {
     // The duration of the block movement in seconds.
     private static final int MOVING_BLOCK_DURATION = 4;
 
     // The distance the block moves in points.
     private static final int MOVING_BLOCK_DISTANCE = -150;
 
-    private SequentialTransition movingAnimation;
+    private transient SequentialTransition movingAnimation;
 
     /**
      * Constructs a MovingBlock.
@@ -36,7 +41,19 @@ public class MovingBlock extends StandardBlock {
     public MovingBlock(final int x, final int y, final int w, final int h,
                        final int currentLevel, final String imageName) {
         super(x, y, w, h, BlockType.MOVING_BLOCK, currentLevel, imageName);
+        this.initializeMoving();
+    }
 
+    /*
+     * Loads and sets up an existing MovingBlock.
+     */
+    @Serial
+    private void readObject(final ObjectInputStream inputStream) throws ClassNotFoundException, IOException {
+        inputStream.defaultReadObject();
+        this.initializeMoving();
+    }
+
+    private void initializeMoving() {
         KeyFrame moveDown = new KeyFrame(Duration.seconds(MOVING_BLOCK_DURATION),
                 new KeyValue(this.translateYProperty(), this.getTranslateY() + MOVING_BLOCK_DISTANCE));
         KeyFrame moveUp = new KeyFrame(Duration.seconds(MOVING_BLOCK_DURATION),

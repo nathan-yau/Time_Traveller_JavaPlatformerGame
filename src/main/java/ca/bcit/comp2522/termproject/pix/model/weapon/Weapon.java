@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.model.weapon;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
@@ -9,10 +10,9 @@ import java.util.Random;
  * @author Derek Woo
  * @version 2023-11
  */
-public abstract class Weapon {
+public abstract class Weapon implements Serializable {
     /** Random generator. */
     protected static final Random RANDOM_GENERATOR = new Random();
-    private static final double COOL_DOWN_TIME = 1.5;
     private final WeaponType weaponType;
     private final int damage;
     private final double hitRate;
@@ -76,4 +76,16 @@ public abstract class Weapon {
     public void setWeaponIsAvailable(final boolean weaponIsAvailable) {
         this.weaponIsAvailable = weaponIsAvailable;
     }
+
+    /**
+     * Gets the ammo count.
+     * @return the ammo count as an int
+     */
+    public abstract int getAmmoCount();
+
+    /**
+     * Adds ammo to the weapon.
+     * @param newAmmo the amount of ammo to add as an int
+     */
+    public abstract void addAmmo(int newAmmo);
 }

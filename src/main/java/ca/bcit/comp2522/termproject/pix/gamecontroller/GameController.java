@@ -1,5 +1,6 @@
 package ca.bcit.comp2522.termproject.pix.gamecontroller;
 
+import ca.bcit.comp2522.termproject.pix.Command;
 import ca.bcit.comp2522.termproject.pix.GameType;
 import ca.bcit.comp2522.termproject.pix.MainApplication;
 import ca.bcit.comp2522.termproject.pix.model.AttackEffect.AttackEffect;
@@ -8,7 +9,7 @@ import ca.bcit.comp2522.termproject.pix.model.Enemy.Enemy;
 import ca.bcit.comp2522.termproject.pix.model.GameObject;
 import ca.bcit.comp2522.termproject.pix.model.block.BlockType;
 import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
-import ca.bcit.comp2522.termproject.pix.model.bossfight.BossProjectiles;
+import ca.bcit.comp2522.termproject.pix.model.bossfight.BossProjectileGenerator;
 import ca.bcit.comp2522.termproject.pix.model.bossfight.BossWeapon;
 import ca.bcit.comp2522.termproject.pix.model.bossfight.BossWeaponType;
 import ca.bcit.comp2522.termproject.pix.model.bossfight.Hal;
@@ -18,16 +19,21 @@ import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItemType;
 import ca.bcit.comp2522.termproject.pix.model.platformgenerator.PlatformManager;
 import ca.bcit.comp2522.termproject.pix.model.player.Direction;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
+import ca.bcit.comp2522.termproject.pix.model.uimanager.UIManager;
 import ca.bcit.comp2522.termproject.pix.model.weapon.MeleeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.RangeWeapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.Weapon;
 import ca.bcit.comp2522.termproject.pix.model.weapon.WeaponType;
+import ca.bcit.comp2522.termproject.pix.screens.Screen;
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Bounds;
+import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -36,12 +42,20 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -54,7 +68,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GameController {
     private static final int X_CAMERA_THRESHOLD = 300;
     private static final int X_CAMERA_ADJUSTMENT = 300;
+    private static final double INITIAL_PLAYER_X = 0;
+    private static final double INITIAL_PLAYER_Y = 500;
     private static ChangeListener<? super Number> playerXListener;
+    private final Stage stage;
+    private AnimationTimer gameLoopTimer;
+    private final int windowWidth;
+    private final int windowHeight;
     private final Pane appRoot;
     private final Pane gameRoot;
     private final Pane uiRoot;
@@ -68,67 +88,127 @@ public class GameController {
     private final BlockInteraction blockInteraction;
     private final ItemInteraction itemInteraction;
     private final EnemyInteraction enemyInteraction;
-    private final BossInteraction bossInteraction;
-    private final ArrayList<BossWeapon> bossProjectiles;
     private final DoubleProperty playerX;
-    private Enemy activeBoss;
+    private BossFight activeBossFight;
     private boolean rangeTargetHit;
     private final LevelManager levelManager;
-    private Timeline bossWeaponTimeline;
+    private final UIManager uiManager;
     private boolean switching = false;
-    private BossProjectiles bossFight;
+    private boolean endGameConditionReached;
 
     /**
      * Constructs a GameController object with default values.
      * Set up the initial platform and player.
+     *
+     * @param windowWidth the width of the window as an int
+     * @param windowHeight the height of the window as an int
+     * @param currentLevel the current level stage
+     * @param player the player loaded from save
+     * @param gameBlocks previously-loaded game blocks to as an Arraylist
+     * @param gameItems previously-loaded game pickup items as an Arraylist
+     * @param gameEnemies previously-loaded game enemies as an Arraylist
+     * @param stage the current application stage
+     * @throws IOException if the image is not found
      */
-    public GameController() {
-        final double initialPlayerX = 0;
-        final double initialPlayerY = 500;
+    public GameController(final int windowWidth, final int windowHeight, final int currentLevel, final Player player,
+                          final ArrayList<ArrayList<StandardBlock>> gameBlocks,
+                          final ArrayList<ArrayList<PickUpItem>> gameItems,
+                          final ArrayList<ArrayList<Enemy>> gameEnemies, final Stage stage) throws IOException {
+        this.player = player;
+        this.stage = stage;
+        this.windowWidth = windowWidth;
+        this.windowHeight = windowHeight;
         this.appRoot = new Pane();
         this.gameRoot = new Pane();
         this.uiRoot = new Pane();
-        this.levelManager = new LevelManager();
-        this.platform = new PlatformManager(levelManager);
+        this.levelManager = new LevelManager(currentLevel);
+        this.platform = new PlatformManager(levelManager, gameBlocks, gameItems, gameEnemies);
         this.keyboardChecker = new HashMap<>();
-        this.player = new Player(initialPlayerX, initialPlayerY, "Player/idle.png");
         this.cachedBlockArray = new ArrayList<>();
         this.collisionDetector = new CollisionDetector();
         this.blockInteraction = new BlockInteraction();
         this.itemInteraction = new ItemInteraction();
         this.enemyInteraction = new EnemyInteraction();
-        this.lastCacheXPosition = initialPlayerX;
-        this.lastCacheYPosition = initialPlayerY;
+        this.lastCacheXPosition = INITIAL_PLAYER_X;
+        this.lastCacheYPosition = INITIAL_PLAYER_Y;
         this.rangeTargetHit = false;
-        this.playerX = player.translateXProperty();
-        this.bossInteraction = new BossInteraction();
-        this.bossProjectiles = new ArrayList<>();
+        this.playerX = this.player.translateXProperty();
         this.setBackground(this.getLevelBackground());
-        this.platform.createGamePlatform();
+        if (gameBlocks.isEmpty() || gameItems.isEmpty() || gameEnemies.isEmpty()) {
+            this.platform.createRegularLevels();
+        }
         this.setUpPlatform();
-        this.setUpCamera();
         this.setCachedBlockArray();
-        gameRoot.getChildren().add(player);
+        this.endGameConditionReached = false;
+        gameRoot.getChildren().add(this.player);
+        this.uiManager = new UIManager(this.player.getMaxHealthPoints());
+        this.uiSetUp();
+        this.refreshUi();
+        this.player.refreshPlayerImage();
+        this.setUpCamera();
+        playerXListener.changed(this.playerX, 0, this.player.getCenterX());
+    }
+
+    /**
+     * Constructs a GameController object with default values.
+     * Set up the initial platform and player.
+     *
+     * @param windowWidth the width of the window as an int
+     * @param windowHeight the height of the window as an int
+     * @param stage the current application stage
+     * @throws IOException if the image is not found
+     */
+    public GameController(final int windowWidth, final int windowHeight, final Stage stage) throws IOException {
+        this(windowWidth, windowHeight, 0, new Player(INITIAL_PLAYER_X, INITIAL_PLAYER_Y,
+                "Player/idle.png"), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), stage);
+    }
+
+    /* Set up the initial ui layout. */
+    private void uiSetUp() {
+        uiRoot.getChildren().add(uiManager.getBatteryCounter());
+        uiRoot.getChildren().add(uiManager.getWorldName());
+        uiRoot.getChildren().add(uiManager.getPlayerStatus());
+        uiRoot.getChildren().add(uiManager.getBackpack());
+    }
+
+    /*
+     * Refresh the UI with the current player state.
+     */
+    private void refreshUi() throws IOException {
+        uiManager.refreshPotionSlot(player.getHealthPotionCounter());
+        uiManager.refreshBatteryCounter(player.getEnergyCounter());
+        uiManager.refreshWorldName(levelManager.getCurrentLevel());
+        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
+        uiManager.refreshPlayerStatus();
+        uiManager.refreshMeleeSlot(player.getWeapon(WeaponType.MELEE_WEAPON) != null);
+        uiManager.refreshRangeSlot(player.getWeapon(WeaponType.RANGE_WEAPON) != null);
+        if (player.getWeapon(WeaponType.RANGE_WEAPON) != null) {
+            uiManager.refreshAmmoSlot(Objects.requireNonNull(
+                    player.getWeapon(WeaponType.RANGE_WEAPON)).getAmmoCount());
+        }
     }
 
     /**
      * Sets up the platform using the PlatformManager.
      */
     private void setUpPlatform() {
+        this.platform.setLevelArrays(levelManager.getCurrentLevel());
+
         for (StandardBlock block: platform.getBlockArray()) {
             gameRoot.getChildren().add(block);
+            block.reloadImage();
         }
 
         for (PickUpItem item: platform.getItemArray()) {
             gameRoot.getChildren().add(item);
+            item.reloadImage();
         }
 
         for (Enemy enemy: platform.getEnemyArray()) {
             gameRoot.getChildren().add(enemy);
+            enemy.reloadImage();
         }
     }
-
-
 
     /**
      * Sets up the camera.
@@ -216,13 +296,18 @@ public class GameController {
     /**
      * Switches the level.
      * @param dimension the dimension to switch to
+     * @param resetPlayerPosition whether to reset the player position
      */
-    private void switchLevel(final int dimension) {
+    private void switchLevel(final int dimension, final boolean resetPlayerPosition) {
         gameRoot.getChildren().clear();
         cachedBlockArray.clear();
         platform.setNextLevelArrays(dimension);
         this.setUpPlatform();
         setCachedBlockArray();
+        if (resetPlayerPosition) {
+            player.resetPosition();
+            gameRoot.setLayoutX(0);
+        }
         TeleportEffect teleportEffect = player.teleport();
         gameRoot.getChildren().add(player);
         gameRoot.getChildren().add(teleportEffect);
@@ -245,7 +330,6 @@ public class GameController {
          * Constructs a CollisionDetector.
          */
         CollisionDetector() { }
-
 
         /**
          * Checks if the two objects are intersecting.
@@ -294,7 +378,7 @@ public class GameController {
             return distance <= yTolerance;
         }
 
-        /**
+        /*
          * Checks if the two objects are on the same x-axis.
          * @param firstGameObject the first game object
          * @param secondGameObject the second game object
@@ -302,17 +386,38 @@ public class GameController {
          */
         private boolean onSameXAxis(final GameObject<? extends GameType> firstGameObject,
                                     final GameObject<? extends GameType> secondGameObject) {
-            final int edgeOffset = 10;
             // Check if the first object is inside the second object
             boolean firstObjectInside = secondGameObject.getMinX() <= firstGameObject.getMinX()
                     && secondGameObject.getMaxX() >= firstGameObject.getMaxX();
             // Check if the first object is on the left edge of the second object
-            boolean firstObjectOnLeft = secondGameObject.getMinX() >= firstGameObject.getMinX()
-                    && firstGameObject.getMaxX() >= secondGameObject.getMinX() + edgeOffset;
+            boolean firstObjectOnLeft = objectOnLeft(firstGameObject, secondGameObject);
             // Check if the first object is on the right edge of the second object
-            boolean firstObjectOnRight = firstGameObject.getMaxX() >= secondGameObject.getMaxX()
-                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
+            boolean firstObjectOnRight = objectOnRight(firstGameObject, secondGameObject);
             return firstObjectInside || firstObjectOnLeft || firstObjectOnRight;
+        }
+
+        /* Checks if the first object is on the left edge of the second object.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the first object is on the left edge of the second object, false otherwise
+         */
+        private boolean objectOnLeft(final GameObject<? extends GameType> firstGameObject,
+                                     final GameObject<? extends GameType> secondGameObject) {
+            final int edgeOffset = 10;
+            return secondGameObject.getMinX() >= firstGameObject.getMinX()
+                    && firstGameObject.getMaxX() >= secondGameObject.getMinX() + edgeOffset;
+        }
+
+        /* Checks if the first object is on the right edge of the second object.
+         * @param firstGameObject the first game object
+         * @param secondGameObject the second game object
+         * @return true if the first object is on the right edge of the second object, false otherwise
+         */
+        private boolean objectOnRight(final GameObject<? extends GameType> firstGameObject,
+                                      final GameObject<? extends GameType> secondGameObject) {
+            final int edgeOffset = 10;
+            return firstGameObject.getMaxX() >= secondGameObject.getMaxX()
+                    && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
         }
 
         /**
@@ -322,7 +427,7 @@ public class GameController {
          * @return the collision percentage as double
          */
         public double calculateCollisionPercentage(final GameObject<? extends GameType>  firstGameObject,
-                                                          final GameObject<? extends GameType>  secondGameObject) {
+                                                   final GameObject<? extends GameType>  secondGameObject) {
 
             final int divisor = 100;
             // Calculate overlapping area
@@ -394,6 +499,11 @@ public class GameController {
                             }
                             return;
                         }
+                        if (collisionDetector.objectOnLeft(player, block)) {
+                            player.disableForwardKnockBack();
+                        } else if (collisionDetector.objectOnRight(player, block)) {
+                            player.disableBackwardKnockBack();
+                        }
                     }
                 }
                 if (!onLadder) {
@@ -457,7 +567,7 @@ public class GameController {
         ItemInteraction() { }
 
         // Check and handle collision with items
-        private void interactWithItems() {
+        private void interactWithItems() throws IOException {
             final double itemCollisionPercentage = 40;
             Iterator<PickUpItem> iterator = platform.getItemArray().iterator();
 
@@ -468,14 +578,33 @@ public class GameController {
                         && collisionDetector.calculateCollisionPercentage(player, item) > itemCollisionPercentage) {
                     if (item.getSubtype() == PickUpItemType.HEALTH_POTION) {
                         player.incrementHealthPotionCounter();
-                    } else if (item.getSubtype() == PickUpItemType.GOLD_COIN) {
-                        player.incrementGoldCoinCounter();
+                        uiManager.refreshPotionSlot(player.getHealthPotionCounter());
+                    } else if (item.getSubtype() == PickUpItemType.ENERGY) {
+                        player.incrementEnergyCounter();
+                        uiManager.refreshBatteryCounter(player.getEnergyCounter());
                     } else if (item.getSubtype() == PickUpItemType.MELEE_WEAPON) {
-                        Weapon meleeWeapon = new MeleeWeapon(platform.getCurrentLevel());
+                        Weapon meleeWeapon = new MeleeWeapon(levelManager.getCurrentLevel());
                         player.addWeapon(meleeWeapon);
+                        uiManager.refreshMeleeSlot(true);
                     } else if (item.getSubtype() == PickUpItemType.RANGE_WEAPON) {
-                        Weapon rangeWeapon = new RangeWeapon(platform.getCurrentLevel());
+                        Weapon rangeWeapon = new RangeWeapon(levelManager.getCurrentLevel());
                         player.addWeapon(rangeWeapon);
+                        uiManager.refreshRangeSlot(true);
+                        uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
+                    } else if (item.getSubtype() == PickUpItemType.AMMO) {
+                        Weapon rangeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
+                        if (rangeWeapon != null) {
+                            rangeWeapon.addAmmo(1);
+                            uiManager.refreshAmmoSlot(rangeWeapon.getAmmoCount());
+                        }
+                    } else if (item.getSubtype() == PickUpItemType.SAVE_TRIGGER) {
+                        saveGameState();
+                    } else if (item.getSubtype() == PickUpItemType.BOSS_TRIGGER) {
+                        levelManager.enterBossLevel();
+                        platform.createBossLevel();
+                        switchLevel(levelManager.getCurrentLevel(), true);
+                        uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                        switching = true;
                     }
                     if (item.onPickup()) {
                         iterator.remove();
@@ -488,7 +617,7 @@ public class GameController {
     // Handle interactions with pickup items.
     private final class EnemyInteraction {
         final double hitBoxCollisionPercentage = 50;
-        ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
+        final ArrayList<Enemy> enemiesToRemove = new ArrayList<>();
 
         /**
          * Constructs an EnemyInteraction object.
@@ -518,17 +647,29 @@ public class GameController {
                         player.vanishMeleeHitBox();
                     });
                     final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
-                    System.out.println("Melee damage: " + meleeDamage);
-                    if (enemy.takeDamage(meleeDamage) <= 0) {
+                    int enemyHealth = enemy.takeDamage(meleeDamage);
+                    this.updateEnemyHealthBar(enemy);
+                    if (enemyHealth <= 0) {
                         enemy.startDying().thenAccept(isCompleted -> gameRoot.getChildren().remove(enemy));
                         return true;
                     } else {
                         enemy.getHurt();
                     }
-
                 }
                 return false;
             });
+        }
+
+        private void updateEnemyHealthBar(final Enemy enemy) {
+            try {
+                uiManager.addEnemyHealthBar(enemy.getSubtype(), enemy.getHealthPoint());
+                for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                    uiRoot.getChildren().remove(enemyHealthBar);
+                    uiRoot.getChildren().add(enemyHealthBar);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
 
@@ -540,21 +681,13 @@ public class GameController {
         private void rangeWithEnemies(final AttackEffect existingRangeHitBox, final Enemy enemy) {
             if (collisionDetector.objectIntersect(existingRangeHitBox, enemy) & enemy.getDamageEnable()) {
                 final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
-                System.out.println("Range damage: " + rangeDamage);
-                enemy.setDamageEnable(false);
-                existingRangeHitBox.stopInitialEffect();
-                rangeTargetHit = true;
-                existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
-                    gameRoot.getChildren().remove(existingRangeHitBox);
-                    player.vanishRangeHitBox();
-                    rangeTargetHit = false;
-                    enemy.setDamageEnable(true);
-                });
+                rangeCombat(existingRangeHitBox, enemy);
                 if (enemy.takeDamage(rangeDamage) != 0) {
                     enemy.getHurt();
                 } else {
                     enemiesToRemove.add(enemy);
                 }
+                this.updateEnemyHealthBar(enemy);
             }
         }
 
@@ -566,14 +699,14 @@ public class GameController {
             AttackEffect existingRangeHitBox = player.getRangeHitBox();
             for (Enemy enemy : platform.getEnemyArray()) {
                 if (collisionDetector.objectIntersect(player, enemy)
-                    && collisionDetector.calculateCollisionPercentage(player, enemy) > enemyCollisionPercentage) {
-                        enemy.setDirection(Direction.FORWARD);
-                        if (player.getCenterX() < enemy.getCenterX()) {
-                            enemy.setDirection(Direction.BACKWARD);
-                        }
-                        enemy.meleeAttack();
-                        player.getHurt();
-                        return;
+                        && collisionDetector.calculateCollisionPercentage(player, enemy) > enemyCollisionPercentage) {
+                    enemy.setDirection(Direction.FORWARD);
+                    if (player.getCenterX() < enemy.getCenterX()) {
+                        enemy.setDirection(Direction.BACKWARD);
+                    }
+                    enemy.meleeAttack();
+                    meleeCombat(enemy, enemy.getBoundsInParent());
+                    return;
                 }
                 if (existingRangeHitBox != null) {
                     this.rangeWithEnemies(existingRangeHitBox, enemy);
@@ -596,109 +729,27 @@ public class GameController {
         }
     }
 
-
-    // Handle interactions with lasers.
-    private final class BossInteraction {
-        final double hitBoxCollisionPercentage = 50;
-        ArrayList<BossWeapon> projectiles;
-
-        /**
-         * Constructs an BossWeaponInteraction object.
-         */
-        BossInteraction() { }
-
-        /*
-         * Interacts with the boss with melee weapon.
-         * @param hitBox the attack hit box
-         */
-        private void meleeWithBoss(final AttackEffect hitBox) {
-            AtomicBoolean found = new AtomicBoolean(false);
-            hitBox.startInitialEffect().thenAccept(isDone -> {
-                if (isDone && !found.get()) {
-                    gameRoot.getChildren().remove(hitBox);
-                    player.vanishMeleeHitBox();
-                }
-            });
-
-            if (collisionDetector.objectIntersect(hitBox, activeBoss)
-                    && collisionDetector.calculateCollisionPercentage(hitBox, activeBoss)
-                    > hitBoxCollisionPercentage) {
-                found.set(true);
-                hitBox.stopInitialEffect();
-                hitBox.startOnHitEffect().thenAccept(isDone -> {
-                    gameRoot.getChildren().remove(hitBox);
-                    player.vanishMeleeHitBox();
-                });
-                final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
-                System.out.println("Melee damage: " + meleeDamage);
-                if (activeBoss.takeDamage(meleeDamage) <= 0) {
-                    endBossFight();
-                } else {
-                    activeBoss.getHurt();
-                }
-            }
+    // Handle melee combat
+    private void meleeCombat(final Enemy enemy, final Bounds boundsInParent) {
+        if (player.takeDamage(enemy.getAttackDamage()) > 0) {
+            player.getHurt();
         }
+        player.knockBack(!(player.getBoundsInParent().getCenterX()
+                < boundsInParent.getCenterX()));
+        uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
+    }
 
-        /*
-         * Interacts with the boss with range weapons.
-         * @param existingRangeHitBox the existing range hit box
-         */
-        private void rangeWithBoss(final AttackEffect existingRangeHitBox) {
-            if (collisionDetector.objectIntersect(existingRangeHitBox, activeBoss) & activeBoss.getDamageEnable()) {
-                final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
-                System.out.println("Boss Range damage: " + rangeDamage);
-                activeBoss.setDamageEnable(false);
-                existingRangeHitBox.stopInitialEffect();
-                rangeTargetHit = true;
-                existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
-                    gameRoot.getChildren().remove(existingRangeHitBox);
-                    player.vanishRangeHitBox();
-                    rangeTargetHit = false;
-                    activeBoss.setDamageEnable(true);
-                });
-                if (activeBoss.takeDamage(rangeDamage) != 0) {
-                    activeBoss.getHurt();
-                } else {
-                    endBossFight();
-                }
-            }
-        }
-
-        /*
-         * Interacts with the boss.
-         */
-        private void interactWithBoss() {
-            AttackEffect existingRangeHitBox = player.getRangeHitBox();
-            if (existingRangeHitBox != null) {
-                this.rangeWithBoss(existingRangeHitBox);
-            }
-        }
-
-        public void setProjectiles(final ArrayList<BossWeapon> projectiles) {
-            this.projectiles = projectiles;
-        }
-
-        // Check and handle collision with boss weapons
-        private void interactWithBossWeapon() {
-            if (this.projectiles != null) {
-                final double itemCollisionPercentage = 40;
-                Iterator<BossWeapon> iterator = this.projectiles.iterator();
-
-                while (iterator.hasNext()) {
-                    BossWeapon projectile = iterator.next();
-
-                    if (collisionDetector.objectIntersect(player, projectile)
-                            && collisionDetector.calculateCollisionPercentage(player, projectile)
-                            > itemCollisionPercentage) {
-                        if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
-                            player.getHurt();
-                            iterator.remove();
-                            gameRoot.getChildren().remove(projectile);
-                        }
-                    }
-                }
-            }
-        }
+    // Handle ranged combat hit box and collision detection
+    private void rangeCombat(final AttackEffect existingRangeHitBox, final Enemy enemy) {
+        enemy.setDamageEnable(false);
+        existingRangeHitBox.stopInitialEffect();
+        rangeTargetHit = true;
+        existingRangeHitBox.startOnHitEffect().thenAccept(isDone -> {
+            gameRoot.getChildren().remove(existingRangeHitBox);
+            player.vanishRangeHitBox();
+            rangeTargetHit = false;
+            enemy.setDamageEnable(true);
+        });
     }
 
     /**
@@ -725,7 +776,8 @@ public class GameController {
      * @return true if any key is pressed, false otherwise
      */
     private boolean isAnyKeyPressed() {
-        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.I, KeyCode.O, KeyCode.P};
+        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.SPACE, KeyCode.A, KeyCode.S, KeyCode.D,
+                KeyCode.SHIFT, KeyCode.J, KeyCode.K, KeyCode.H};
         for (KeyCode key : keysToCheck) {
             if (keyboardChecker.containsKey(key)) {
                 Boolean isPressed = keyboardChecker.get(key);
@@ -749,7 +801,10 @@ public class GameController {
         // Listen to potion use signal
         if (isPressed(KeyCode.H)) {
             player.useHealthPotion();
+            uiManager.refreshHealthBar(player.getHealthPoint(), player.getMaxHealthPoints());
+            uiManager.refreshPotionSlot(player.getHealthPotionCounter());
         }
+
         // Listen to idle signal
         if (!isAnyKeyPressed() & !player.isPlayerInAction()) {
             player.setIdle();
@@ -760,11 +815,14 @@ public class GameController {
         final int outOfBounds = 5;
         // Listen to jump signal and prevent for jumping out of the map
         // If the player is next to a ladder, climb instead of jump
+        if (isPressed(KeyCode.SPACE) && player.getTranslateY() >= outOfBounds) {
+            player.setJumpSpeed();
+        }
+
+        // Climb if the player is next to a ladder
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
             if (player.isNextToLadder()) {
                 player.climb(true);
-            } else {
-                player.setJumpSpeed();
             }
         }
 
@@ -776,12 +834,12 @@ public class GameController {
         }
 
         // Listen to running signal
-        if (isPressed(KeyCode.I)) {
+        if (isPressed(KeyCode.SHIFT)) {
             player.run();
         }
 
         // Listen to walk signal
-        if (!isPressed(KeyCode.I)) {
+        if (!isPressed(KeyCode.SHIFT)) {
             player.walk();
         }
 
@@ -796,9 +854,9 @@ public class GameController {
         }
     }
     /* Listen to attack signals */
-    private void meleeAttackKeyListener() {
+    private void meleeAttackKeyListener() throws IOException {
         // Listen to melee attack signal
-        if (isPressed(KeyCode.O)) {
+        if (isPressed(KeyCode.K)) {
             AttackEffect hitBox;
             if (player.noHitBox()) {
                 hitBox = player.meleeAttack();
@@ -807,27 +865,37 @@ public class GameController {
                 hitBox = null;
             }
             if (hitBox != null) {
+                for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                    uiRoot.getChildren().remove(enemyHealthBar);
+                }
+                uiManager.clearEnemyHealthBars();
                 gameRoot.getChildren().add(hitBox);
                 enemyInteraction.meleeWithEnemies(hitBox);
-                if (activeBoss != null) {
-                    bossInteraction.meleeWithBoss(hitBox);
+                if (activeBossFight != null) {
+                    activeBossFight.meleeWithBoss(hitBox);
                 }
             }
         }
     }
+
     /* Listen to attack signals */
-    private void rangeAttackKeyListener() {
-        if (isPressed(KeyCode.P)) {
+    private void rangeAttackKeyListener() throws IOException {
+        if (isPressed(KeyCode.L)) {
             Weapon activeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
             if (activeWeapon != null) {
                 AttackEffect hitBox;
                 if (player.noHitBox()) {
                     hitBox = player.rangeAttack();
                     player.useWeapon(WeaponType.RANGE_WEAPON);
+                    uiManager.refreshAmmoSlot(activeWeapon.getAmmoCount());
                 } else {
                     hitBox = null;
                 }
                 if (hitBox != null) {
+                    for (HBox enemyHealthBar : uiManager.getEnemyHealthBars()) {
+                        uiRoot.getChildren().remove(enemyHealthBar);
+                    }
+                    uiManager.clearEnemyHealthBars();
                     gameRoot.getChildren().add(hitBox);
                     hitBox.startInitialEffect().thenAccept(isDone -> {
                         if (isDone && !rangeTargetHit) {
@@ -839,103 +907,273 @@ public class GameController {
             }
         }
     }
+
     /* Listen to switch platform signals */
-    private void switchPlatformKeyListener() {
-        if (isPressed(KeyCode.L)) {
-            if (!switching) {
+    private void switchPlatformKeyListener() throws IOException {
+        if (isPressed(KeyCode.CLOSE_BRACKET) & activeBossFight == null) {
+            if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.nextLevel();
-                this.switchLevel(levelManager.getCurrentLevel());
+                this.switchLevel(levelManager.getCurrentLevel(), false);
+                uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                player.decrementEnergyCounter();
+                uiManager.refreshBatteryCounter(player.getEnergyCounter());
                 switching = true;
             }
         }
 
-        if (isPressed(KeyCode.K)) {
-            if (!switching) {
+        if (isPressed(KeyCode.OPEN_BRACKET) & activeBossFight == null) {
+            if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.previousLevel();
-                this.switchLevel(levelManager.getCurrentLevel());
+                this.switchLevel(levelManager.getCurrentLevel(), false);
+                uiManager.refreshWorldName(levelManager.getCurrentLevel());
+                player.decrementEnergyCounter();
+                uiManager.refreshBatteryCounter(player.getEnergyCounter());
                 switching = true;
             }
         }
     }
 
-
-    // Checks if this level is a boss level.
-    private void checkForBossPresence() {
+    /*
+     * Checks if this level is a boss level.
+     */
+    private void checkForBossPresence() throws IOException {
         final int[] bossLevels = {3};
-        if (activeBoss == null && platform.getCurrentLevel() == bossLevels[0]) {
-            final int halYOffset = -100;
-            Enemy hal = new Hal(platform.getTotalLevelWidth() / 2, platform.getTotalLevelHeight() + halYOffset);
-            startBossFight(hal);
+        if (levelManager.getCurrentLevel() == bossLevels[0]) {
+            final int numberOfProjectiles = 10;
+            final int projectileWidth = 50;
+            final int startDelay = 2;
+            final int laserDuration = 3;
+            final int endDuration = 2;
+            final int heightOffset = 130;
+
+            if (activeBossFight == null || activeBossFight.bossLevel != bossLevels[0]) {
+                Enemy hal = new Hal(windowHeight - heightOffset);
+                activeBossFight = new BossFight(bossLevels[0], hal);
+            }
+            activeBossFight.startBossFight(numberOfProjectiles,
+                    projectileWidth, startDelay, laserDuration, endDuration);
+        } else {
+            if (activeBossFight != null) {
+                activeBossFight.endBossFight();
+                activeBossFight = null;
+            }
         }
     }
 
-    // Start a boss fight with Hal's lasers
-    private void startBossFight(final Enemy boss) {
-        final int numberOfProjectiles = 10;
-        final int projectileWidth = 50;
-        final int laserDuration = 5;
-        final int totalDuration = 15;
+    /**
+     * Represents a boss fight object.
+     */
+    private class BossFight {
+        private static final double HIT_BOX_COLLISION_PERCENTAGE = 50;
+        private final ArrayList<BossWeapon> projectiles = new ArrayList<>();
+        private final int bossLevel;
+        private final Enemy activeBoss;
+        private BossProjectileGenerator projectileGenerator;
+        private Timeline projectileTimeline;
 
-        this.disableCamera();
+        /**
+         * Constructs a BossFight object.
+         *
+         * @param bossLevel the boss level
+         * @param boss the boss to fight
+         */
+        BossFight(final int bossLevel, final Enemy boss) {
+            this.bossLevel = bossLevel;
+            this.activeBoss = boss;
+        }
 
-        activeBoss = boss;
-        gameRoot.getChildren().add(boss);
+        /**
+         * Starts the boss fight.
+         *
+         * @param numberOfProjectiles the number of projectiles to be fired at once
+         * @param projectileWidth the width of the projectile
+         * @param startDelay the delay before the boss attack
+         * @param laserDuration the duration of the laser
+         * @param totalDuration the total duration of the boss attack
+         * @throws IOException if the image is not found
+         */
+        public void startBossFight(final int numberOfProjectiles, final int projectileWidth,
+                                   final int startDelay, final int laserDuration, final int totalDuration)
+                throws IOException {
+            disableCamera();
 
-        // Create Hal's lasers
-        bossFight = new BossProjectiles(numberOfProjectiles, platform.getTotalLevelWidth(),
-                platform.getTotalLevelHeight(), projectileWidth);
+            if (!gameRoot.getChildren().contains(activeBoss)) {
+                gameRoot.getChildren().add(activeBoss);
+                player.toFront();
+                uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                uiManager.refreshBossStatus();
+                uiRoot.getChildren().add(uiManager.getBossStatus());
+            }
 
-        // Start Hal's lasers and switch positions every 10 seconds
-        bossWeaponTimeline = new Timeline(
-                new KeyFrame(Duration.seconds(0), event -> {
-                    bossProjectiles.clear();
-                    bossProjectiles.addAll(bossFight.fireProjectiles());
-                    for (BossWeapon projectile : bossProjectiles) {
-                        if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
-                            gameRoot.getChildren().add(projectile);
+            if (this.projectileGenerator == null) {
+                this.projectileGenerator = new BossProjectileGenerator(numberOfProjectiles, windowWidth,
+                        windowHeight, projectileWidth);
+            }
+
+            if (this.projectileTimeline == null) {
+                this.projectileTimeline = createProjectileTimeline(startDelay, laserDuration, totalDuration);
+                this.projectileTimeline.setCycleCount(Timeline.INDEFINITE);
+                this.projectileTimeline.play();
+            }
+        }
+
+        /*
+         * Creates the timeline for the boss projectiles.
+         *
+         * @param startDelay delay before lasers are fired
+         * @param laserDuration duration of the laser
+         * @param endDelay delay after lasers are fired
+         */
+        private Timeline createProjectileTimeline(final int startDelay, final int laserDuration, final int endDelay) {
+            final double projectileDamageDelay = 0.5;
+            return new Timeline(
+                    new KeyFrame(Duration.seconds(startDelay), event -> {
+                        // Add projectiles to gameRoot
+                        for (BossWeapon projectile : projectileGenerator.fireProjectiles()) {
+                            if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
+                                gameRoot.getChildren().add(projectile);
+                            }
                         }
+                        activeBoss.setDamageEnable(false);
+                        activeBoss.setVisible(false);
+                        setBackground("background/attack.gif");
+                    }),
+
+                    new KeyFrame(Duration.seconds(projectileDamageDelay + startDelay), event -> {
+                        // Add projectiles to the projectiles list after a delay
+                        projectiles.addAll(projectileGenerator.getProjectiles());
+                    }),
+
+                    new KeyFrame(Duration.seconds(laserDuration + projectileDamageDelay + startDelay), event -> {
+                        Iterator<BossWeapon> iterator = projectiles.iterator();
+                        while (iterator.hasNext()) {
+                            BossWeapon laser = iterator.next();
+                            gameRoot.getChildren().remove(laser);
+                            iterator.remove();
+                        }
+                        activeBoss.setDamageEnable(true);
+                        activeBoss.setVisible(true);
+                        setBackground("background/error.gif");
+                    }),
+                    new KeyFrame(Duration.seconds(laserDuration + projectileDamageDelay + startDelay + endDelay))
+            );
+        }
+
+        /**
+         * Ends the current boss fight.
+         */
+        public void endBossFight() {
+            for (BossWeapon laser : projectiles) {
+                gameRoot.getChildren().remove(laser);
+            }
+            this.projectileTimeline.stop();
+            Iterator<BossWeapon> iterator = projectiles.iterator();
+            while (iterator.hasNext()) {
+                BossWeapon laser = iterator.next();
+                gameRoot.getChildren().remove(laser);
+                iterator.remove();
+            }
+            this.activeBoss.setDamageEnable(false);
+            this.activeBoss.setVisible(false);
+        }
+
+        /*
+         * Interacts with the boss with melee weapons.
+         * @param hitBox the melee attack hit box
+         */
+        private void meleeWithBoss(final AttackEffect hitBox) throws IOException {
+            if (activeBoss.getDamageEnable()) {
+                AtomicBoolean found = new AtomicBoolean(false);
+                hitBox.startInitialEffect().thenAccept(isDone -> {
+                    if (isDone && !found.get()) {
+                        gameRoot.getChildren().remove(hitBox);
+                        player.vanishMeleeHitBox();
                     }
-                    bossInteraction.setProjectiles(bossProjectiles);
-                }),
-                new KeyFrame(Duration.seconds(laserDuration), event -> {
-                    Iterator<BossWeapon> iterator = bossProjectiles.iterator();
-                    while (iterator.hasNext()) {
-                        BossWeapon laser = iterator.next();
-                        gameRoot.getChildren().remove(laser);
+                });
+
+                if (collisionDetector.objectIntersect(hitBox, activeBoss)
+                        && collisionDetector.calculateCollisionPercentage(hitBox, activeBoss)
+                        > HIT_BOX_COLLISION_PERCENTAGE) {
+                    found.set(true);
+                    hitBox.stopInitialEffect();
+                    hitBox.startOnHitEffect().thenAccept(isDone -> {
+                        gameRoot.getChildren().remove(hitBox);
+                        player.vanishMeleeHitBox();
+                    });
+                    final int meleeDamage = player.getWeaponDamage(WeaponType.MELEE_WEAPON);
+                    if (activeBoss.takeDamage(meleeDamage) <= 0) {
+                        this.endBossFight();
+                        startVictoryCondition(stage);
+                    } else {
+                        activeBoss.getHurt();
+                    }
+                    uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                    uiManager.refreshBossStatus();
+                }
+            }
+        }
+
+        /*
+         * Interacts with the boss with range weapons.
+         * @param existingRangeHitBox the existing range hit box
+         */
+        private void rangeWithBoss(final AttackEffect existingRangeHitBox) throws IOException {
+            if (activeBoss.getDamageEnable()) {
+                if (collisionDetector.objectIntersect(existingRangeHitBox, activeBoss) & activeBoss.getDamageEnable()) {
+                    final int rangeDamage = player.getWeaponDamage(WeaponType.RANGE_WEAPON);
+                    rangeCombat(existingRangeHitBox, activeBoss);
+                    if (activeBoss.takeDamage(rangeDamage) != 0) {
+                        activeBoss.getHurt();
+                    } else {
+                        this.endBossFight();
+                        startVictoryCondition(stage);
+                    }
+                    uiManager.refreshBossHealthBar(activeBoss.getHealthPoint());
+                    uiManager.refreshBossStatus();
+                }
+            }
+        }
+
+        /*
+         * Interacts with the boss.
+         */
+        private void interactWithBoss() throws IOException {
+            AttackEffect existingRangeHitBox = player.getRangeHitBox();
+            if (existingRangeHitBox != null) {
+                this.rangeWithBoss(existingRangeHitBox);
+            }
+        }
+
+        /*
+         * Check and handle collision with boss weapons
+         */
+        private void interactWithBossProjectiles() {
+            final double itemCollisionPercentage = 40;
+            Iterator<BossWeapon> iterator = this.projectiles.iterator();
+
+            while (iterator.hasNext()) {
+                BossWeapon projectile = iterator.next();
+
+                if (collisionDetector.objectIntersect(player, projectile)
+                        && collisionDetector.calculateCollisionPercentage(player, projectile)
+                        > itemCollisionPercentage) {
+                    if (projectile.getSubtype() == BossWeaponType.PROJECTILE) {
+                        meleeCombat(activeBoss, projectile.getBoundsInParent());
                         iterator.remove();
+                        gameRoot.getChildren().remove(projectile);
                     }
-                    bossInteraction.setProjectiles(null);
-                }),
-                new KeyFrame(Duration.seconds(totalDuration))
-        );
-        bossWeaponTimeline.setCycleCount(Timeline.INDEFINITE);
-        bossWeaponTimeline.play();
-    }
-
-    private void endBossFight() {
-        for (BossWeapon laser : bossProjectiles) {
-            gameRoot.getChildren().remove(laser);
+                }
+            }
         }
-        bossWeaponTimeline.stop();
-
-        Iterator<BossWeapon> iterator = bossProjectiles.iterator();
-        while (iterator.hasNext()) {
-            BossWeapon laser = iterator.next();
-            gameRoot.getChildren().remove(laser);
-            iterator.remove();
-        }
-
-        gameRoot.getChildren().remove(activeBoss);
-        bossFight = null;
     }
 
     /**
      * Checks if the game is over.
      */
     private void gameOverCondition() {
-        if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT) {
-            System.out.println("Game Over");
-            System.exit(0);
+        if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT
+                || player.getHealthPoint() <= 0) {
+            this.startGameOverCondition(stage);
         }
     }
 
@@ -943,7 +1181,7 @@ public class GameController {
      * Starts the game loop.
      */
     public void startGameLoop() {
-        AnimationTimer timer = new AnimationTimer() {
+        gameLoopTimer = new AnimationTimer() {
             @Override
             public void handle(final long l) {
                 try {
@@ -953,9 +1191,9 @@ public class GameController {
                     blockInteraction.interactWithBlocksY();
                     itemInteraction.interactWithItems();
                     enemyInteraction.interactWithEnemies();
-                    if (activeBoss != null) {
-                        bossInteraction.interactWithBoss();
-                        bossInteraction.interactWithBossWeapon();
+                    if (activeBossFight != null) {
+                        activeBossFight.interactWithBoss();
+                        activeBossFight.interactWithBossProjectiles();
                     }
                     checkForBossPresence();
                     gameOverCondition();
@@ -964,7 +1202,7 @@ public class GameController {
                 }
             }
         };
-        timer.start();
+        gameLoopTimer.start();
     }
 
     // Get the background image for the level
@@ -979,6 +1217,92 @@ public class GameController {
         return String.format("Background/%s.%s", levelManager.getCurrentLevel(), fileFormat);
     }
 
+    /*
+     * Start end game condition.
+     */
+    private void startEndGameCondition(final Stage currentStage, final String title,
+                                       final String bodyText, final String backgroundImage) {
+        if (!this.endGameConditionReached) {
+            final int titleWidth = 350;
+            final int titleXOffset = (this.windowWidth / 2) - (titleWidth / 2);
+            final int titleYOffset = this.windowHeight / 2 - 70;
+
+            final int bodyWidth = 625;
+            final int bodyXOffset = (this.windowWidth / 2) - (bodyWidth / 2);
+            final int bodyYOffset = (this.windowHeight / 2) - 20;
+
+            final int menuWidth = 50;
+            final int menuBoxXOffset = (this.windowWidth / 2) - (menuWidth / 2);
+            final int menuBoxYOffset = (this.windowHeight / 2) + 90;
+            final int menuBoxItemTopPadding = 20;
+
+            this.endGameConditionReached = true;
+            Screen gameScreen = new Screen(this.windowWidth, this.windowHeight);
+            Scene scene = new Scene(gameScreen.getRoot(), this.windowWidth, this.windowHeight);
+
+            final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
+            menuItems.put("New Game", () -> {
+                try {
+                    gameLoopTimer.stop();
+                    for (ArrayList<Enemy> enemy : platform.getTotalEnemyArray()) {
+                        for (Enemy enemyInstance : enemy) {
+                            enemyInstance.terminateAnimation();
+                        }
+                    }
+                    if (activeBossFight != null) {
+                        if (activeBossFight.projectileTimeline != null) {
+                            activeBossFight.projectileTimeline.stop();
+                        }
+                    }
+                    MainApplication.startGame(stage, false);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            menuItems.put("Quit", Platform::exit);
+
+            currentStage.setScene(scene);
+
+            gameScreen.addBackground(backgroundImage);
+            gameScreen.addTitle(title, Color.WHITE, TextAlignment.CENTER, titleWidth, titleXOffset, titleYOffset);
+            gameScreen.addBodyText(bodyText, Color.WHITE, TextAlignment.CENTER, bodyWidth, bodyXOffset, bodyYOffset);
+            gameScreen.addMenu(menuItems, TextAlignment.CENTER, menuBoxXOffset, menuBoxYOffset, menuBoxItemTopPadding);
+        }
+    }
+
+    /*
+     * Start the victory condition.
+     */
+    private void startVictoryCondition(final Stage currentStage) {
+        startEndGameCondition(currentStage, "YOU DID IT!",
+                "Your unwavering courage and\ndetermination have triumphed\nover the AI menace",
+                "victoryBg.gif");
+    }
+
+    /*
+     * Start the loss condition.
+     */
+    private void startGameOverCondition(final Stage currentStage) {
+        startEndGameCondition(currentStage, "OH NO...",
+                "Despite your valiant efforts,\nthe world has succumbed to\nthe cold grip of AI",
+                "gameOverBg.gif");
+    }
+
+    /*
+     * Saves the game state.
+     */
+    private void saveGameState() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("gameState.sav"))) {
+            oos.writeObject(this.levelManager.getCurrentLevel());
+            oos.writeObject(this.player);
+            oos.writeObject(this.platform.getTotalBlockArray());
+            oos.writeObject(this.platform.getTotalItemArray());
+            oos.writeObject(this.platform.getTotalEnemyArray());
+        } catch (IOException e) {
+            System.out.println("Error saving game state.");
+        }
+    }
+
     /**
      * Gets the root of the application.
      * @return the root of the application
@@ -987,4 +1311,3 @@ public class GameController {
         return appRoot;
     }
 }
-

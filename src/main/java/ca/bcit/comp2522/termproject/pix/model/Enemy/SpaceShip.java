@@ -8,8 +8,8 @@ package ca.bcit.comp2522.termproject.pix.model.Enemy;
  * @version 2023-11
  */
 public class SpaceShip extends Minion {
-    private static final int HEALTH_POINT = 2;
-    private static final int ATTACK_POINT = 1;
+    private static final int HEALTH_POINT = 4;
+    private static final int ATTACK_POINT = 2;
     private static final int HEIGHTS = 90;
     private static final int WIDTHS = 90;
     private static final int MOVING_RANGE = 100;

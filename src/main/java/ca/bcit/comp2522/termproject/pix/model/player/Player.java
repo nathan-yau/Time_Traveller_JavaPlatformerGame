@@ -20,6 +20,10 @@ import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -29,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Derek Woo
  * @version 2023
  */
-public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable {
+public final class Player extends GameObject<PlayerType> implements Combative, Damageable, Movable, Serializable {
     private static final int MAX_HEALTH_POINTS = 20;
     private static final double WALK_SPEED = 5;
     private static final double RUN_SPEED = 10;
@@ -38,25 +42,30 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private boolean attackEnable;
     private boolean damageEnable;
     private boolean climbEnable;
+    private boolean backwardKnockBack;
+    private boolean forwardKnockBack;
     private boolean turnOffGravity;
-    private AttackEffect meleeHitBox;
-    private AttackEffect rangeHitBox;
+    private boolean healthPotionEnable;
+    private transient AttackEffect meleeHitBox;
+    private transient AttackEffect rangeHitBox;
     private double speed;
     private String currentImagePath;
     private Action action;
     private Direction direction;
-    private Point2D velocity;
+    private transient Point2D velocity;
     private int healthPotionCounter;
-    private int goldCoinCounter;
-    private Timeline meleeAnimation;
-    private Timeline punchAnimation;
-    private Timeline rangeAnimation;
-    private Timeline walkAnimation;
-    private Timeline jumpAnimation;
-    private Timeline climbAnimation;
+    private int energyCounter;
+    private transient Timeline meleeAnimation;
+    private transient Timeline punchAnimation;
+    private transient Timeline rangeAnimation;
+    private transient Timeline walkAnimation;
+    private transient Timeline jumpAnimation;
+    private transient Timeline climbAnimation;
     private final Weapon[] weaponArray = new Weapon[2];
-    private Timeline hurtAnimation;
+    private transient Timeline hurtAnimation;
     private Direction climbDirection;
+    private double currentXLocation;
+    private double currentYLocation;
 
     /**
      * Constructs a Player object.
@@ -73,10 +82,35 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.attackEnable = true;
         this.damageEnable = true;
         this.climbEnable = false;
+        this.healthPotionEnable = true;
+        this.backwardKnockBack = true;
+        this.forwardKnockBack = true;
         this.meleeHitBox = null;
         this.rangeHitBox = null;
         this.climbDirection = Direction.FORWARD;
         this.currentImagePath = String.format("player/%s", direction.name());
+        this.initializeAnimations();
+        this.healthPoint = MAX_HEALTH_POINTS;
+        this.speed = WALK_SPEED;
+        this.currentXLocation = x;
+    }
+
+    /*
+     * Loads and sets up an existing player.
+     */
+    @Serial
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.velocity = new Point2D(0, 0);
+        this.currentImagePath = "Player/idle.png";
+        this.restoreGameObject(this.currentXLocation, this.currentYLocation, this.getFitWidth(), this.getFitHeight());
+        this.initializeAnimations();
+    }
+
+    /*
+     * Initializes the animations.
+     */
+    private void initializeAnimations() {
         this.initializeMeleeAttackingAnimation();
         this.initializeRangeAttackingAnimation();
         this.initializeWalkingAnimation();
@@ -84,8 +118,14 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.initializeHurtingAnimation();
         this.initializePunchAttackingAnimation();
         this.initializeClimbingAnimation();
-        this.healthPoint = MAX_HEALTH_POINTS;
-        this.speed = WALK_SPEED;
+    }
+
+    /*
+     * Updates the current location of the Player.
+     */
+    private void updateCurrentLocation() {
+        this.currentXLocation = this.getTranslateX();
+        this.currentYLocation = this.getTranslateY();
     }
 
     /**
@@ -243,7 +283,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         final int hurtFrameCount = 7;
         hurtAnimation = new Timeline(
                 new KeyFrame(Duration.millis(hurtDuration), event -> {
-                    this.action = Action.MELEE_ATTACK;
+                    this.action = Action.HURTING;
                     this.setOpacity(hurtFrame[0] % 2);
                     this.currentImagePath = String.format("player/%s", direction.name());
                     this.updatePlayerImage(String.format("%s/hurting_%d.png", currentImagePath, hurtFrame[0]));
@@ -254,6 +294,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         hurtAnimation.setOnFinished(event -> {
             this.setIdle();
             this.setOpacity(1);
+            this.resetKnockBack();
         });
     }
 
@@ -270,6 +311,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         }
         if (climbEnable) {
             this.setTranslateY(this.getTranslateY() + climbPerFrame);
+            this.updateCurrentLocation();
             this.direction = this.climbDirection;
             turnOffGravity = true;
             attackEnable = false;
@@ -302,7 +344,9 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      *  Sets the Player when it is on the ground.
      */
     public void offsetGravity() {
-        this.setTranslateY(this.getTranslateY() - 1);
+        final double offset = 0.8;
+        this.setTranslateY(this.getTranslateY() - offset);
+        this.updateCurrentLocation();
         jumpEnable = true;
     }
 
@@ -326,6 +370,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         if (movingDown) {
             if (!turnOffGravity) {
                 this.setTranslateY(this.getTranslateY() + fallingPixel);
+                this.updateCurrentLocation();
             }
         } else {
             this.currentImagePath = String.format("player/%s", direction.name());
@@ -333,6 +378,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
             climbAnimation.stop();
             jumpAnimation.play();
             this.setTranslateY(this.getTranslateY() - jumpingPixel);
+            this.updateCurrentLocation();
             this.action = Action.JUMPING;
         }
     }
@@ -346,13 +392,16 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         if (movingRight) {
             this.direction = Direction.FORWARD;
             this.setTranslateX(this.getTranslateX() + 1);
+            this.updateCurrentLocation();
         } else {
             this.direction = Direction.BACKWARD;
             this.setTranslateX(this.getTranslateX() - 1);
+            this.updateCurrentLocation();
         }
         jumpAnimation.stop();
         if (!(meleeAnimation.getStatus() == Animation.Status.RUNNING
-                || rangeAnimation.getStatus() == Animation.Status.RUNNING)) {
+                || rangeAnimation.getStatus() == Animation.Status.RUNNING
+                || punchAnimation.getStatus() == Animation.Status.RUNNING)) {
             walkAnimation.play();
         }
     }
@@ -363,6 +412,13 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     private void updatePlayerImage(final String imageUrl) {
         this.setImage(new Image(String.valueOf(MainApplication.class.getResource(imageUrl))));
+    }
+
+    /**
+     * Updates the Player image.
+     */
+    public void refreshPlayerImage() {
+        this.setImage(new Image(String.valueOf(MainApplication.class.getResource("Player/idle.png"))));
     }
 
     /**
@@ -394,6 +450,49 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
+     * Knocks back the Player.
+     * @param moveRight true if moving right, false if moving left
+     */
+    public void knockBack(final boolean moveRight) {
+        final int knockBackDuration = 20;
+        final int knockBackDistance;
+        if (moveRight && forwardKnockBack || !moveRight && backwardKnockBack) {
+            if (moveRight) {
+                knockBackDistance = 1;
+                disableForwardKnockBack();
+            } else {
+                knockBackDistance = -1;
+                disableBackwardKnockBack();
+            }
+            for (int i = 0; i <= knockBackDuration; i++) {
+                this.setTranslateX(this.getTranslateX() + knockBackDistance);
+            }
+        }
+    }
+
+    /**
+     * Resets the knock back.
+     */
+    public void resetKnockBack() {
+        this.forwardKnockBack = true;
+        this.backwardKnockBack = true;
+    }
+
+    /**
+     * Set forward knock back to false.
+     */
+    public void disableForwardKnockBack() {
+        this.forwardKnockBack = false;
+    }
+
+    /**
+     * Set backward knock back to false.
+     */
+    public void disableBackwardKnockBack() {
+        this.backwardKnockBack = false;
+    }
+
+    /**
      * Add a weapon to the Player's weapons array.
      *
      * @param weapon the weapon to add
@@ -404,7 +503,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         } else {
             this.weaponArray[1] = weapon;
         }
-        System.out.println("Added: " + weapon);
     }
 
     /**
@@ -430,16 +528,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void incrementHealthPotionCounter() {
         this.healthPotionCounter++;
-        System.out.println("Health potion count: " + this.healthPotionCounter);
     }
 
-    /**
-     * Decrements the player's health potion counter by one.
-     */
-    public void decrementHealthPotionCounter() {
-        this.healthPotionCounter--;
-        System.out.println("Health potion count: " + this.healthPotionCounter);
-    }
 
     /**
      * Gets the player's health potion counter.
@@ -450,20 +540,28 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
-     * Increments the player's gold coin counter by one.
+     * Increments the player's energy counter by one.
      */
-    public void incrementGoldCoinCounter() {
-        this.goldCoinCounter++;
-        System.out.println("Gold Coin count: " + this.goldCoinCounter);
+    public void incrementEnergyCounter() {
+        final int energyPerPickUp = 3;
+        this.energyCounter += energyPerPickUp;
     }
 
     /**
-     * Gets the player's gold coin counter.
-     *
-     * @return the player's gold coin counter
+     * Decrements the player's energy counter by one.
      */
-    public int getGoldCoinCounter() {
-        return this.goldCoinCounter;
+    public void decrementEnergyCounter() {
+        this.energyCounter--;
+    }
+
+
+    /**
+     * Gets the player's energy counter.
+     *
+     * @return the player's energy counter
+     */
+    public int getEnergyCounter() {
+        return this.energyCounter;
     }
 
     /**
@@ -549,14 +647,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
-     * Checks if the Player is facing forward.
-     * @return true if the Player is facing forward, false otherwise
-     */
-    public boolean facingForward() {
-        return this.direction == Direction.FORWARD;
-    }
-
-    /**
      * Gets the attack point of the Player.
      * @return the attack point of the Player
      */
@@ -573,20 +663,11 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     public int takeDamage(final int point) {
         if (damageEnable) {
             healthPoint -= point;
-            damageEnable = false;
             PauseTransition pause = new PauseTransition(Duration.seconds(1));
             pause.setOnFinished(event -> damageEnable = true);
             pause.play();
         }
         return healthPoint;
-    }
-
-    /**
-     * Get Melee Hit Box.
-     * @return the melee hit box
-     */
-    public AttackEffect getMeleeHitBox() {
-        return this.meleeHitBox;
     }
 
     /**
@@ -626,8 +707,8 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     public void getHurt() {
         if (damageEnable) {
             this.attackEnable = false;
+            damageEnable = false;
             this.hurtAnimation.play();
-            this.takeDamage(1);
             this.action = Action.HURTING;
         }
     }
@@ -645,9 +726,13 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Use a health potion.
      */
     public void useHealthPotion() {
-        if (healthPotionCounter > 0 && healthPoint < MAX_HEALTH_POINTS) {
+        if (healthPotionCounter > 0 && healthPoint < MAX_HEALTH_POINTS & healthPotionEnable) {
+            this.healthPotionEnable = false;
             this.healthPotionCounter--;
             this.healthPoint++;
+            PauseTransition delay = new PauseTransition(Duration.seconds(1));
+            delay.setOnFinished(event -> healthPotionEnable = true);
+            delay.play();
         }
     }
 
@@ -713,5 +798,29 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      */
     public void setClimbDirection(final Direction climbingDirection) {
         this.climbDirection = climbingDirection;
+    }
+
+    /**
+     * Gets the health point of the Player.
+     * @return the health point of the Player
+     */
+    public int getHealthPoint() {
+        return healthPoint;
+    }
+
+    /**
+     * Reset player's position.
+     */
+    public void resetPosition() {
+        this.setTranslateX(this.getInitialXPosition());
+        this.setTranslateY(this.getInitialYPosition());
+    }
+
+    /**
+     * Gets the max health point of the Player.
+     * @return the max health point of the Player
+     */
+    public int getMaxHealthPoints() {
+        return MAX_HEALTH_POINTS;
     }
 }

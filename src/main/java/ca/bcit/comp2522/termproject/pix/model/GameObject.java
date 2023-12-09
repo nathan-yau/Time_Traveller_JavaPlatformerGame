@@ -6,6 +6,9 @@ import javafx.geometry.Bounds;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * Represents an object in the game that has coordinates.
  *
@@ -14,12 +17,17 @@ import javafx.scene.image.ImageView;
  * @version 2023-11
  * @param <T> the type of the object
  */
-public abstract class GameObject<T extends GameType> extends ImageView {
+public abstract class GameObject<T extends GameType> extends ImageView implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -8362378599272637297L;
     // The name of the object.
     private final T objectSubtype;
+    private final String objectImageUrl;
 
     // The type of the object.
     private final ObjectType objectType;
+    private final double initialXPosition;
+    private final double initialYPosition;
 
     /**
      * Constructs a GameObject with dimensions.
@@ -54,6 +62,24 @@ public abstract class GameObject<T extends GameType> extends ImageView {
         this.setTranslateY(y);
         this.objectSubtype = subtype;
         this.objectType = type;
+        this.initialXPosition = x;
+        this.initialYPosition = y;
+        this.objectImageUrl = String.valueOf(MainApplication.class.getResource(url));
+    }
+
+    /**
+     * Restores the game object to its saved dimensions and coordinates.
+     *
+     * @param x the x-coordinate of the game object as a double
+     * @param y the y-coordinate of the game object as a double
+     * @param w the width of the game object as a double
+     * @param h the height of the game object as a double
+     */
+    public void restoreGameObject(final double x, final double y, final double w, final double h) {
+        this.setTranslateX(x);
+        this.setTranslateY(y);
+        this.setFitWidth(w);
+        this.setFitHeight(h);
     }
 
     /**
@@ -131,6 +157,22 @@ public abstract class GameObject<T extends GameType> extends ImageView {
     }
 
     /**
+     * Gets the initial X Position of the game object.
+     * @return the initial X Position of the game object as a double
+     */
+    public final double getInitialXPosition() {
+        return this.initialXPosition;
+    }
+
+    /**
+     * Gets the initial Y Position of the game object.
+     * @return the initial Y Position of the game object as a double
+     */
+    public final double getInitialYPosition() {
+        return this.initialYPosition;
+    }
+
+    /**
      * Check if the Player intersects with another object.
      * @param objectBounds the bounds of the object
      * @return true if intersects, false if not
@@ -149,5 +191,12 @@ public abstract class GameObject<T extends GameType> extends ImageView {
      */
     public final T getSubtype() {
         return this.objectSubtype;
+    }
+
+    /**
+     * Reloads the image of the game object.
+     */
+    public void reloadImage() {
+        this.setImage(new Image(objectImageUrl));
     }
 }

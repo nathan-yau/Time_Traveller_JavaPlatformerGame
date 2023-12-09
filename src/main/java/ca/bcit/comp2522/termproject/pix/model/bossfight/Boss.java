@@ -53,16 +53,6 @@ public class Boss extends Enemy {
     }
 
     /**
-     * Gets the attack damage of the boss.
-     *
-     * @return an int representing the attack damage of the boss
-     */
-    @Override
-    public int getAttackDamage() {
-        return 0;
-    }
-
-    /**
      * Process when the boss gets hurt.
      */
     @Override
@@ -82,6 +72,5 @@ public class Boss extends Enemy {
 
     @Override
     public void terminateAnimation() {
-
     }
 }
