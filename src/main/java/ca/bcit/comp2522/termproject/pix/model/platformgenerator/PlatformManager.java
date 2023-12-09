@@ -175,17 +175,13 @@ public class PlatformManager {
                             BLOCK_HEIGHT + movingBlockYPadding, currentLevel, imageIndex.name());
                     totalBlockArray.get(currentLevel).add(movingBlock);
                 } else if (categorySymbol == '2') {
-                    StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
+                    StandardBlock ladderBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, BlockType.LADDERS, currentLevel, "ladder");
-                    totalBlockArray.get(currentLevel).add(decorationBlock);
+                    totalBlockArray.get(currentLevel).add(ladderBlock);
                 } else if (categorySymbol == '3') {
-                    StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
+                    StandardBlock disappearingBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
                             BLOCK_HEIGHT, BlockType.DISAPPEARING_BLOCK, currentLevel, "rope");
-                    totalBlockArray.get(currentLevel).add(decorationBlock);
-                } else if (categorySymbol == '4') {
-                    StandardBlock decorationBlock = new StandardBlock(xPosition, yPosition, BLOCK_WIDTH,
-                            BLOCK_HEIGHT, BlockType.TESTING_BLOCK, currentLevel, "dirt");
-                    totalBlockArray.get(currentLevel).add(decorationBlock);
+                    totalBlockArray.get(currentLevel).add(disappearingBlock);
                 } else if (categorySymbol == 'P') {
                     HealthPotion healthPotion = new HealthPotion(xPosition, yPosition - yPadding, BLOCK_WIDTH,
                             BLOCK_HEIGHT + yPadding);
@@ -318,6 +314,7 @@ public class PlatformManager {
             return PlatformPosition.BLOCK;
         }
 
+
         if (!positions[0][0] & !positions[1][0]
                 & !positions[0][2] & !positions[1][2] & middleColFilled) {
             return PlatformPosition.WALL;
@@ -338,6 +335,23 @@ public class PlatformManager {
         if (!positions[0][2] && positions[1][2] & positions[0][1]) {
             return PlatformPosition.DIRT_LEFT_CORNER;
         }
+
+        if (rightColFilled & middleColFilled & !positions[1][0] & !positions[2][0]) {
+            return PlatformPosition.LEFT_EDGE;
+        }
+
+        if (rightColFilled & middleColFilled & !positions[2][0]) {
+            return PlatformPosition.DIRT_TURN_LEFT_CORNER;
+        }
+
+        if (leftColFilled & middleColFilled & !positions[1][2] & !positions[2][2]) {
+            return PlatformPosition.RIGHT_EDGE;
+        }
+
+        if (leftColFilled & middleColFilled & !positions[2][2]) {
+            return PlatformPosition.DIRT_TURN_UP_CORNER;
+        }
+
         if (topRowFilled) {
             if (bottomRowFilled) {
                 return PlatformPosition.DIRT;

@@ -10,5 +10,5 @@ import ca.bcit.comp2522.termproject.pix.GameType;
  * @version 2023-11
  */
 public enum BlockType  implements GameType {
-    SOLID_BLOCK, MOVING_BLOCK, DISAPPEARING_BLOCK, TESTING_BLOCK, LADDERS
+    SOLID_BLOCK, MOVING_BLOCK, DISAPPEARING_BLOCK, LADDERS
 }
