@@ -116,6 +116,11 @@ public final class LevelLayout {
         return REG_LEVEL_DATA[level];
     }
 
+    /**
+     * Gets the boss level data.
+     *
+     * @return the boss level data as a String[]
+     */
     public static String[] getBossLevelData() {
         return LEVEL4;
     }
