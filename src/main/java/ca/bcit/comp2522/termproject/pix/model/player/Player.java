@@ -45,6 +45,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     private boolean backwardKnockBack;
     private boolean forwardKnockBack;
     private boolean turnOffGravity;
+    private boolean healthPotionEnable;
     private transient AttackEffect meleeHitBox;
     private transient AttackEffect rangeHitBox;
     private double speed;
@@ -81,6 +82,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.attackEnable = true;
         this.damageEnable = true;
         this.climbEnable = false;
+        this.healthPotionEnable = true;
         this.backwardKnockBack = true;
         this.forwardKnockBack = true;
         this.meleeHitBox = null;
@@ -723,9 +725,15 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
      * Use a health potion.
      */
     public void useHealthPotion() {
-        if (healthPotionCounter > 0 && healthPoint < MAX_HEALTH_POINTS) {
+        if (healthPotionCounter > 0 && healthPoint < MAX_HEALTH_POINTS & healthPotionEnable) {
+            this.healthPotionEnable = false;
             this.healthPotionCounter--;
             this.healthPoint++;
+            PauseTransition delay = new PauseTransition(Duration.seconds(1));
+            delay.setOnFinished(event -> {
+                healthPotionEnable = true;
+            });
+            delay.play();
         }
     }
 
