@@ -731,9 +731,7 @@ public class GameController {
 
     // Handle melee combat
     private void meleeCombat(final Enemy enemy, final Bounds boundsInParent) {
-        if (player.takeDamage(enemy.getAttackDamage()) <= 0) {
-            System.out.println("Player died");
-        } else {
+        if (player.takeDamage(enemy.getAttackDamage()) > 0) {
             player.getHurt();
         }
         player.knockBack(!(player.getBoundsInParent().getCenterX()
@@ -1300,7 +1298,6 @@ public class GameController {
             oos.writeObject(this.platform.getTotalBlockArray());
             oos.writeObject(this.platform.getTotalItemArray());
             oos.writeObject(this.platform.getTotalEnemyArray());
-            System.out.println("Game state saved successfully.");
         } catch (IOException e) {
             System.out.println("Error saving game state.");
         }
