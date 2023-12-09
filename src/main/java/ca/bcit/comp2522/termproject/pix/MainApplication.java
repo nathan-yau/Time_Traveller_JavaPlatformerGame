@@ -6,16 +6,13 @@ import ca.bcit.comp2522.termproject.pix.model.block.StandardBlock;
 import ca.bcit.comp2522.termproject.pix.model.pickupitem.PickUpItem;
 import ca.bcit.comp2522.termproject.pix.model.player.Player;
 import ca.bcit.comp2522.termproject.pix.screens.Screen;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
 
 
 import java.io.FileInputStream;
@@ -23,7 +20,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.Objects;
 
 /**
  * Represents the main application window.
@@ -43,26 +39,34 @@ public class MainApplication extends Application {
      * Starts the Game.
      *
      * @param stage the stage to run the game in as a Stage
+     * @param playTutorial whether to play the tutorial as a boolean
      * @throws IOException if the game cannot be started
      */
-    public static void startGame(final Stage stage) throws IOException {
+    public static void startGame(final Stage stage, final boolean playTutorial) throws IOException {
         GameController gameApp = new GameController(WINDOW_WIDTH, WINDOW_HEIGHT, stage);
         Scene scene = new Scene(gameApp.getAppRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
-        Media media = new Media(Objects.requireNonNull(MainApplication.class.getResource("tutorial.mp4")).toExternalForm());
-        MediaPlayer mediaPlayer = new MediaPlayer(media);
-        MediaView mediaView = new MediaView(mediaPlayer);
-        Pane tutorial = new Pane();
-        tutorial.getChildren().add(mediaView);
-        Scene tutorialScene = new Scene(tutorial, WINDOW_WIDTH, WINDOW_HEIGHT);
+        if (playTutorial) {
+            playTutorial(stage, gameApp, scene);
+        } else {
+            stage.setScene(scene);
+            gameApp.insertKeyboardListeners();
+            gameApp.startGameLoop();
+        }
+    }
+
+    private static void playTutorial(final Stage stage, final GameController gameApp, final Scene scene) {
+        final int tutorialLength = 33;
+        Screen tutorial = new Screen(WINDOW_WIDTH, WINDOW_HEIGHT);
+        tutorial.addBackground("tutorial.gif");
+        Scene tutorialScene = new Scene(tutorial.getRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
         stage.setScene(tutorialScene);
-        mediaView.fitWidthProperty().bind(stage.widthProperty());
-        mediaView.fitHeightProperty().bind(stage.heightProperty());
-        mediaPlayer.play();
-        mediaPlayer.setOnEndOfMedia(() -> {
+        PauseTransition delay = new PauseTransition(javafx.util.Duration.seconds(tutorialLength));
+        delay.setOnFinished(event -> {
             stage.setScene(scene);
             gameApp.insertKeyboardListeners();
             gameApp.startGameLoop();
         });
+        delay.play();
     }
 
     /*
@@ -136,7 +140,7 @@ public class MainApplication extends Application {
         final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
         menuItems.put("New Game", () -> {
             try {
-                startGame(stage);
+                startGame(stage, true);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

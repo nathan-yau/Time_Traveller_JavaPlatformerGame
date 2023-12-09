@@ -1246,7 +1246,7 @@ public class GameController {
             menuItems.put("New Game", () -> {
                 try {
                     gameLoopTimer.stop();
-                    MainApplication.startGame(stage);
+                    MainApplication.startGame(stage, false);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
