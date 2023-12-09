@@ -83,5 +83,9 @@ public abstract class Weapon implements Serializable {
      */
     public abstract int getAmmoCount();
 
+    /**
+     * Adds ammo to the weapon.
+     * @param newAmmo the amount of ammo to add as an int
+     */
     public abstract void addAmmo(int newAmmo);
 }
