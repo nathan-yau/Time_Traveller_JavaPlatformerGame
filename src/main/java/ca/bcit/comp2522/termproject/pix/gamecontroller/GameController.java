@@ -386,7 +386,6 @@ public class GameController {
          */
         private boolean onSameXAxis(final GameObject<? extends GameType> firstGameObject,
                                     final GameObject<? extends GameType> secondGameObject) {
-            final int edgeOffset = 10;
             // Check if the first object is inside the second object
             boolean firstObjectInside = secondGameObject.getMinX() <= firstGameObject.getMinX()
                     && secondGameObject.getMaxX() >= firstGameObject.getMaxX();
@@ -731,7 +730,7 @@ public class GameController {
     }
 
     // Handle melee combat
-    private void meleeCombat(Enemy enemy, Bounds boundsInParent) {
+    private void meleeCombat(final Enemy enemy, final Bounds boundsInParent) {
         if (player.takeDamage(enemy.getAttackDamage()) <= 0) {
             System.out.println("Player died");
         } else {
