@@ -305,6 +305,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         hurtAnimation.setOnFinished(event -> {
             this.setIdle();
             this.setOpacity(1);
+            this.resetKnockBack();
         });
     }
 
@@ -469,8 +470,10 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         if (moveRight && forwardKnockBack || !moveRight && backwardKnockBack) {
             if (moveRight) {
                 knockBackDistance = 1;
+                disableForwardKnockBack();
             } else {
                 knockBackDistance = -1;
+                disableBackwardKnockBack();
             }
             for (int i = 0; i <= knockBackDuration; i++) {
                 this.setTranslateX(this.getTranslateX() + knockBackDistance);

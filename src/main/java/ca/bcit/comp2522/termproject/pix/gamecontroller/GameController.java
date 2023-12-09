@@ -483,7 +483,6 @@ public class GameController {
             final double vectorY = player.getVelocityY();
             final boolean movingDown = vectorY > 0;
             boolean onLadder = false;
-            player.resetKnockBack();
             for (int i = 0; i < Math.abs(vectorY); i++) {
                 for (StandardBlock block : cachedBlockArray) {
                     if (collisionDetector.objectIntersect(player, block)) {
@@ -827,8 +826,6 @@ public class GameController {
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
             if (player.isNextToLadder()) {
                 player.climb(true);
-            } else {
-                player.setJumpSpeed();
             }
         }
 
