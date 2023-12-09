@@ -34,8 +34,13 @@ public class RangeWeapon extends Weapon implements Serializable {
         return this.ammoCount;
     }
 
+    /**
+     * Adds ammo to the weapon.
+     *
+     * @param newAmmo the amount of ammo to add as an int
+     */
     @Override
-    public void addAmmo(int newAmmo) {
+    public void addAmmo(final int newAmmo) {
         this.ammoCount += newAmmo;
     }
 
