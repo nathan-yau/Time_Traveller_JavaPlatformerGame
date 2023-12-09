@@ -415,7 +415,7 @@ public class GameController {
          * @return true if the first object is on the right edge of the second object, false otherwise
          */
         private boolean objectOnRight(final GameObject<? extends GameType> firstGameObject,
-                                     final GameObject<? extends GameType> secondGameObject) {
+                                      final GameObject<? extends GameType> secondGameObject) {
             final int edgeOffset = 10;
             return firstGameObject.getMaxX() >= secondGameObject.getMaxX()
                     && firstGameObject.getMinX() <= secondGameObject.getMaxX() - edgeOffset;
@@ -428,7 +428,7 @@ public class GameController {
          * @return the collision percentage as double
          */
         public double calculateCollisionPercentage(final GameObject<? extends GameType>  firstGameObject,
-                                                          final GameObject<? extends GameType>  secondGameObject) {
+                                                   final GameObject<? extends GameType>  secondGameObject) {
 
             final int divisor = 100;
             // Calculate overlapping area
@@ -701,12 +701,12 @@ public class GameController {
             AttackEffect existingRangeHitBox = player.getRangeHitBox();
             for (Enemy enemy : platform.getEnemyArray()) {
                 if (collisionDetector.objectIntersect(player, enemy)
-                    && collisionDetector.calculateCollisionPercentage(player, enemy) > enemyCollisionPercentage) {
-                        enemy.setDirection(Direction.FORWARD);
-                        if (player.getCenterX() < enemy.getCenterX()) {
-                            enemy.setDirection(Direction.BACKWARD);
-                        }
-                        enemy.meleeAttack();
+                        && collisionDetector.calculateCollisionPercentage(player, enemy) > enemyCollisionPercentage) {
+                    enemy.setDirection(Direction.FORWARD);
+                    if (player.getCenterX() < enemy.getCenterX()) {
+                        enemy.setDirection(Direction.BACKWARD);
+                    }
+                    enemy.meleeAttack();
                     meleeCombat(enemy, enemy.getBoundsInParent());
                     return;
                 }
@@ -780,8 +780,8 @@ public class GameController {
      * @return true if any key is pressed, false otherwise
      */
     private boolean isAnyKeyPressed() {
-        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D,
-                KeyCode.I, KeyCode.O, KeyCode.P, KeyCode.H};
+        final KeyCode[] keysToCheck = {KeyCode.W, KeyCode.SPACE, KeyCode.A, KeyCode.S, KeyCode.D,
+                KeyCode.SHIFT, KeyCode.J, KeyCode.K, KeyCode.H};
         for (KeyCode key : keysToCheck) {
             if (keyboardChecker.containsKey(key)) {
                 Boolean isPressed = keyboardChecker.get(key);
@@ -819,6 +819,11 @@ public class GameController {
         final int outOfBounds = 5;
         // Listen to jump signal and prevent for jumping out of the map
         // If the player is next to a ladder, climb instead of jump
+        if (isPressed(KeyCode.SPACE) && player.getTranslateY() >= outOfBounds) {
+            player.setJumpSpeed();
+        }
+
+        // Climb if the player is next to a ladder
         if (isPressed(KeyCode.W) && player.getTranslateY() >= outOfBounds) {
             if (player.isNextToLadder()) {
                 player.climb(true);
@@ -835,12 +840,12 @@ public class GameController {
         }
 
         // Listen to running signal
-        if (isPressed(KeyCode.I)) {
+        if (isPressed(KeyCode.SHIFT)) {
             player.run();
         }
 
         // Listen to walk signal
-        if (!isPressed(KeyCode.I)) {
+        if (!isPressed(KeyCode.SHIFT)) {
             player.walk();
         }
 
@@ -857,7 +862,7 @@ public class GameController {
     /* Listen to attack signals */
     private void meleeAttackKeyListener() throws IOException {
         // Listen to melee attack signal
-        if (isPressed(KeyCode.O)) {
+        if (isPressed(KeyCode.K)) {
             AttackEffect hitBox;
             if (player.noHitBox()) {
                 hitBox = player.meleeAttack();
@@ -881,7 +886,7 @@ public class GameController {
 
     /* Listen to attack signals */
     private void rangeAttackKeyListener() throws IOException {
-        if (isPressed(KeyCode.P)) {
+        if (isPressed(KeyCode.L)) {
             Weapon activeWeapon = player.getWeapon(WeaponType.RANGE_WEAPON);
             if (activeWeapon != null) {
                 AttackEffect hitBox;
@@ -911,7 +916,7 @@ public class GameController {
 
     /* Listen to switch platform signals */
     private void switchPlatformKeyListener() throws IOException {
-        if (isPressed(KeyCode.L) & activeBossFight == null) {
+        if (isPressed(KeyCode.CLOSE_BRACKET) & activeBossFight == null) {
             if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.nextLevel();
                 this.switchLevel(levelManager.getCurrentLevel(), false);
@@ -922,7 +927,7 @@ public class GameController {
             }
         }
 
-        if (isPressed(KeyCode.K) & activeBossFight == null) {
+        if (isPressed(KeyCode.OPEN_BRACKET) & activeBossFight == null) {
             if (!switching & player.getEnergyCounter() > 0) {
                 levelManager.previousLevel();
                 this.switchLevel(levelManager.getCurrentLevel(), false);
@@ -1173,7 +1178,7 @@ public class GameController {
      */
     private void gameOverCondition() {
         if (player.getTranslateY() > MainApplication.WINDOW_HEIGHT
-            || player.getHealthPoint() <= 0) {
+                || player.getHealthPoint() <= 0) {
             this.startGameOverCondition(stage);
         }
     }
@@ -1303,4 +1308,3 @@ public class GameController {
         return appRoot;
     }
 }
-
