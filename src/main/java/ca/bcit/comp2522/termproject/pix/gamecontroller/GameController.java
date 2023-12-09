@@ -1246,6 +1246,16 @@ public class GameController {
             menuItems.put("New Game", () -> {
                 try {
                     gameLoopTimer.stop();
+                    for (ArrayList<Enemy> enemy : platform.getTotalEnemyArray()) {
+                        for (Enemy enemyInstance : enemy) {
+                            enemyInstance.terminateAnimation();
+                        }
+                    }
+                    if (activeBossFight != null) {
+                        if (activeBossFight.projectileTimeline != null) {
+                            activeBossFight.projectileTimeline.stop();
+                        }
+                    }
                     MainApplication.startGame(stage, false);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
