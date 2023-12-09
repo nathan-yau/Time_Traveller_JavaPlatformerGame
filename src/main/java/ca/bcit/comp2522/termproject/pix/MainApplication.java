@@ -140,7 +140,7 @@ public class MainApplication extends Application {
         final LinkedHashMap<String, Command> menuItems = new LinkedHashMap<>();
         menuItems.put("New Game", () -> {
             try {
-                startGame(stage, false);
+                startGame(stage, true);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
