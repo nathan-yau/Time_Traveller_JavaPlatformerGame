@@ -160,13 +160,17 @@ public abstract class GameObject<T extends GameType> extends ImageView implement
      * Gets the initial X Position of the game object.
      * @return the initial X Position of the game object as a double
      */
-    public final double getInitialXPosition() {return this.initialXPosition;}
+    public final double getInitialXPosition() {
+        return this.initialXPosition;
+    }
 
     /**
      * Gets the initial Y Position of the game object.
      * @return the initial Y Position of the game object as a double
      */
-    public final double getInitialYPosition() {return this.initialYPosition;}
+    public final double getInitialYPosition() {
+        return this.initialYPosition;
+    }
 
     /**
      * Check if the Player intersects with another object.
