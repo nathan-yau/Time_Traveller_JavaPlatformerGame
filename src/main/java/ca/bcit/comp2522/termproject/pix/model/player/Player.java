@@ -105,19 +105,6 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
         this.initializeAnimations();
     }
 
-    /**
-     * Teleports the player to a specific coordinate.
-     *
-     * @param x the desired x-coordinate as a double
-     * @param y the desired y-coordinate as a double
-     */
-    public void teleportToLocation(final double x, final double y) {
-        this.setTranslateX(x);
-        this.setTranslateY(y);
-        this.currentImagePath = "Player/idle.png";
-        this.updateCurrentLocation();
-    }
-
     /*
      * Initializes the animations.
      */
@@ -815,7 +802,7 @@ public final class Player extends GameObject<PlayerType> implements Combative, D
     }
 
     /**
-     * Reset player's position
+     * Reset player's position.
      */
     public void resetPosition() {
         this.setTranslateX(this.getInitialXPosition());
