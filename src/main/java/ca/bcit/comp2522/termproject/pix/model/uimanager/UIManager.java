@@ -402,7 +402,8 @@ public class UIManager {
         healthLabel.setTranslateY(labelYPosition);
     }
 
-    private void initialBossHealthBar(){
+    /* Initializes the boss health bar. */
+    private void initialBossHealthBar() {
         final int width = 500;
         final int height = 20;
         final int barXPosition = 30;
@@ -411,19 +412,13 @@ public class UIManager {
         bossHealthBar.setTranslateX(barXPosition);
     }
 
+    /**
+     * Refreshes the boss health bar.
+     *
+     * @param progress the progress of the boss health bar as a double
+     */
     public void refreshBossHealthBar(final double progress) {
-        final String color;
-        final double inWarningHealthPoint = 0.5;
-        final double inDangerHealthPoint = 0.25;
-        bossHealthBar.setProgress(progress);
-        if (progress > inWarningHealthPoint) {
-            color = "-fx-accent: lightgreen;";
-        } else if (progress > inDangerHealthPoint) {
-            color = "-fx-accent: yellow;";
-        } else {
-            color = "-fx-accent: red;";
-        }
-        bossHealthBar.setStyle(color);
+        healthBarDefaultSetting(progress, bossHealthBar);
     }
 
     /**
@@ -434,10 +429,16 @@ public class UIManager {
      */
     public void refreshHealthBar(final double currentHP, final double maxHP) {
         final double progress = currentHP / maxHP;
+        healthBarDefaultSetting(progress, healthBar);
+        healthLabel.setText(String.format("%.0f / %.0f", currentHP, maxHP));
+    }
+
+    /* Sets the default setting of a health bar.*/
+    private void healthBarDefaultSetting(final double progress, final ProgressBar targetHealthBar) {
         final String color;
         final double inWarningHealthPoint = 0.5;
         final double inDangerHealthPoint = 0.25;
-        healthBar.setProgress(progress);
+        targetHealthBar.setProgress(progress);
         if (progress > inWarningHealthPoint) {
             color = "-fx-accent: lightgreen;";
         } else if (progress > inDangerHealthPoint) {
@@ -445,8 +446,7 @@ public class UIManager {
         } else {
             color = "-fx-accent: red;";
         }
-        healthBar.setStyle(color);
-        healthLabel.setText(String.format("%.0f / %.0f", currentHP, maxHP));
+        targetHealthBar.setStyle(color);
     }
 
     /**
@@ -484,6 +484,10 @@ public class UIManager {
         return backpack;
     }
 
+    /**
+     * Get the boss status.
+     * @return the boss status as a HBox
+     */
     public HBox getBossStatus() {
         return bossStatus;
     }
