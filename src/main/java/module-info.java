@@ -1,7 +1,6 @@
 module ca.bcit.comp2522.termproject.pix {
     requires javafx.controls;
     requires javafx.fxml;
-    requires javafx.media;
 
 
     opens ca.bcit.comp2522.termproject.pix to javafx.fxml;
